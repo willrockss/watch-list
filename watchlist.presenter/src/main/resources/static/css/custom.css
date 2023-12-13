@@ -1,0 +1,9 @@
+/* .card {
+    width: 50vw;
+    margin: auto;
+    margin-top: 10vh;
+} */
+
+.panel-body {
+    border-radius: 4px;
+}
