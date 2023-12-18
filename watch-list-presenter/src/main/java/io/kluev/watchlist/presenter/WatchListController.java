@@ -9,15 +9,19 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -57,15 +61,27 @@ public class WatchListController {
 
     @PostMapping("/play")
     @ResponseBody
-    public ResponseEntity<Void> play(@RequestBody PlayRequest request) {
+    public ResponseEntity<String> play(@RequestBody PlayRequest request) {
         log.info("Going to forward play request: {}", request);
-        val resp = restClient
+        ResponseEntity<String> resp = restClient
                 .post()
                 .uri(backendProperties.getUrl() + "/play")
                 .body(request)
-                .retrieve();
-        log.debug("Play request was successfully forwarded with resp {}", resp);
+                .retrieve()
+                .onStatus(new ResponseErrorHandler() {
+                    @Override
+                    public boolean hasError(ClientHttpResponse response) throws IOException {
+                        return response.getStatusCode().isError();
+                    }
 
-        return ResponseEntity.ok().build();
+                    @Override
+                    public void handleError(ClientHttpResponse response) throws IOException {
+                        log.error("Play request was not forwarded with resp code {}", response.getStatusCode());
+                    }
+                })
+                .toEntity(String.class);
+
+        log.info("Play request was successfully forwarded with resp code {} and body {}", resp.getStatusCode(), resp.getBody());
+        return resp;
     }
 }

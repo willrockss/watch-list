@@ -1,0 +1,6 @@
+server:
+  port: 8060
+
+integration:
+  node-red:
+    url: ${CURR_HOST:http://localhost}:1880
