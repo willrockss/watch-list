@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const progress = require('progress-stream');
+const streamThrottle = require("stream-throttle")
 const port = 8000;
 
 async function delay(time) {
@@ -65,7 +66,7 @@ const requestListener = async function (req, res) {
 
             progressStream.on('progress', function(progress) {
                 const currProgress =  progress.percentage.toFixed(2);
-                if ((Math.abs(prevProgress - 100) < 0.1) == 0 && (Math.abs(currProgress - 100) < 0.1)) {
+                if (prevProgress == 0 && (Math.abs(currProgress - 100) < 0.1)) {
                     console.log('Ignore first 100% progress');
                 } else {
                     console.log('WatchProgress:',currProgress + '%');
@@ -74,11 +75,18 @@ const requestListener = async function (req, res) {
                 
             });
 
+            // Chuncksize matters how much Video Player (or TV) bufferize. Delta betwee loaded and watched time will be minimal.
+            // TODO adopt chunksize based on movie metadata
+            var throttle = new streamThrottle.Throttle({rate: 1024*1024  /*bytes per second*/ , chunksize: 64 * 1024})
+
             var stream = fs.createReadStream(file, {
                 start : start,
                 end : end
             }).on("open", function() {
-                stream.pipe(progressStream).pipe(res);
+                stream
+                    .pipe(throttle)
+                    .pipe(progressStream)
+                    .pipe(res);
             }).on("error", function(err) {
                 res.end(err);
             });

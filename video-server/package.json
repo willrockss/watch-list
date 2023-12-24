@@ -9,6 +9,7 @@
   "author": "Alexey Kluev",
   "license": "ISC",
   "dependencies": {
-    "progress-stream": "^2.0.0"
+    "progress-stream": "^2.0.0",
+    "stream-throttle": "^0.1.3"
   }
 }
