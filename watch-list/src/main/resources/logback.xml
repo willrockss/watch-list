@@ -1,8 +1,8 @@
 <configuration>
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>./logs/watch.list.presenter.log</file>
+        <file>./logs/watch.list.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>./logs/%d{yyyy-MM-dd}-watch.list.presenter.log</fileNamePattern>
+            <fileNamePattern>./logs/%d{yyyy-MM-dd}-watch.list.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
