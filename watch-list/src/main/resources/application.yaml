@@ -3,4 +3,4 @@ server:
 
 integration:
   node-red:
-    url: ${CURR_HOST:http://localhost}:1880
+    url: http://${CURR_HOST:localhost}:1880
