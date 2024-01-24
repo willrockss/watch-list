@@ -29,7 +29,7 @@ public class GetWatchListHandler {
                 .orElse(null);
 
         return new SeriesDto(
-                series.getId(),
+                series.getId().getValue(),
                 series.getTitle(),
                 path
         );

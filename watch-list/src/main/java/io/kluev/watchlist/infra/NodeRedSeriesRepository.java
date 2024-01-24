@@ -2,7 +2,10 @@ package io.kluev.watchlist.infra;
 
 import io.kluev.watchlist.domain.Episode;
 import io.kluev.watchlist.domain.Series;
+import io.kluev.watchlist.domain.SeriesIdGenerator;
 import io.kluev.watchlist.domain.SeriesRepository;
+import io.kluev.watchlist.domain.event.EpisodeWatched;
+import io.kluev.watchlist.domain.event.Event;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,14 +15,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -27,11 +26,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class NodeRedSeriesRepository implements SeriesRepository {
+    private final static ParameterizedTypeReference<List<List<Object>>> RESPONSE_TYPE = new ParameterizedTypeReference<>(){};
 
+    private final SeriesIdGenerator seriesIdGenerator;
     private final RestClient restClient;
     private final NodeRedIntegrationProperties properties;
-
-    private final Map<String, Series> seriesCache = new ConcurrentHashMap<>();
 
     @Override
     public List<Series> getInProgress() {
@@ -41,27 +40,56 @@ public class NodeRedSeriesRepository implements SeriesRepository {
                 .toList();
     }
 
+    @Override
+    public Optional<Series> getInProgressById(String seriesId) {
+        return getInProgress()
+                .stream()
+                .filter(it -> Objects.equals(it.getId().getValue(), seriesId))
+                .findFirst();
+    }
+
+    @Override
+    public void save(Series series) {
+        // TODO Implement properly
+        // Use UnitOfWork or just IdentityMap instead of seriesId casting
+        val req = new HashMap<String, Object>();
+
+        for (Event event : series.getEvents()) {
+            switch (event) {
+                case EpisodeWatched episodeWatched -> req.put("watchedEpisodeNumber", episodeWatched.episode().getNumber());
+                default -> throw new IllegalStateException("Unexpected value: " + event);
+            }
+        }
+
+        if (req.isEmpty()) {
+            log.debug("Nothing to update for {}", series);
+            return;
+        }
+
+        if (series.getId() instanceof NodeRedSeriesId id) {
+            val rawResponse = restClient
+                    .patch()
+                    .uri(properties.getUrl() + "/watch-list/" + id.getSheetRowNumber())
+                    .body(req)
+                    .retrieve()
+                    .body(Map.class);
+
+            log.debug("Update response {}", rawResponse);
+        } else {
+            throw new IllegalStateException("Unexpected id value: " + series.getId());
+        }
+
+    }
+
     private Series createFromRaw(NodeRedWatchListResponse nodeResp) {
-        val series = new Series(nodeResp.name(), generateFullTitle(nodeResp), Path.of(nodeResp.path()));
+        val id = new NodeRedSeriesId(seriesIdGenerator.generateId(nodeResp.name(), nodeResp.seasonNumber()), nodeResp.rowNumber());
+        val series = new Series(id, generateFullTitle(nodeResp), Path.of(nodeResp.path()));
         if (Files.exists(series.getPath()) && Files.isDirectory(series.getPath())) {
-            try {
-                val extMap = Files
-                        .list(series.getPath())
-                        .filter(Files::isRegularFile)
-                        .map(it -> it.getFileName().toString())
-                        .map(FilenameUtils::getExtension)
-                        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+            val contentExt = calculateEpisodeFileExtension(series.getPath());
 
-                val contentExt = extMap
-                        .entrySet()
-                        .stream()
-                        .max(Entry.comparingByValue())
-                        .map(Entry::getKey)
-                        .orElseThrow();
-
+            try (val episodesStream = Files.list(series.getPath())) {
                 AtomicInteger counter = new AtomicInteger(0);
-                Files
-                        .list(series.getPath())
+                episodesStream
                         .filter(it -> contentExt.equals(FilenameUtils.getExtension(it.getFileName().toString())))
                         .sorted()
                         .forEach(it -> series.getEpisodes().add(new Episode(
@@ -77,14 +105,35 @@ public class NodeRedSeriesRepository implements SeriesRepository {
         return series;
     }
 
+    private String calculateEpisodeFileExtension(Path seriesPath) {
+        try (val episodesStream = Files.list(seriesPath)) {
+            val extensionFrequencyMap = episodesStream
+                    .filter(Files::isRegularFile)
+                    .map(it -> it.getFileName().toString())
+                    .map(FilenameUtils::getExtension)
+                    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+            return extensionFrequencyMap
+                    .entrySet()
+                    .stream()
+                    .max(Entry.comparingByValue())
+                    .map(Entry::getKey)
+                    .orElseThrow();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Unable to read directory: " + seriesPath, e);
+        }
+    }
+
     private String generateFullTitle(NodeRedWatchListResponse wlResp) {
         return "%s(%s, %d/%d)".formatted(wlResp.name(), wlResp.seasonNumber(), wlResp.watchedEpisodeNumber(), wlResp.episodesCount());
     }
 
     private List<NodeRedWatchListResponse> getFromNodeRed() {
-        val rawResponse = restClient.get().uri(properties.getUrl() + "/watch-list").retrieve().body(
-                new ParameterizedTypeReference<List<List<Object>>>() {
-                });
+        val rawResponse = restClient
+                .get()
+                .uri(properties.getUrl() + "/watch-list")
+                .retrieve()
+                .body(RESPONSE_TYPE);
 
         if (rawResponse == null) {
             return List.of();
@@ -92,8 +141,10 @@ public class NodeRedSeriesRepository implements SeriesRepository {
 
         val result = new ArrayList<NodeRedWatchListResponse>();
         boolean headerSkipped = false;
+        int rowNumber = 0;
 
         for (List<Object> it : rawResponse) {
+            rowNumber++;
             if (!headerSkipped) {
                 headerSkipped = true;
                 continue;
@@ -117,6 +168,7 @@ public class NodeRedSeriesRepository implements SeriesRepository {
             }
 
             result.add(new NodeRedWatchListResponse(
+                    rowNumber,
                     name,
                     seasonNumber,
                     watchedEpisodeNumber,
@@ -144,6 +196,7 @@ public class NodeRedSeriesRepository implements SeriesRepository {
 }
 
 record NodeRedWatchListResponse(
+        Integer rowNumber,
         String name,
         Integer seasonNumber,
         Integer watchedEpisodeNumber,

@@ -18,6 +18,7 @@ public class WatchListController {
 
     private final GetWatchListHandler getWatchListHandler;
     private final PlayHandler playHandler;
+    private final ProgressHandler progressHandler;
 
 
     @GetMapping("/watch-list")
@@ -34,4 +35,12 @@ public class WatchListController {
         return ResponseEntity.badRequest().body(resp.error());
     }
 
+    @PostMapping("/progress")
+    public ResponseEntity<String> progress(@RequestBody ProgressRequest request) {
+        val resp = progressHandler.handle(request);
+        if (resp.error() == null) {
+            return ResponseEntity.ok(null);
+        }
+        return ResponseEntity.badRequest().body(resp.error());
+    }
 }
