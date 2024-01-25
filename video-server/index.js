@@ -1,5 +1,7 @@
 const http = require('http');
 const fs = require('fs');
+const Buffer = require('buffer').Buffer;
+const url = require('url');
 const progress = require('progress-stream');
 const streamThrottle = require("stream-throttle")
 const port = 8000;
@@ -26,6 +28,14 @@ const requestListener = async function (req, res) {
     console.log('params', params);
 
     var file = params.path;
+
+    var fileName = file.substring(file.lastIndexOf('/') + 1);
+
+
+    const pathName = url.parse(req.url).pathname;
+    const rawSeriesId = pathName.substring(pathName.lastIndexOf('/') + 1);
+    const videoId = decodeURIComponent(rawSeriesId);
+
 
     var range = req.headers.range;
     console.log('receve request', req.method, ', url:', req.url, ', range:', range);
@@ -61,7 +71,7 @@ const requestListener = async function (req, res) {
             var progressStream = progress({
                 transferred: start,
                 length: total,
-                time: 500 /* ms */
+                time: 2000 /* ms */
             });
 
             progressStream.on('progress', function(progress) {
@@ -69,8 +79,34 @@ const requestListener = async function (req, res) {
                 if (prevProgress == 0 && (Math.abs(currProgress - 100) < 0.1)) {
                     console.log('Ignore first 100% progress');
                 } else {
-                    console.log('WatchProgress:',currProgress + '%');
+                    console.log('WatchProgress:', currProgress + '%');
                     prevProgress = currProgress;
+
+                    // TODO use ZeroMQ instead of REST
+                    const progressReqBody = JSON.stringify({
+                        progress: progress.percentage,
+                        seriesId: videoId,
+                        videoId: fileName
+                    });
+
+                    // TODO take URL from environment or parameter `progressCallback`
+                    const progressReq = http.request({
+                        host: 'localhost',
+                        port: 8060,
+                        path: '/progress',
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json;charset=utf-8',
+                            'Content-Length': Buffer.byteLength(progressReqBody, 'utf8')
+                        }
+                    });
+
+                    progressReq.on('error', (e) => {
+                        console.error(`problem with request: ${e.message}`);
+                    });
+
+                    progressReq.write(progressReqBody);
+                    progressReq.end();
                 }
                 
             });
