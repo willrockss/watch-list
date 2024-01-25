@@ -1,10 +1,12 @@
 package io.kluev.watchlist.infra.config.beans;
 
 import io.kluev.watchlist.app.GetWatchListHandler;
+import io.kluev.watchlist.app.LockService;
 import io.kluev.watchlist.app.PlayHandler;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
 import io.kluev.watchlist.domain.SeriesRepository;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
+import io.kluev.watchlist.infra.SimpleLockService;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import lombok.val;
 import org.springframework.context.annotation.Bean;
@@ -47,5 +49,10 @@ public class MainBeansConfig {
     @Bean
     public SeriesIdGenerator seriesIdGenerator() {
         return new SeriesIdGenerator();
+    }
+
+    @Bean
+    public LockService lockService() {
+        return new SimpleLockService();
     }
 }

@@ -20,20 +20,32 @@ public class ProgressHandler {
     private final RestClient restClient;
     private final NodeRedIntegrationProperties properties;
 
+    private final LockService lockService;
     private final SeriesRepository seriesRepository;
 
     public ProgressResponse handle(ProgressRequest request) {
-        log.debug("Going to update watch progress by {}", request);
+        log.debug("Going to handle progress update {}", request);
 
+        // TODO extract to specification
         if (request.progress() > 99.0) {
-            var error = updateWatchedEpisode(request);
-            if (error != null) {
-                return new ProgressResponse(error);
+            val lock = lockService.acquireLock(request.seriesId());
+            if (lock == null) {
+                log.debug("Unable to acquire to acquire lock to update progress for {}", request.seriesId());
+                return new ProgressResponse("Episode update already in progress");
             }
+            try {
+                var error = updateWatchedEpisode(request);
+                if (error != null) {
+                    return new ProgressResponse(error);
+                }
 
-            error = sendNotification(request);
-            if (error != null) {
-                return new ProgressResponse(error);
+                error = sendNotification(request);
+                if (error != null) {
+                    return new ProgressResponse(error);
+                }
+                log.info("Episode {} should be marked as watched", request.videoId());
+            } finally {
+                lock.unlock();
             }
         }
         return new ProgressResponse();
@@ -43,34 +55,27 @@ public class ProgressHandler {
         val series = seriesRepository.getInProgressById(request.seriesId()).orElseThrow();
         val isSuccess = series.markEpisodeWatched(request.videoId());
         if (!isSuccess) {
-            return "Cannot find episode to mark as watched";
+            return "Cannot find episode to mark as watched or it's already marked as watched";
         }
-
         seriesRepository.save(series);
-
-        val text = URLEncoder.encode(request.videoId() + " should be marked as watched", StandardCharsets.UTF_8);
-        val resp = restClient
-                .post()
-                .uri(properties.getUrl() + "/show-notification?text=" + text)
-                .body(request)
-                .retrieve()
-                .toEntity(String.class);
-        if (resp.getStatusCode().isError()) {
-            return resp.getBody();
-        }
         return null;
     }
 
     private String sendNotification(ProgressRequest request) {
-        val notificationTextParam = URLEncoder.encode(request.videoId() + " should be marked as watched", StandardCharsets.UTF_8);
-        val resp = restClient
-                .post()
-                .uri(properties.getUrl() + "/show-notification?text=" + notificationTextParam)
-                .retrieve()
-                .toEntity(String.class);
-        if (resp.getStatusCode().isError()) {
-            return resp.getBody();
+        try {
+            val notificationTextParam = URLEncoder.encode(request.videoId() + " should be marked as watched", StandardCharsets.UTF_8);
+            val resp = restClient
+                    .post()
+                    .uri(properties.getUrl() + "/show-notification?text=" + notificationTextParam)
+                    .retrieve()
+                    .toEntity(String.class);
+            if (resp.getStatusCode().isError()) {
+                return resp.getBody();
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("Unable to send notification", e);
+            return "Unable to send notification due to " + e.getMessage();
         }
-        return null;
     }
 }

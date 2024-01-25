@@ -2,6 +2,7 @@ package io.kluev.watchlist.infra.endpoint;
 
 import io.kluev.watchlist.app.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import java.util.List;
 
 
 @RestController
+@Slf4j
 @RequiredArgsConstructor
 public class WatchListController {
 
@@ -37,6 +39,7 @@ public class WatchListController {
 
     @PostMapping("/progress")
     public ResponseEntity<String> progress(@RequestBody ProgressRequest request) {
+        log.trace("Received progress request {}", request);
         val resp = progressHandler.handle(request);
         if (resp.error() == null) {
             return ResponseEntity.ok(null);

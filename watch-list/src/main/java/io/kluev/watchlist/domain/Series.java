@@ -23,9 +23,10 @@ public class Series {
     private Path path;
     private final List<Episode> episodes = new ArrayList<>();
     private final List<Event> events = new ArrayList<>();
+    // TODO Add last watched episode id
 
     public Optional<Episode> getNextToWatchEpisode() {
-        return episodes.stream().sorted().filter(it -> !it.getIsWatched()).findFirst();
+        return episodes.stream().sorted().filter(it -> !it.isWatched()).findFirst();
     }
 
     public boolean markEpisodeWatched(String episodeFilename) {
@@ -36,6 +37,11 @@ public class Series {
                 .orElse(null);
         if (episode == null) {
             log.warn("Unable to find episode {} in {} to mark it as watched. Do nothing", episodeFilename, this);
+            return false;
+        }
+        // TODO check that current watched episode is not less that last watched episode
+        if (episode.isWatched()) {
+            log.warn("Episode {} in {} is already marked as watched. Do nothing", episodeFilename, this);
             return false;
         }
         events.add(new EpisodeWatched(episode));
