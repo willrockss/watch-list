@@ -37,9 +37,9 @@
     </div>
 
     <script>
-      function play(path){
+      function play(path, videoId){
         var xhr = new XMLHttpRequest();
-        var body = '{"videoPath": "' + encodeURIComponent(path) + '"}';
+        var body = '{"videoId": "' + encodeURIComponent(videoId) + '", "videoPath": "' + encodeURIComponent(path) + '"}';
         xhr.open("POST", '/play', true);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.send(body);
@@ -48,7 +48,7 @@
 
     <div class="container">
       {{#watchlist}}
-      <div class="row justify-content-md-center" onclick="play('{{toWatchEpisodePath}}')">
+      <div class="row justify-content-md-center" onclick="play('{{toWatchEpisodePath}}', '{{id}}')">
         <div class="col-md-1"></div>
         <div class="col-md-10">
           <div class="p-2">
