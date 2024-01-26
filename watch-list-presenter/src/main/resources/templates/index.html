@@ -12,21 +12,24 @@
     <link href="css/dark-mode.css" rel="stylesheet">
     <link href="css/custom.css" rel="stylesheet">
 
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
-    <![endif]-->
-
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="js/jquery-1-12-4.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="bootstrap-3.3.7-dist/js/bootstrap.js"></script>
     
   </head>
 
   <body data-theme="dark">
+
+    <!-- Modal window with loading spinner -->
+    <div class="modal fade bd-example-modal-lg" data-backdrop="static" data-keyboard="false" tabindex="-1">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content" style="width: 48px">
+          <img src="pendulum.gif">
+        </div>
+      </div>
+    </div>
+
     <div class="container">
       <div class="row justify-content-md-center">
         <div class="col-md-1"></div>
@@ -38,7 +41,16 @@
 
     <script>
       function play(path, videoId){
+        $('.modal').modal('show');
+
         var xhr = new XMLHttpRequest();
+
+        xhr.addEventListener("readystatechange", function() {
+          if (this.readyState === 4) {
+            $('.modal').modal('hide');
+          }
+        });
+
         var body = '{"videoId": "' + encodeURIComponent(videoId) + '", "videoPath": "' + encodeURIComponent(path) + '"}';
         xhr.open("POST", '/play', true);
         xhr.setRequestHeader('Content-Type', 'application/json');
