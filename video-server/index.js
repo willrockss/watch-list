@@ -81,32 +81,11 @@ const requestListener = async function (req, res) {
                 } else {
                     console.log('WatchProgress:', currProgress + '%');
                     prevProgress = currProgress;
-
-                    // TODO use ZeroMQ instead of REST
-                    const progressReqBody = JSON.stringify({
+                    sendProgress({
                         progress: progress.percentage,
                         seriesId: videoId,
                         videoId: fileName
                     });
-
-                    // TODO take URL from environment or parameter `progressCallback`
-                    const progressReq = http.request({
-                        host: 'localhost',
-                        port: 8060,
-                        path: '/progress',
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json;charset=utf-8',
-                            'Content-Length': Buffer.byteLength(progressReqBody, 'utf8')
-                        }
-                    });
-
-                    progressReq.on('error', (e) => {
-                        console.error(`problem with request: ${e.message}`);
-                    });
-
-                    progressReq.write(progressReqBody);
-                    progressReq.end();
                 }
                 
             });
@@ -129,6 +108,30 @@ const requestListener = async function (req, res) {
         }
     });
 };
+
+function sendProgress(progressRequest) {
+    // TODO use ZeroMQ instead of REST
+    const progressReqBody = JSON.stringify(progressRequest);
+
+    // TODO take URL from environment or parameter `progressCallback`
+    const progressReq = http.request({
+        host: 'localhost',
+        port: 8060,
+        path: '/progress',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json;charset=utf-8',
+            'Content-Length': Buffer.byteLength(progressReqBody, 'utf8')
+        }
+    });
+
+    progressReq.on('error', (e) => {
+        console.error(`problem with request: ${e.message}`);
+    });
+
+    progressReq.write(progressReqBody);
+    progressReq.end();
+}
 
 const server = http.createServer(requestListener);
 server.listen(port, () => {
