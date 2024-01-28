@@ -95,8 +95,7 @@ public class NodeRedSeriesRepository implements SeriesRepository {
                         .forEach(it -> series.getEpisodes().add(new Episode(
                                 counter.incrementAndGet(),
                                 it.getFileName().toString(),
-                                counter.get() <= nodeResp.watchedEpisodeNumber(),
-                                0
+                                counter.get() <= nodeResp.watchedEpisodeNumber()
                         )));
             } catch (Exception e) {
                 log.error("Unable to read directory: {}", series.getPath(), e);
