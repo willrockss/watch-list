@@ -92,7 +92,7 @@ const requestListener = async function (req, res) {
 
             // Chuncksize matters how much Video Player (or TV) bufferize. Delta betwee loaded and watched time will be minimal.
             // TODO adopt chunksize based on movie metadata
-            var throttle = new streamThrottle.Throttle({rate: 1024*1024  /*bytes per second*/ , chunksize: 64 * 1024})
+            var throttle = new streamThrottle.Throttle({rate: 2*1024*1024  /*bytes per second*/ , chunksize: 128 * 1024})
 
             var stream = fs.createReadStream(file, {
                 start : start,
