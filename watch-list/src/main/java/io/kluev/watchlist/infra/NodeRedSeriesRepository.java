@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -31,6 +32,9 @@ public class NodeRedSeriesRepository implements SeriesRepository {
     private final SeriesIdGenerator seriesIdGenerator;
     private final RestClient restClient;
     private final NodeRedIntegrationProperties properties;
+
+    // Since it's single tenant app don't bother about memory leak here
+    private final ConcurrentHashMap<String, List<Episode>> episodesCacheByPath = new ConcurrentHashMap<>();
 
     @Override
     public List<Series> getInProgress() {
@@ -83,25 +87,33 @@ public class NodeRedSeriesRepository implements SeriesRepository {
 
     private Series createFromRaw(NodeRedWatchListResponse nodeResp) {
         val id = new NodeRedSeriesId(seriesIdGenerator.generateId(nodeResp.name(), nodeResp.seasonNumber()), nodeResp.rowNumber());
-        val series = new Series(id, generateFullTitle(nodeResp), Path.of(nodeResp.path()));
-        if (Files.exists(series.getPath()) && Files.isDirectory(series.getPath())) {
-            val contentExt = calculateEpisodeFileExtension(series.getPath());
+        val series = new Series(id, generateFullTitle(nodeResp), Path.of(nodeResp.path()), nodeResp.watchedEpisodeNumber());
 
-            try (val episodesStream = Files.list(series.getPath())) {
+        val episodesFromCache = episodesCacheByPath.computeIfAbsent(series.getPath().toString(), it -> loadEpisodes(series.getPath()));
+        series.getEpisodes().addAll(episodesFromCache);
+        return series;
+    }
+
+    private List<Episode> loadEpisodes(Path path) {
+        log.debug("Going to load episodes from {}", path);
+        if (Files.exists(path) && Files.isDirectory(path)) {
+            val contentExt = calculateEpisodeFileExtension(path);
+
+            try (val episodesStream = Files.list(path)) {
                 AtomicInteger counter = new AtomicInteger(0);
-                episodesStream
+                return episodesStream
                         .filter(it -> contentExt.equals(FilenameUtils.getExtension(it.getFileName().toString())))
                         .sorted()
-                        .forEach(it -> series.getEpisodes().add(new Episode(
+                        .map(it -> new Episode(
                                 counter.incrementAndGet(),
-                                it.getFileName().toString(),
-                                counter.get() <= nodeResp.watchedEpisodeNumber()
-                        )));
+                                it.getFileName().toString()
+                        ))
+                        .toList();
             } catch (Exception e) {
-                log.error("Unable to read directory: {}", series.getPath(), e);
+                log.error("Unable to read directory: {}", path, e);
             }
         }
-        return series;
+        return List.of();
     }
 
     private String calculateEpisodeFileExtension(Path seriesPath) {

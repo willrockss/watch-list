@@ -1,9 +1,11 @@
 package io.kluev.watchlist.infra;
 
 import io.kluev.watchlist.domain.SeriesId;
+import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+@Data
 @Getter
 @RequiredArgsConstructor
 public class NodeRedSeriesId implements SeriesId {

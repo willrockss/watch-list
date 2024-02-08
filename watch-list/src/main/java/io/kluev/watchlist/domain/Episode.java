@@ -1,9 +1,11 @@
 package io.kluev.watchlist.domain;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 import java.util.Comparator;
-import java.util.Objects;
 
 @Getter
 @NoArgsConstructor
@@ -14,12 +16,6 @@ public class Episode implements Comparable<Episode> {
 
     private Integer number;
     private String filename;
-    @Getter(AccessLevel.NONE)
-    private Boolean isWatched;
-
-    public Boolean isWatched() {
-        return Objects.requireNonNullElse(isWatched, Boolean.FALSE);
-    }
 
     @Override
     public int compareTo(@NonNull Episode episode) {
