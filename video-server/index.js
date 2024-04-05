@@ -1,5 +1,6 @@
 const http = require('http');
 const fs = require('fs');
+const fsProm = require('fs/promises');
 const Buffer = require('buffer').Buffer;
 const url = require('url');
 const progress = require('progress-stream');
@@ -46,66 +47,70 @@ const requestListener = async function (req, res) {
     var start = parseInt(positions[0], 10);
 
     let prevProgress = 0;
-    fs.stat(file, function(err, stats) {
-        if (err) {
-            throw err;
+    let stats;
+    try {
+        stats = await fsProm.stat(file);
+    } catch(err) {
+        console.error('Unable to read file: ', file, err);
+        res.writeHead(404);
+        res.end();
+        return;
+    }
+
+    var total = stats.size;
+    var end = positions[1] ? parseInt(positions[1], 10) : total - 1;
+    var chunksize = (end - start) + 1;
+
+    const respHeaders = {
+        "Content-Range" : "bytes " + start + "-" + end + "/" + total,
+        "Accept-Ranges" : "bytes",
+        "Content-Length" : chunksize,
+        "Content-Type" : 'video/x-matroska'
+    };
+
+    const etagValue = req.headers['If-Match'];
+    if (etagValue) {
+        respHeaders['etag'] = 'W/"' + etagValue + '"';
+    }
+
+    res.writeHead(206, respHeaders);
+
+    var progressStream = progress({
+        transferred: start,
+        length: total,
+        time: 2000 /* ms */
+    });
+
+    progressStream.on('progress', function(progress) {
+        const currProgress =  progress.percentage.toFixed(2);
+        if (prevProgress == 0 && (Math.abs(currProgress - 100) < 0.1)) {
+            console.log('Ignore first 100% progress');
         } else {
-            var total = stats.size;
-            var end = positions[1] ? parseInt(positions[1], 10) : total - 1;
-            var chunksize = (end - start) + 1;
-
-            const respHeaders = {
-                "Content-Range" : "bytes " + start + "-" + end + "/" + total,
-                "Accept-Ranges" : "bytes",
-                "Content-Length" : chunksize,
-                "Content-Type" : 'video/x-matroska'
-            };
-
-            const etagValue = req.headers['If-Match'];
-            if (etagValue) {
-                respHeaders['etag'] = 'W/"' + etagValue + '"';
+            console.log('WatchProgress:', currProgress + '%');
+            prevProgress = currProgress;
+            sendProgress({
+                progress: progress.percentage,
+                seriesId: videoId,
+                    videoId: fileName
+                });
             }
+            
+    });
 
-            res.writeHead(206, respHeaders);
+    // Chuncksize matters how much Video Player (or TV) bufferize. Delta betwee loaded and watched time will be minimal.
+    // TODO adopt chunksize based on movie metadata
+    var throttle = new streamThrottle.Throttle({rate: 2*1024*1024  /*bytes per second*/ , chunksize: 128 * 1024})
 
-            var progressStream = progress({
-                transferred: start,
-                length: total,
-                time: 2000 /* ms */
-            });
-
-            progressStream.on('progress', function(progress) {
-                const currProgress =  progress.percentage.toFixed(2);
-                if (prevProgress == 0 && (Math.abs(currProgress - 100) < 0.1)) {
-                    console.log('Ignore first 100% progress');
-                } else {
-                    console.log('WatchProgress:', currProgress + '%');
-                    prevProgress = currProgress;
-                    sendProgress({
-                        progress: progress.percentage,
-                        seriesId: videoId,
-                        videoId: fileName
-                    });
-                }
-                
-            });
-
-            // Chuncksize matters how much Video Player (or TV) bufferize. Delta betwee loaded and watched time will be minimal.
-            // TODO adopt chunksize based on movie metadata
-            var throttle = new streamThrottle.Throttle({rate: 2*1024*1024  /*bytes per second*/ , chunksize: 128 * 1024})
-
-            var stream = fs.createReadStream(file, {
-                start : start,
-                end : end
-            }).on("open", function() {
-                stream
-                    .pipe(throttle)
-                    .pipe(progressStream)
-                    .pipe(res);
-            }).on("error", function(err) {
-                res.end(err);
-            });
-        }
+    var stream = fs.createReadStream(file, {
+        start : start,
+        end : end
+    }).on("open", function() {
+        stream
+            .pipe(throttle)
+            .pipe(progressStream)
+            .pipe(res);
+    }).on("error", function(err) {
+        res.end(err);
     });
 };
 
