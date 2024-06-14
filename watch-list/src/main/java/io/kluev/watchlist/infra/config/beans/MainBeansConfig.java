@@ -1,19 +1,30 @@
 package io.kluev.watchlist.infra.config.beans;
 
+import com.google.api.services.sheets.v4.Sheets;
 import io.kluev.watchlist.app.GetWatchListHandler;
 import io.kluev.watchlist.app.LockService;
 import io.kluev.watchlist.app.PlayHandler;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
 import io.kluev.watchlist.domain.SeriesRepository;
+import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
+import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
+import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
+import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
+import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
+import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
+
+import java.util.Set;
 
 @Configuration
 public class MainBeansConfig {
@@ -54,5 +65,34 @@ public class MainBeansConfig {
     @Bean
     public LockService lockService() {
         return new SimpleLockService();
+    }
+
+    @Bean
+    public GoogleSheetsWatchListRepository googleSheetsWatchListRepository(
+            Sheets sheetsService,
+            GoogleSheetProperties properties
+    ) {
+        return new GoogleSheetsWatchListRepository(sheetsService, properties);
+    }
+
+    @Bean
+    public ExternalMovieDatabase kinopoiskExternalMovieDatabase(@Value("${integration.kinopoisk.api.key}") String apiKey) {
+        return new KinopoiskClient(apiKey);
+    }
+
+    @Bean
+    public TelegramClient okHttpTelegramClient(@Value("${integration.telegram-bot.api.key}") String apiKey) {
+        return new OkHttpTelegramClient(apiKey);
+    }
+
+    @Bean
+    public WatchListTGBot watchListTGBot(
+            @Value("${integration.telegram-bot.api.key}") String apiKey,
+            @Value("${integration.telegram-bot.allowed-users}") Set<String> allowedUsers,
+            TelegramClient telegramClient,
+            ExternalMovieDatabase externalMovieDatabase,
+            GoogleSheetsWatchListRepository googleSheetsWatchListRepository
+    ) {
+        return new WatchListTGBot(apiKey, allowedUsers, telegramClient, externalMovieDatabase, googleSheetsWatchListRepository);
     }
 }

@@ -24,6 +24,10 @@ dependencies {
     implementation('org.apache.commons:commons-lang3:3.14.0')
     implementation('commons-io:commons-io:2.15.1')
     implementation('org.apache.httpcomponents.client5:httpclient5:5.2.3')
+    implementation('com.google.apis:google-api-services-sheets:v4-rev612-1.25.0')
+    implementation('org.apache.commons:commons-collections4:4.5.0-M1')
+    implementation('org.telegram:telegrambots-springboot-longpolling-starter:7.3.0')
+    implementation('org.telegram:telegrambots-client:7.3.0')
 
     compileOnly('org.projectlombok:lombok')
     annotationProcessor('org.projectlombok:lombok')

@@ -4,3 +4,23 @@ server:
 integration:
   node-red:
     url: http://${CURR_HOST:localhost}:1880
+
+  google:
+    credentialsFile: <path to your credentials JSON file>
+    sheet:
+      spreadsheetId: <your spreadsheet ID>
+      moviesToWatch:
+        headerRange: Посмотреть!R1C1:R10C12
+        columnsMapping:
+          fullName: Название фильма(year, EngName)
+          preComment: ПреКоммент
+          kinopoiskId: KinopoiskId
+          readyToWatch: ReadyToWatch
+          File: File
+
+  kinopoisk:
+    apiKey: <your Kinopoisk API Key>
+
+  telegramBot:
+    apiKey: <your bot API key>
+    allowedUsers: <comma separated list of usernames of allowed users>
