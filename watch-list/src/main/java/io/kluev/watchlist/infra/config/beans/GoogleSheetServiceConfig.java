@@ -16,7 +16,7 @@ import java.util.List;
 @Configuration
 public class GoogleSheetServiceConfig {
 
-    @Value("${integration.google.credentialsFile}")
+    @Value("${integration.google.credentials-file}")
     private String googleCredentialsFile;
 
     public static final String SHEET_APP_NAME = "WatchList";

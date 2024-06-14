@@ -90,11 +90,19 @@ public class KinopoiskClient implements ExternalMovieDatabase {
 
     private ExternalMovieDto mapDto(Film film) {
         return new ExternalMovieDto(
-                Integer.valueOf(film.getYear()),
+                parseIntegerOrNull(film.getYear()),
                 film.getNameRu(),
                 film.getNameEn(),
                 String.valueOf(film.getFilmId()),
                 film.getPosterUrlPreview()
         );
+    }
+
+    private Integer parseIntegerOrNull(String raw) {
+        try {
+            return Integer.valueOf(raw);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
