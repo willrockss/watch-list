@@ -2,6 +2,8 @@ package io.kluev.watchlist.infra.googlesheet;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.*;
+import io.kluev.watchlist.domain.MovieItem;
+import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -11,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class GoogleSheetsWatchListRepository {
+public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     private final Sheets service;
     private final GoogleSheetProperties properties;
@@ -31,13 +33,15 @@ public class GoogleSheetsWatchListRepository {
     }
 
     @SneakyThrows
-    public void addMovieToWatch(String fullTitle, String preComment, String kinopoiskId) {
+    @Override
+    public void enlist(MovieItem movieItem) {
+        val preComment = "";
         service.spreadsheets().values().append(
                         properties.getSpreadsheetId(),
                         insertRange,
                         new ValueRange()
                                 .setValues(List.of(List.of(
-                                        fullTitle, "", preComment, "", "", "", "", "", "", kinopoiskId
+                                        movieItem.getFullTitle(), "", preComment, "", "", "", "", "", "", movieItem.getExternalId()
                                 )))
                                 .setMajorDimension("ROWS")
                 )

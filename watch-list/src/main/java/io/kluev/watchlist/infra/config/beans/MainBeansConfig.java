@@ -1,9 +1,11 @@
 package io.kluev.watchlist.infra.config.beans;
 
 import com.google.api.services.sheets.v4.Sheets;
+import io.kluev.watchlist.app.EnlistMovieHandler;
 import io.kluev.watchlist.app.GetWatchListHandler;
 import io.kluev.watchlist.app.LockService;
 import io.kluev.watchlist.app.PlayHandler;
+import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
 import io.kluev.watchlist.domain.SeriesRepository;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
@@ -14,6 +16,7 @@ import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
 import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
+
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +29,7 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.Set;
 
+@SuppressWarnings("unused")
 @Configuration
 public class MainBeansConfig {
 
@@ -68,7 +72,7 @@ public class MainBeansConfig {
     }
 
     @Bean
-    public GoogleSheetsWatchListRepository googleSheetsWatchListRepository(
+    public MovieRepository googleSheetsWatchListRepository(
             Sheets sheetsService,
             GoogleSheetProperties properties
     ) {
@@ -91,8 +95,13 @@ public class MainBeansConfig {
             @Value("${integration.telegram-bot.allowed-users}") Set<String> allowedUsers,
             TelegramClient telegramClient,
             ExternalMovieDatabase externalMovieDatabase,
-            GoogleSheetsWatchListRepository googleSheetsWatchListRepository
+            EnlistMovieHandler enlistMovieHandler
     ) {
-        return new WatchListTGBot(apiKey, allowedUsers, telegramClient, externalMovieDatabase, googleSheetsWatchListRepository);
+        return new WatchListTGBot(apiKey, allowedUsers, telegramClient, externalMovieDatabase, enlistMovieHandler);
+    }
+
+    @Bean
+    public EnlistMovieHandler enlistMovieHandler(MovieRepository movieRepository) {
+        return new EnlistMovieHandler(movieRepository);
     }
 }

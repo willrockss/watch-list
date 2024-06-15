@@ -1,7 +1,8 @@
 package io.kluev.watchlist.infra.telegrambot;
 
+import io.kluev.watchlist.app.EnlistMovieHandler;
+import io.kluev.watchlist.app.EnlistMovieRequest;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
-import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
@@ -24,7 +25,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
     private final Set<String> allowedUsers;
     private final TelegramClient telegramClient;
     private final ExternalMovieDatabase externalMovieDatabase;
-    private final GoogleSheetsWatchListRepository googleSheetsExample;
+    private final EnlistMovieHandler enlistMovieHandler;
 
     private static final LinkPreviewOptions SMALL_PREVIEW =
             LinkPreviewOptions
@@ -57,9 +58,17 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
             var extId = callData.replace("add_movie_", "");
             var movieDto = externalMovieDatabase.getByExternalId(extId).orElse(null);
             if (movieDto != null) {
-                var fullTitle = "%s(%d, %s)".formatted(movieDto.name(), movieDto.year(), movieDto.enName());
-                googleSheetsExample.addMovieToWatch(fullTitle, "", extId);
-                msgBuilder.text("Фильм " + fullTitle + " добавлен в список");
+                var enlistRequest = EnlistMovieRequest
+                        .builder()
+                        .title(movieDto.name())
+                        .foreignTitle(movieDto.enName())
+                        .year(movieDto.year())
+                        .externalId(extId)
+                        .build();
+
+                var response = enlistMovieHandler.handle(enlistRequest);
+
+                msgBuilder.text("Фильм " + response.fullTitle() + " добавлен в список");
             } else {
                 msgBuilder.text("Invalid id " + extId);
             }
@@ -90,8 +99,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
             telegramClient.execute(new SendMessage(chatId, "По запросу '%s' ничего не найдено".formatted(msg.getText())));
         } else {
             foundMovies.stream().findFirst().ifPresent(it -> {
-                var fullName = "%s(%d, %s)".formatted(it.name(), it.year(), it.enName());
-                SendMessage img1Msg = new SendMessage(chatId, "%s\n%s".formatted(fullName, it.previewImageUrl()));
+                SendMessage img1Msg = new SendMessage(chatId, "%s\n%s".formatted(it.getFullName(), it.previewImageUrl()));
                 img1Msg.setLinkPreviewOptions(SMALL_PREVIEW);
                 img1Msg.setReplyMarkup(
                         InlineKeyboardMarkup

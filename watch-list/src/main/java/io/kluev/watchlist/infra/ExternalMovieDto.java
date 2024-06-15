@@ -7,4 +7,11 @@ public record ExternalMovieDto(
         String externalId,
         String previewImageUrl
 ) {
+
+    public String getFullName() {
+        if (enName != null) {
+            return "%s (%d, %s)".formatted(name, year, enName);
+        }
+        return "%s (%d)".formatted(name, year);
+    }
 }
