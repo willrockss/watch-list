@@ -19,6 +19,7 @@ import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
 
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -89,6 +90,7 @@ public class MainBeansConfig {
         return new OkHttpTelegramClient(apiKey);
     }
 
+    @ConditionalOnProperty(value = "integration.telegram-bot.enabled", havingValue = "true", matchIfMissing = true)
     @Bean
     public WatchListTGBot watchListTGBot(
             @Value("${integration.telegram-bot.api.key}") String apiKey,

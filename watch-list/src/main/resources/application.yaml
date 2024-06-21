@@ -22,5 +22,6 @@ integration:
     apiKey: <your Kinopoisk API Key>
 
   telegramBot:
+    enabled: true
     apiKey: <your bot API key>
     allowedUsers: <comma separated list of usernames of allowed users>
