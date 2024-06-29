@@ -12,8 +12,10 @@ import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
+import io.kluev.watchlist.infra.config.props.JackettProperties;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
+import io.kluev.watchlist.infra.jackett.JackettRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
 import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
 
@@ -106,4 +108,10 @@ public class MainBeansConfig {
     public EnlistMovieHandler enlistMovieHandler(MovieRepository movieRepository) {
         return new EnlistMovieHandler(movieRepository);
     }
+
+    @Bean
+    public JackettRestGateway jackettRestGateway(JackettProperties properties, RestClient restClient) {
+        return new JackettRestGateway(properties, restClient);
+    }
+
 }

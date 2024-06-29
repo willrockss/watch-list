@@ -25,3 +25,7 @@ integration:
     enabled: true
     apiKey: <your bot API key>
     allowedUsers: <comma separated list of usernames of allowed users>
+
+  jackett:
+    apiKey: <your Jackett API key>
+    baseUrl: http://localhost:9117

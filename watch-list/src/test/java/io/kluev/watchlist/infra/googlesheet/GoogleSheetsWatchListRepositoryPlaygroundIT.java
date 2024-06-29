@@ -19,7 +19,8 @@ import org.springframework.context.annotation.Import;
 @SuppressWarnings("unused")
 @SpringBootTest(properties = {
         "integration.google.credentialsFile=/home/alex/gkeys/test_key.json",
-        "integration.google.sheet.spreadsheetId=10buF2nA3Zo6sLwmoywiCs2p8MsEJc7hbjbi2Vlhfguk"
+        "integration.google.sheet.spreadsheetId=10buF2nA3Zo6sLwmoywiCs2p8MsEJc7hbjbi2Vlhfguk",
+        "integration.telegramBot.enabled=false"
 })
 @Import(GoogleSheetProperties.class)
 class GoogleSheetsWatchListRepositoryPlaygroundIT {
