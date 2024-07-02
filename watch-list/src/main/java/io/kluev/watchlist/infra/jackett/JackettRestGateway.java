@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.app.DownloadedContent;
+import io.kluev.watchlist.app.JackettGateway;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
 import io.kluev.watchlist.infra.jackett.dto.Item;
 import io.kluev.watchlist.infra.jackett.dto.Rss;
@@ -25,14 +26,15 @@ import java.util.function.Function;
 import static java.util.Objects.requireNonNull;
 
 @RequiredArgsConstructor
-public class JackettRestGateway {
+public class JackettRestGateway implements JackettGateway {
+
+    public static final int DEFAULT_PAGE_SIZE = 40;
+    private final static ObjectMapper MAPPER = createXmlMapper();
 
     private final JackettProperties properties;
     private final RestClient restClient;
 
-    private final static ObjectMapper MAPPER = createXmlMapper();
-
-
+    @Override
     public List<DownloadableContentInfo> query(String query) {
         val rawResp = restClient
                 .get()
@@ -47,6 +49,7 @@ public class JackettRestGateway {
         }
     }
 
+    @Override
     public DownloadedContent download(DownloadableContentInfo contentInfo) {
         val fileResp = restClient.get().uri(contentInfo.link()).retrieve().body(Resource.class);
         if (fileResp == null) {
@@ -54,6 +57,7 @@ public class JackettRestGateway {
         }
         try {
             val decodedFilename = URLDecoder.decode(requireNonNull(fileResp.getFilename()), StandardCharsets.UTF_8);
+            // TODO allow [] and (). Move to another class and add test
             val escapedFilename = decodedFilename.replaceAll("[^\\w.-]", "_");
             return new DownloadedContent(escapedFilename, fileResp.getContentAsByteArray());
         } catch (IOException ioException) {
@@ -92,6 +96,8 @@ public class JackettRestGateway {
                         .queryParam("apikey", apiKey)
                         .queryParam("t", "search")
                         .queryParam("q", query)
+                        .queryParam("limit", DEFAULT_PAGE_SIZE)
+                        .queryParam("sort", "size")
                         .build();
 
     }
