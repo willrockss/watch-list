@@ -37,7 +37,8 @@ public class KinopoiskClient implements ExternalMovieDatabase {
     }
 
     public List<Film> findRaw(String query) throws Exception {
-        val encodedQuery = URLEncoder.encode(query, Charset.defaultCharset());
+        // For some reason in Uppers case results are more correct. Try search "изгой" vs "ИЗГОЙ"
+        val encodedQuery = URLEncoder.encode(query.toUpperCase(), Charset.defaultCharset());
         val uri = new URI("https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword?page=1&keyword=" + encodedQuery);
         val req = HttpRequest
                 .newBuilder(uri)
