@@ -17,6 +17,7 @@ import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
+import io.kluev.watchlist.infra.telegrambot.TelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
 
 import lombok.val;
@@ -25,6 +26,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
@@ -88,6 +90,11 @@ public class MainBeansConfig {
     }
 
     @Bean
+    public TelegramSessionStore telegramSessionStore(JdbcClient jdbcClient) {
+        return new TelegramSessionStore(jdbcClient);
+    }
+
+    @Bean
     public TelegramClient okHttpTelegramClient(@Value("${integration.telegram-bot.api.key}") String apiKey) {
         return new OkHttpTelegramClient(apiKey);
     }
@@ -99,9 +106,10 @@ public class MainBeansConfig {
             @Value("${integration.telegram-bot.allowed-users}") Set<String> allowedUsers,
             TelegramClient telegramClient,
             ExternalMovieDatabase externalMovieDatabase,
-            EnlistMovieHandler enlistMovieHandler
+            EnlistMovieHandler enlistMovieHandler,
+            TelegramSessionStore telegramSessionStore
     ) {
-        return new WatchListTGBot(apiKey, allowedUsers, telegramClient, externalMovieDatabase, enlistMovieHandler);
+        return new WatchListTGBot(apiKey, allowedUsers, telegramClient, externalMovieDatabase, enlistMovieHandler, telegramSessionStore);
     }
 
     @Bean

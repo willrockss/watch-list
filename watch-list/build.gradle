@@ -21,6 +21,8 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-web')
     implementation('org.springframework.boot:spring-boot-starter-validation')
     implementation('org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0')
+    implementation('org.springframework.boot:spring-boot-starter-jdbc')
+
     implementation('org.apache.commons:commons-lang3:3.14.0')
     implementation('commons-io:commons-io:2.15.1')
     implementation('org.apache.httpcomponents.client5:httpclient5:5.2.3')
@@ -30,6 +32,8 @@ dependencies {
     implementation('org.telegram:telegrambots-client:7.3.0')
     implementation('jakarta.validation:jakarta.validation-api:3.1.0')
     implementation('com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.3')
+    implementation('org.postgresql:postgresql')
+
 
     compileOnly('org.projectlombok:lombok')
     annotationProcessor('org.projectlombok:lombok')
