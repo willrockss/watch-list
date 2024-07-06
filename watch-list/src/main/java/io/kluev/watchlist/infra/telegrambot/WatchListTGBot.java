@@ -7,6 +7,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
@@ -42,7 +43,12 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
     @SneakyThrows
     @Override
     public void consume(Update update) {
+        if (update.hasCallbackQuery()) {
+            processCallback(update);
+        }
+
         if (!update.hasMessage()) {
+            log.debug("Message {} not a text message. Skip", update);
             return;
         }
 
@@ -50,20 +56,23 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
             return;
         }
 
+        if (!update.getMessage().hasText()) {
+            log.warn("Message {} text is absent. Do nothing", update);
+        }
+
         telegramSessionStore.createOrUpdateSession(update);
 
-        if (update.hasCallbackQuery()) {
-            processCallback(update);
-        } else if (update.getMessage().hasText()) {
-            processMessage(update);
-        } else {
-            log.warn("Message {} neither callback response nor text message. Do nothing", update);
-        }
+        processMessage(update);
     }
 
     private boolean isSenderAllowed(@NonNull Message message) {
         if (message.getFrom() != null && StringUtils.isNotBlank(message.getFrom().getUserName())) {
-            return allowedUsers.contains(message.getFrom().getUserName());
+            val username = message.getFrom().getUserName();
+            val isAllowed = allowedUsers.contains(username);
+            if (!isAllowed) {
+                log.debug("User {} is not allowed. Ignore", username);
+            }
+            return isAllowed;
         }
         return false;
     }

@@ -34,6 +34,7 @@ integration:
     enabled: true
     apiKey: <your bot API key>
     allowedUsers: <comma separated list of usernames of allowed users>
+    sessionStoreType: PG
 
   jackett:
     apiKey: <your Jackett API key>

@@ -17,6 +17,8 @@ import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
+import io.kluev.watchlist.infra.telegrambot.PgTelegramSessionStore;
+import io.kluev.watchlist.infra.telegrambot.StubTelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.TelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
 import lombok.val;
@@ -93,9 +95,17 @@ public class MainBeansConfig {
         return new KinopoiskClient(apiKey);
     }
 
+
+    @ConditionalOnProperty(name = "integration.telegram-bot.session-store-type", havingValue = "PG", matchIfMissing = true)
     @Bean
-    public TelegramSessionStore telegramSessionStore(JdbcClient jdbcClient) {
-        return new TelegramSessionStore(jdbcClient);
+    public TelegramSessionStore pgTelegramSessionStore(JdbcClient jdbcClient) {
+        return new PgTelegramSessionStore(jdbcClient);
+    }
+
+    @ConditionalOnProperty(name = "integration.telegram-bot.session-store-type", havingValue = "STUB")
+    @Bean
+    public TelegramSessionStore stubTetelegramSessionStore() {
+        return new StubTelegramSessionStore();
     }
 
     @Bean
