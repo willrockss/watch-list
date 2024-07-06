@@ -11,4 +11,7 @@ import org.springframework.stereotype.Component;
 public class NodeRedIntegrationProperties {
     @NotBlank
     private String url;
+
+    @NotBlank
+    private String playVideoUrl = "/play";
 }

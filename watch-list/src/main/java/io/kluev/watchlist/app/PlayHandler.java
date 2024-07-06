@@ -11,10 +11,11 @@ public class PlayHandler {
     // TODO Extract to separate facade-service
     private final RestClient restClient;
     private final NodeRedIntegrationProperties properties;
+
     public PlayResponse handle(PlayRequest request) {
         val resp = restClient
                 .post()
-                .uri(properties.getUrl() + "/play")
+                .uri(properties.getUrl() + properties.getPlayVideoUrl())
                 .body(request)
                 .retrieve()
                 .toEntity(String.class);

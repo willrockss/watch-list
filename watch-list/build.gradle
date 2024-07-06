@@ -41,6 +41,8 @@ dependencies {
     testAnnotationProcessor('org.projectlombok:lombok')
     developmentOnly('org.springframework.boot:spring-boot-devtools')
     testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testImplementation('com.maciejwalkowiak.spring:wiremock-spring-boot:2.1.2')
+
 
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.10.1')
     testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.10.1')

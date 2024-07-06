@@ -19,7 +19,6 @@ import io.kluev.watchlist.infra.jackett.JackettRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
 import io.kluev.watchlist.infra.telegrambot.TelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
-
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,7 +37,10 @@ import java.util.Set;
 @Configuration
 public class MainBeansConfig {
 
-
+    /**
+     * Will be removed in the future. Use {@link RestClient} only
+     */
+    @Deprecated
     @Bean
     public RestTemplate restTemplate() {
         val template = new RestTemplate();
@@ -47,13 +49,15 @@ public class MainBeansConfig {
     }
 
     @Bean
-    public RestClient restClient() {
-        return RestClient.create(restTemplate());
+    public RestClient restClient(RestClient.Builder builder) {
+        return builder
+                .requestFactory(new HttpComponentsClientHttpRequestFactory())
+                .build();
     }
 
     @Bean
-    public NodeRedSeriesRepository nodeRedSeriesRepository(NodeRedIntegrationProperties properties) {
-        return new NodeRedSeriesRepository(seriesIdGenerator(), restClient(), properties);
+    public NodeRedSeriesRepository nodeRedSeriesRepository(NodeRedIntegrationProperties properties, RestClient restClient) {
+        return new NodeRedSeriesRepository(seriesIdGenerator(), restClient, properties);
     }
 
     @Bean
@@ -62,8 +66,8 @@ public class MainBeansConfig {
     }
 
     @Bean
-    public PlayHandler playHandler(NodeRedIntegrationProperties properties) {
-        return new PlayHandler(restClient(), properties);
+    public PlayHandler playHandler(NodeRedIntegrationProperties properties, RestClient restClient) {
+        return new PlayHandler(restClient, properties);
     }
 
     @Bean

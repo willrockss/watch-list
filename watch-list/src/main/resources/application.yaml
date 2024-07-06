@@ -12,6 +12,7 @@ spring:
 integration:
   node-red:
     url: http://${CURR_HOST:localhost}:1880
+    play-video-url: /play
 
   google:
     credentialsFile: <path to your credentials JSON file>
