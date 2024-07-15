@@ -13,7 +13,7 @@ public class TelegramBotProperties {
     SessionStoreType sessionStoreType;
 
     public enum SessionStoreType {
-        STUB,
+        NOOP,
         PG
     }
 }

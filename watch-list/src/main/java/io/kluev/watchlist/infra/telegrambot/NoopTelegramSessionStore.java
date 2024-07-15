@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Slf4j
-public class StubTelegramSessionStore implements TelegramSessionStore {
+public class NoopTelegramSessionStore implements TelegramSessionStore {
 
     @Override
     public void createOrUpdateSession(Update incomingUpdate) {
