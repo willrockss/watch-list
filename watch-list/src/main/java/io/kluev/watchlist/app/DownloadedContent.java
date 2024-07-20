@@ -1,8 +1,10 @@
 package io.kluev.watchlist.app;
 
+import lombok.NonNull;
+
 // TODO move to another app|module later
 public record DownloadedContent(
-        String filename,
-        byte[] bytes
+        @NonNull String filename,
+        byte @NonNull [] bytes
 ) {
 }

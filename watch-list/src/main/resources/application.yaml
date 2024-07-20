@@ -34,8 +34,12 @@ integration:
     enabled: true
     apiKey: <your bot API key>
     allowedUsers: <comma separated list of usernames of allowed users>
+    admins: <comma separated list of usernames of admins>
     sessionStoreType: PG
 
   jackett:
     apiKey: <your Jackett API key>
     baseUrl: http://localhost:9117
+
+search-content:
+  torrFolder: /home/${USER}/Downloads/torr

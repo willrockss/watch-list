@@ -7,6 +7,7 @@ public record EnlistMovieRequest(
         String title,
         String foreignTitle,
         Integer year,
-        String externalId
+        String externalId,
+        String username
 ) {
 }

@@ -1,22 +1,19 @@
 package io.kluev.watchlist.infra.config.beans;
 
 import com.google.api.services.sheets.v4.Sheets;
-import io.kluev.watchlist.app.EnlistMovieHandler;
-import io.kluev.watchlist.app.GetWatchListHandler;
-import io.kluev.watchlist.app.LockService;
-import io.kluev.watchlist.app.PlayHandler;
+import io.kluev.watchlist.app.*;
+import io.kluev.watchlist.app.searchcontent.SearchContentHandler;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
 import io.kluev.watchlist.domain.SeriesRepository;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
-import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
-import io.kluev.watchlist.infra.config.props.JackettProperties;
-import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
+import io.kluev.watchlist.infra.config.props.*;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
+import io.kluev.watchlist.infra.telegrambot.TelegramChatGateway;
 import io.kluev.watchlist.infra.telegrambot.PgTelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.NoopTelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.TelegramSessionStore;
@@ -24,6 +21,7 @@ import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -121,19 +119,46 @@ public class MainBeansConfig {
             TelegramClient telegramClient,
             ExternalMovieDatabase externalMovieDatabase,
             EnlistMovieHandler enlistMovieHandler,
-            TelegramSessionStore telegramSessionStore
+            TelegramSessionStore telegramSessionStore,
+            ApplicationEventPublisher eventPublisher
     ) {
-        return new WatchListTGBot(apiKey, allowedUsers, telegramClient, externalMovieDatabase, enlistMovieHandler, telegramSessionStore);
+        return new WatchListTGBot(
+                apiKey,
+                allowedUsers,
+                telegramClient,
+                externalMovieDatabase,
+                enlistMovieHandler,
+                telegramSessionStore,
+                eventPublisher
+        );
     }
 
     @Bean
-    public EnlistMovieHandler enlistMovieHandler(MovieRepository movieRepository) {
-        return new EnlistMovieHandler(movieRepository);
+    public EnlistMovieHandler enlistMovieHandler(MovieRepository movieRepository, ApplicationEventPublisher publisher) {
+        return new EnlistMovieHandler(movieRepository, publisher);
     }
 
     @Bean
-    public JackettRestGateway jackettRestGateway(JackettProperties properties, RestClient restClient) {
+    public JackettGateway jackettRestGateway(JackettProperties properties, RestClient restClient) {
         return new JackettRestGateway(properties, restClient);
+    }
+
+    @Bean
+    public ChatGateway chatGateway(
+            TelegramClient telegramClient,
+            TelegramSessionStore telegramSessionStore,
+            TelegramBotProperties telegramBotProperties
+    ) {
+        return new TelegramChatGateway(telegramClient, telegramSessionStore, telegramBotProperties);
+    }
+
+    @Bean
+    public SearchContentHandler searchContentHandler(
+            JackettGateway jackettGateway,
+            ChatGateway chatGateway,
+            SearchContentProperties properties
+    ) {
+        return new SearchContentHandler(jackettGateway, chatGateway, properties);
     }
 
 }

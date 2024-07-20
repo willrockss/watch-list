@@ -1,5 +1,7 @@
 package io.kluev.watchlist.infra.telegrambot;
 
+import io.kluev.watchlist.app.ChatMessage;
+import io.kluev.watchlist.app.ChatMessageResponse;
 import io.kluev.watchlist.app.EnlistMovieHandler;
 import io.kluev.watchlist.app.EnlistMovieRequest;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
@@ -9,6 +11,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
@@ -19,7 +22,6 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.Set;
@@ -33,6 +35,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
     private final ExternalMovieDatabase externalMovieDatabase;
     private final EnlistMovieHandler enlistMovieHandler;
     private final TelegramSessionStore telegramSessionStore;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final LinkPreviewOptions SMALL_PREVIEW =
             LinkPreviewOptions
@@ -80,15 +83,23 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
     @SneakyThrows
     private void processCallback(Update update) {
         String callData = update.getCallbackQuery().getData();
-        Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
-        String chatId = String.valueOf(update.getCallbackQuery().getMessage().getChatId());
+        val initialMessage = update.getCallbackQuery().getMessage();
+        Integer messageId = initialMessage.getMessageId();
+        String chatId = String.valueOf(initialMessage.getChatId());
 
-        var msgBuilder = SendMessage
-                .builder()
-                .chatId(chatId)
-                .replyToMessageId(messageId);
+        eventPublisher.publishEvent(new ChatMessageResponse(
+                chatId,
+                callData
+        ));
 
+        // Move to Search saga
         if (callData.startsWith("add_movie_")) {
+            var msgBuilder = SendMessage
+                    .builder()
+                    .chatId(chatId)
+                    .replyToMessageId(messageId);
+
+
             var extId = callData.replace("add_movie_", "");
             var movieDto = externalMovieDatabase.getByExternalId(extId).orElse(null);
             if (movieDto != null) {
@@ -98,6 +109,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
                         .foreignTitle(movieDto.enName())
                         .year(movieDto.year())
                         .externalId(extId)
+                        .username(update.getCallbackQuery().getFrom().getUserName())
                         .build();
 
                 var response = enlistMovieHandler.handle(enlistRequest);
@@ -106,10 +118,9 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
             } else {
                 msgBuilder.text("Invalid id " + extId);
             }
+
+            telegramClient.execute(msgBuilder.build());
         }
-
-        telegramClient.execute(msgBuilder.build());
-
     }
 
     @SneakyThrows
@@ -124,31 +135,31 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
 
         var chatId = msg.getChatId().toString();
 
+        eventPublisher.publishEvent(new ChatMessage(msg.getFrom().getUserName(), chatId, msg.getText()));
+
         var foundMovies = externalMovieDatabase.find(msg.getText());
+
+        SendMessage respMsg;
         if (foundMovies.isEmpty()) {
-            telegramClient.execute(new SendMessage(chatId, "По запросу '%s' ничего не найдено".formatted(msg.getText())));
+            respMsg = new SendMessage(chatId, "По запросу '%s' ничего не найдено".formatted(msg.getText()));
         } else {
-            foundMovies.stream().findFirst().ifPresent(it -> {
-                SendMessage img1Msg = new SendMessage(chatId, "%s\n%s".formatted(it.getFullName(), it.previewImageUrl()));
-                img1Msg.setLinkPreviewOptions(SMALL_PREVIEW);
-                img1Msg.setReplyMarkup(
-                        InlineKeyboardMarkup
-                                .builder()
-                                .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton
-                                        .builder()
-                                        .text("Добавить в список")
-                                        .callbackData("add_movie_" + it.externalId())
-                                        .build())
-                                )
-                                .build()
-                );
-                try {
-                    telegramClient.execute(img1Msg);
-                } catch (TelegramApiException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            val firstFoundMovie = foundMovies.stream().findFirst().orElseThrow();
+            respMsg = new SendMessage(chatId, "%s\n%s".formatted(firstFoundMovie.getFullName(), firstFoundMovie.previewImageUrl()));
+            respMsg.setLinkPreviewOptions(SMALL_PREVIEW);
+            respMsg.setReplyMarkup(
+                    InlineKeyboardMarkup
+                            .builder()
+                            .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton
+                                    .builder()
+                                    .text("Добавить в список")
+                                    .callbackData("add_movie_" + firstFoundMovie.externalId())
+                                    .build())
+                            )
+                            .build()
+            );
         }
+
+        telegramClient.execute(respMsg);
     }
 
     @Override

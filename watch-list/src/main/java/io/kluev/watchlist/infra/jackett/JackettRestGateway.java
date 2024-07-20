@@ -10,6 +10,7 @@ import io.kluev.watchlist.app.JackettGateway;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
 import io.kluev.watchlist.infra.jackett.dto.Item;
 import io.kluev.watchlist.infra.jackett.dto.Rss;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.core.io.Resource;
@@ -50,15 +51,14 @@ public class JackettRestGateway implements JackettGateway {
     }
 
     @Override
-    public DownloadedContent download(DownloadableContentInfo contentInfo) {
+    public DownloadedContent download(@NonNull DownloadableContentInfo contentInfo) {
         val fileResp = restClient.get().uri(contentInfo.link()).retrieve().body(Resource.class);
         if (fileResp == null) {
             throw new IllegalArgumentException("Unable to download: " + contentInfo.link());
         }
         try {
             val decodedFilename = URLDecoder.decode(requireNonNull(fileResp.getFilename()), StandardCharsets.UTF_8);
-            // TODO allow [] and (). Move to another class and add test
-            val escapedFilename = decodedFilename.replaceAll("[^\\w.-]", "_");
+            val escapedFilename = WLFilenameUtils.escapeFilename(decodedFilename);
             return new DownloadedContent(escapedFilename, fileResp.getContentAsByteArray());
         } catch (IOException ioException) {
             throw new IllegalArgumentException("Unable to read downloaded file: " + contentInfo.link(), ioException);

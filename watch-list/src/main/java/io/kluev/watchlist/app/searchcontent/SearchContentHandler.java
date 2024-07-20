@@ -1,0 +1,108 @@
+package io.kluev.watchlist.app.searchcontent;
+
+import io.kluev.watchlist.app.*;
+import io.kluev.watchlist.common.utils.NumberUtils;
+import io.kluev.watchlist.domain.event.MovieEnlisted;
+import io.kluev.watchlist.infra.config.props.SearchContentProperties;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+
+import java.nio.file.Path;
+import java.time.OffsetDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Slf4j
+@SuppressWarnings("unused")
+@RequiredArgsConstructor
+public class SearchContentHandler {
+
+    private final JackettGateway jackettGateway;
+    private final ChatGateway chatGateway;
+    private final SearchContentProperties properties;
+
+    // TODO move to storage
+    private final Map<UUID, SearchContentSaga> sagaById = new ConcurrentHashMap<>();
+
+    @Async
+    @EventListener(MovieEnlisted.class)
+    public void handle(MovieEnlisted event) {
+        val saga = SearchContentSaga.create();
+        sagaById.put(saga.getSagaId(), saga);
+
+        val found = jackettGateway.query(event.movie().getFullTitle());
+        val top10HighQuality = found
+                .stream()
+                // TODO Add proper filter, sorter based on strategy
+                .sorted(Comparator.comparing(DownloadableContentInfo::size).reversed())
+                .limit(10)
+                .toList();
+
+        saga.setFound(top10HighQuality);
+        chatGateway.sendSelectContentRequest(saga.getSagaId(), top10HighQuality);
+    }
+
+    @Async
+    @EventListener(ChatMessageResponse.class)
+    public void handleResponse(ChatMessageResponse rawResponse) {
+        val resp = SearchContentSagaResponse.parseOrNull(rawResponse);
+        if (resp == null) {
+            log.debug("Unable to parse response {}. Ignore", rawResponse);
+            return;
+        }
+
+        val saga = sagaById.get(resp.sagaId());
+        if (saga == null) {
+            log.error("Unable to find saga by id {}. Ignore", resp.sagaId());
+            return;
+        }
+
+        val selectedContent = findSelectedDownloadableContentInfoOrNull(saga, resp);
+        val torrFileContent = jackettGateway.download(selectedContent);
+        val savedFilename = save(torrFileContent);
+        chatGateway.sendMessage(rawResponse.chatId(), savedFilename + " был успешно скачан");
+    }
+
+    private DownloadableContentInfo findSelectedDownloadableContentInfoOrNull(
+            SearchContentSaga saga,
+            SearchContentSagaResponse resp
+    ) {
+        // TODO check for null
+        val selectedIndex = NumberUtils.parseOrNull(resp.selectedContent()) - 1;
+        if (selectedIndex < 0 || selectedIndex >= saga.getFound().size()) {
+            log.error("Invalid selected index {}. Found count {}. Ignore", selectedIndex, saga.getFound().size());
+            return null;
+        }
+        return saga.getFound().get(selectedIndex);
+    }
+
+    @SneakyThrows
+    private String save(DownloadedContent torrFileContent) {
+        val file = Path.of(properties.getTorrFolder(), torrFileContent.filename()).toFile();
+
+        FileUtils.writeByteArrayToFile(file, torrFileContent.bytes());
+        System.out.println(file.getCanonicalFile() + " was created");
+
+        return file.getAbsolutePath();
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public static class SearchContentSaga {
+        private final UUID sagaId;
+        private final OffsetDateTime createdAt;
+
+        @Setter
+        private List<DownloadableContentInfo> found;
+
+        private static SearchContentSaga create() {
+            return new SearchContentSaga(UUID.randomUUID(), OffsetDateTime.now() /* TODO use Clock*/);
+        }
+    }
+}
