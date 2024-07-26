@@ -1,0 +1,705 @@
+[
+    {
+        "id": "1c100426f1edcec5",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "7cb3aaca8bd9dad3",
+        "type": "inject",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "ssap://system.launcher/launch",
+        "payload": "{\"id\":\"com.webos.app.photovideo\",\"params\":{\"payload\":[{\"fullPath\":\"http://192.168.2.20:8080/Barbie.2023.1080p.WEBRip.x264-Delia_EniaHD.mkv\",\"dlnaInfo\":{\"flagVal\":4096,\"cleartextSize\":\"-1\",\"contentLength\":\"-1\",\"opVal\":1,\"protocolInfo\":\"http-get:*:video/x-matroska:DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000\",\"duration\":0},\"mediaType\":\"VIDEO\",\"deviceType\":\"DMR\"}]}}",
+        "payloadType": "json",
+        "x": 675,
+        "y": 180,
+        "wires": [
+            [
+                "9abe5a60d3ee9388"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "30bce1b7c19e6583",
+        "type": "debug",
+        "z": "1c100426f1edcec5",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1080,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "4686ed98659d3989",
+        "type": "exec",
+        "z": "1c100426f1edcec5",
+        "command": "vlc ",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 1070,
+        "y": 780,
+        "wires": [
+            [
+                "0d2fee726d13f0b2"
+            ],
+            [],
+            [
+                "2f600c9136e1cd53"
+            ]
+        ]
+    },
+    {
+        "id": "d14788180af67cc3",
+        "type": "function",
+        "z": "1c100426f1edcec5",
+        "name": "generate video URL",
+        "func": "//msg.payload = 'http://localhost:8000/video?path=' + msg.videoPath\n\nvar currHost = global.get('MODE') == 'TEST' ? 'localhost' : env.get('CURR_HOST');\nmsg.payload = 'http://' + currHost + ':8000/video/' + msg.videoId + '?path=' + msg.videoPath;\n\nconsole.log(\"generated video URL:\", msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 900,
+        "wires": [
+            [
+                "6237cb2e37fc01b9",
+                "76a6345d22a00dba"
+            ]
+        ]
+    },
+    {
+        "id": "2f600c9136e1cd53",
+        "type": "debug",
+        "z": "1c100426f1edcec5",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1220,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "0d2fee726d13f0b2",
+        "type": "debug",
+        "z": "1c100426f1edcec5",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1220,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "87812f33f4dbb5be",
+        "type": "function",
+        "z": "1c100426f1edcec5",
+        "name": "Change TEST MODE",
+        "func": "let mode = global.get('MODE');\n\n// Flip mode\nif (mode === 'TEST') {\n    mode = 'PROD';\n    node.status({ fill: \"green\", shape: \"dot\", text: \"PROD\" });\n} else {\n    mode = 'TEST';\n    node.status({ fill: \"red\", shape: \"ring\", text: \"TEST\" });\n}\nglobal.set('MODE', mode);\nmsg.payload = mode;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\nconst modeEnvValue = env.get('MODE');\nconsole.log(\"MODE:\", modeEnvValue);\nconst envModeProp = modeEnvValue || 'TEST';\nconsole.log(\"Calculated mode:\", envModeProp);\n\nif (envModeProp == 'TEST') {\n    global.set('MODE', 'TEST');\n    node.status({ fill: \"red\", shape: \"ring\", text: \"TEST\" })\n} else {\n    global.set('MODE', 'PROD');\n    node.status({ fill: \"green\", shape: \"dot\", text: \"PROD\" });\n}\n",
+        "finalize": "",
+        "libs": [],
+        "x": 280,
+        "y": 40,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "83da5230966c4d60",
+        "type": "inject",
+        "z": "1c100426f1edcec5",
+        "name": "Click",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 110,
+        "y": 40,
+        "wires": [
+            [
+                "87812f33f4dbb5be"
+            ]
+        ]
+    },
+    {
+        "id": "6237cb2e37fc01b9",
+        "type": "switch",
+        "z": "1c100426f1edcec5",
+        "name": "check mode",
+        "property": "MODE",
+        "propertyType": "global",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "TEST",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "PROD",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 870,
+        "y": 900,
+        "wires": [
+            [
+                "4686ed98659d3989"
+            ],
+            [
+                "e845e64143a0c037"
+            ]
+        ]
+    },
+    {
+        "id": "f0fed2a66e9228b9",
+        "type": "GSheet",
+        "z": "1c100426f1edcec5",
+        "creds": "c76fea402f365772",
+        "method": "get",
+        "action": "",
+        "sheet": "13_eekNC9DtOpr5Lax48IniYQnLJby2dUNen-R-vfEVw",
+        "cells": "",
+        "flatten": false,
+        "name": "",
+        "x": 630,
+        "y": 420,
+        "wires": [
+            [
+                "7099e7fdb51baa7c",
+                "516706a01d2dce09"
+            ]
+        ]
+    },
+    {
+        "id": "7099e7fdb51baa7c",
+        "type": "debug",
+        "z": "1c100426f1edcec5",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "c08bcffcfce11b19",
+        "type": "http in",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "url": "watch-list",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 460,
+        "wires": [
+            [
+                "1ea3dc373e529dd6"
+            ]
+        ]
+    },
+    {
+        "id": "300865bbcc1ea229",
+        "type": "function",
+        "z": "1c100426f1edcec5",
+        "name": "prepare mock watch context",
+        "func": "msg.payload = [\n    {\n        \"id\": \"Хороший_Доктор\",\n        \"title\": \"Хороший Доктор (2 сезон, 3/20)\"\n    },\n    {\n        \"id\": \"Друзья\",\n        \"title\": \"Друзья (1 сезон, 1/10)\",\n        \"toWatchEpisodePath\": \"/home/alex/Downloads/Friends.COMPLETE.UNCUT.DVDRip.DD5.1.x264/Friends S01E02 NTSC DD5.1 x264-CtrlSD.mkv\"\n    }\n];\n\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\nconst watchListContext = {\n    \"watch-list\": [\n        {\n            \"Kek\": \"Pek\"\n        },\n        {\n            \"Lol\": \"Cheburek\"\n        }\n    ]\n}\n\n\n\nglobal.set('watchListContext', watchListContext);",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 600,
+        "wires": [
+            [
+                "c27714df5cf1cf19"
+            ]
+        ]
+    },
+    {
+        "id": "516706a01d2dce09",
+        "type": "http response",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "statusCode": "200",
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "x": 820,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "66e3f82c01b0a2af",
+        "type": "http in",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "url": "/play",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 80,
+        "y": 800,
+        "wires": [
+            [
+                "7536a1220079bef9"
+            ]
+        ]
+    },
+    {
+        "id": "c3afc3967cfc79cd",
+        "type": "http response",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 530,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "7536a1220079bef9",
+        "type": "function",
+        "z": "1c100426f1edcec5",
+        "name": "Prepare videoPath request",
+        "func": "var body = msg.req.body;\nconsole.log(\"play request body:\", body);\nmsg.payload = \"Video \" + body.videoPath + \" is send to player\";\nreturn [msg, {\"videoPath\": body.videoPath, \"videoId\": body.videoId}];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 800,
+        "wires": [
+            [
+                "c3afc3967cfc79cd"
+            ],
+            [
+                "d14788180af67cc3"
+            ]
+        ]
+    },
+    {
+        "id": "9abe5a60d3ee9388",
+        "type": "lgtv-request",
+        "z": "1c100426f1edcec5",
+        "tv": "25bea8bf132b5b4c",
+        "name": "",
+        "x": 840,
+        "y": 180,
+        "wires": [
+            [
+                "30bce1b7c19e6583"
+            ]
+        ]
+    },
+    {
+        "id": "e845e64143a0c037",
+        "type": "function",
+        "z": "1c100426f1edcec5",
+        "name": "Prepare LG TV movie request",
+        "func": "const moviePath = msg.payload;\nconst decodedPath = decodeURIComponent(moviePath);\nconst fileName = decodedPath.substring(decodedPath.lastIndexOf('/') + 1);\n\n\n\nmsg.payload = `{\n    \"id\": \"com.webos.app.photovideo\",\n    \"params\": {\n        \"payload\": [\n            {\n                \"fullPath\": \"${moviePath}\",\n                \"dlnaInfo\": {\n                    \"flagVal\": 4096,\n                    \"cleartextSize\": \"-1\",\n                    \"contentLength\": \"-1\",\n                    \"opVal\": 1,\n                    \"protocolInfo\": \"http-get:*:video/x-matroska:DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000\",\n                    \"duration\": 0\n                },\n                \"mediaType\": \"VIDEO\",\n                \"deviceType\": \"DMR\",\n                \"fileName\": \"${fileName}\"\n            }\n        ]\n    }\n}`;\n\nmsg.topic = 'ssap://system.launcher/launch';\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1130,
+        "y": 940,
+        "wires": [
+            [
+                "d6f237a85e8e3397",
+                "f197fcfe6ee27d95"
+            ]
+        ]
+    },
+    {
+        "id": "d6f237a85e8e3397",
+        "type": "debug",
+        "z": "1c100426f1edcec5",
+        "name": "debug 11",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1380,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "f197fcfe6ee27d95",
+        "type": "lgtv-request",
+        "z": "1c100426f1edcec5",
+        "tv": "25bea8bf132b5b4c",
+        "name": "",
+        "x": 1380,
+        "y": 920,
+        "wires": [
+            [
+                "8d086bc1fcf7e630"
+            ]
+        ]
+    },
+    {
+        "id": "8d086bc1fcf7e630",
+        "type": "debug",
+        "z": "1c100426f1edcec5",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1580,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "76a6345d22a00dba",
+        "type": "debug",
+        "z": "1c100426f1edcec5",
+        "name": "debug 10",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "651ab49bc668e60a",
+        "type": "http in",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "url": "mock/watch-list",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 600,
+        "wires": [
+            [
+                "300865bbcc1ea229"
+            ]
+        ]
+    },
+    {
+        "id": "c27714df5cf1cf19",
+        "type": "http response",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "statusCode": "200",
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "x": 600,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "0b85157ab5f03e43",
+        "type": "comment",
+        "z": "1c100426f1edcec5",
+        "name": "Launch video player request",
+        "info": "",
+        "x": 840,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "5b5b2de5166edfff",
+        "type": "GSheet",
+        "z": "1c100426f1edcec5",
+        "creds": "c76fea402f365772",
+        "method": "update",
+        "action": "",
+        "sheet": "13_eekNC9DtOpr5Lax48IniYQnLJby2dUNen-R-vfEVw",
+        "cells": "",
+        "flatten": false,
+        "name": "",
+        "x": 630,
+        "y": 300,
+        "wires": [
+            [
+                "3375337f19786549",
+                "d93fb41aa21c9611"
+            ]
+        ]
+    },
+    {
+        "id": "42ae0db2df069f62",
+        "type": "http in",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "url": "/show-notification",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 1060,
+        "wires": [
+            [
+                "a0c733cca865039d",
+                "e3a6b1e122a5680c"
+            ]
+        ]
+    },
+    {
+        "id": "990d4d970fb330eb",
+        "type": "lgtv-toast",
+        "z": "1c100426f1edcec5",
+        "tv": "25bea8bf132b5b4c",
+        "name": "",
+        "x": 590,
+        "y": 1060,
+        "wires": []
+    },
+    {
+        "id": "a0c733cca865039d",
+        "type": "function",
+        "z": "1c100426f1edcec5",
+        "name": "prepare toast payload",
+        "func": "msg.payload = msg.req.query.text;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 1060,
+        "wires": [
+            [
+                "990d4d970fb330eb"
+            ]
+        ]
+    },
+    {
+        "id": "e3a6b1e122a5680c",
+        "type": "http response",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 370,
+        "y": 1140,
+        "wires": []
+    },
+    {
+        "id": "1ea3dc373e529dd6",
+        "type": "function",
+        "z": "1c100426f1edcec5",
+        "name": "prepare get row request",
+        "func": "var params = msg.req.params;\nif (params.length == 0 || !params[0]) {\n    msg.cells = 'Сериалы!A1:H11';\n} else {\n    var rowN = params[0];\n    msg.cells = 'Сериалы!A' + rowN + ':H' + rowN;\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 420,
+        "wires": [
+            [
+                "f0fed2a66e9228b9"
+            ]
+        ]
+    },
+    {
+        "id": "463a38965160bb42",
+        "type": "http in",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "url": "watch-list/*",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 380,
+        "wires": [
+            [
+                "1ea3dc373e529dd6"
+            ]
+        ]
+    },
+    {
+        "id": "86a09fc3e6227d92",
+        "type": "http in",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "url": "watch-list/*",
+        "method": "patch",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 130,
+        "y": 320,
+        "wires": [
+            [
+                "281d1482923901c8"
+            ]
+        ]
+    },
+    {
+        "id": "281d1482923901c8",
+        "type": "function",
+        "z": "1c100426f1edcec5",
+        "name": "prepare patch row request",
+        "func": "var params = msg.req.params;\n\nif (params.length == 0 || !params[0]) {\n    msg.payload = '{\"error\": \"Series row is not specified!\"}';\n    return [null, msg];\n}\n\nvar body = msg.req.body;\nvar watchedEpisodeNumber = body.watchedEpisodeNumber;\nif (!watchedEpisodeNumber) {\n    msg.payload = '{\"error\": \"Episode number is not specified. Should be in the \\\"watchedEpisodeNumber\\\"\"}';\n    return [null, msg];\n}\n\n\nvar rowN = params[0];\nmsg.cells = 'Сериалы!C' + rowN + ':C' + rowN;\nmsg.payload = +watchedEpisodeNumber;\n\nreturn [msg, null];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 300,
+        "wires": [
+            [
+                "5b5b2de5166edfff"
+            ],
+            [
+                "84e6f61a63952a07"
+            ]
+        ]
+    },
+    {
+        "id": "84e6f61a63952a07",
+        "type": "http response",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "statusCode": "400",
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "x": 600,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "4259f6e1ca32a999",
+        "type": "http in",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "url": "watch-list",
+        "method": "patch",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 280,
+        "wires": [
+            [
+                "281d1482923901c8"
+            ]
+        ]
+    },
+    {
+        "id": "3375337f19786549",
+        "type": "debug",
+        "z": "1c100426f1edcec5",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "d93fb41aa21c9611",
+        "type": "http response",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "statusCode": "200",
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "x": 900,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "c76fea402f365772",
+        "type": "gauth",
+        "name": "googlesheeteditor@movietracker-1663573330198.iam.gserviceaccount.com"
+    },
+    {
+        "id": "25bea8bf132b5b4c",
+        "type": "lgtv-config",
+        "host": "192.168.2.10"
+    }
+]
