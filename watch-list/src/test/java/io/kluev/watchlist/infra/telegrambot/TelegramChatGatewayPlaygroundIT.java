@@ -5,13 +5,16 @@ import io.kluev.watchlist.app.DownloadableContentInfo;
 import lombok.val;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Disabled
@@ -26,8 +29,13 @@ class TelegramChatGatewayPlaygroundIT {
     @Autowired
     private ChatGateway chatGateway;
 
+    @MockBean
+    private TelegramSessionStore telegramSessionStore;
+
     @Test
     public void should_send_found_content_table() {
+        Mockito.when(telegramSessionStore.findChatIdsByUsernames(Mockito.any())).thenReturn(List.of("521320812"));
+
         val content = new ArrayList<DownloadableContentInfo>(10);
         for (int i = 0; i < 5; i++) {
             content.add(generateDownloadableContentInfo());

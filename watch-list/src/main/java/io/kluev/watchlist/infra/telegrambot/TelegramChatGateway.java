@@ -57,7 +57,7 @@ public class TelegramChatGateway implements ChatGateway {
         for (int i = 0; i < found.size(); i++) {
             val elem = found.get(i);
             val readableSize = FileUtils.byteCountToDisplaySize(elem.size());
-            textBuilder.append("\t**%d**. %s. \n[Размер: %s, Скачан раз: %d]\n\n".formatted(i + 1, elem.title(), readableSize, elem.statistics().downloadedTimes()));
+            textBuilder.append("\t*%d*. %s. \n\\[Размер: `%s`, Скачан раз: `%d`\\]\n\n".formatted(i + 1, elem.title(), readableSize, elem.statistics().downloadedTimes()));
         }
         return escapeMarkdown(textBuilder.toString());
     }
