@@ -1,12 +1,15 @@
 package io.kluev.watchlist.app.searchcontent;
 
 import io.kluev.watchlist.app.*;
+import io.kluev.watchlist.app.event.ContentSelectedForDownload;
 import io.kluev.watchlist.common.utils.NumberUtils;
+import io.kluev.watchlist.domain.MovieItem;
 import io.kluev.watchlist.domain.event.MovieEnlisted;
 import io.kluev.watchlist.infra.config.props.SearchContentProperties;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 
@@ -23,9 +26,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class SearchContentHandler {
 
+    private final SearchContentProperties properties;
     private final JackettGateway jackettGateway;
     private final ChatGateway chatGateway;
-    private final SearchContentProperties properties;
+    private final ApplicationEventPublisher eventPublisher;
 
     // TODO move to storage
     private final Map<UUID, SearchContentSaga> sagaById = new ConcurrentHashMap<>();
@@ -33,7 +37,7 @@ public class SearchContentHandler {
     @Async
     @EventListener(MovieEnlisted.class)
     public void handle(MovieEnlisted event) {
-        val saga = SearchContentSaga.create();
+        val saga = SearchContentSaga.create(event.movie());
         sagaById.put(saga.getSagaId(), saga);
 
         val found = jackettGateway.query(event.movie().getFullTitle());
@@ -67,6 +71,7 @@ public class SearchContentHandler {
         val torrFileContent = jackettGateway.download(selectedContent);
         val savedFilename = save(torrFileContent);
         chatGateway.sendMessage(rawResponse.chatId(), savedFilename + " был успешно скачан");
+        eventPublisher.publishEvent(new ContentSelectedForDownload(saga.getMovieItem(), savedFilename));
     }
 
     private DownloadableContentInfo findSelectedDownloadableContentInfoOrNull(
@@ -83,7 +88,7 @@ public class SearchContentHandler {
     }
 
     @SneakyThrows
-    private String save(DownloadedContent torrFileContent) {
+    private String save(FileContent torrFileContent) {
         val file = Path.of(properties.getTorrFolder(), torrFileContent.filename()).toFile();
 
         FileUtils.writeByteArrayToFile(file, torrFileContent.bytes());
@@ -96,13 +101,14 @@ public class SearchContentHandler {
     @RequiredArgsConstructor
     public static class SearchContentSaga {
         private final UUID sagaId;
+        private final MovieItem movieItem;
         private final OffsetDateTime createdAt;
 
         @Setter
         private List<DownloadableContentInfo> found;
 
-        private static SearchContentSaga create() {
-            return new SearchContentSaga(UUID.randomUUID(), OffsetDateTime.now() /* TODO use Clock*/);
+        private static SearchContentSaga create(MovieItem movieItem) {
+            return new SearchContentSaga(UUID.randomUUID(), movieItem, OffsetDateTime.now() /* TODO use Clock*/);
         }
     }
 }

@@ -5,5 +5,5 @@ import java.util.List;
 public interface JackettGateway {
     List<DownloadableContentInfo> query(String query);
 
-    DownloadedContent download(DownloadableContentInfo contentInfo);
+    FileContent download(DownloadableContentInfo contentInfo);
 }

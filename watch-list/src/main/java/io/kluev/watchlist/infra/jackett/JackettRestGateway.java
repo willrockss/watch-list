@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.kluev.watchlist.app.DownloadableContentInfo;
-import io.kluev.watchlist.app.DownloadedContent;
+import io.kluev.watchlist.app.FileContent;
 import io.kluev.watchlist.app.JackettGateway;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
 import io.kluev.watchlist.infra.jackett.dto.Item;
@@ -51,7 +51,7 @@ public class JackettRestGateway implements JackettGateway {
     }
 
     @Override
-    public DownloadedContent download(@NonNull DownloadableContentInfo contentInfo) {
+    public FileContent download(@NonNull DownloadableContentInfo contentInfo) {
         val fileResp = restClient.get().uri(contentInfo.link()).retrieve().body(Resource.class);
         if (fileResp == null) {
             throw new IllegalArgumentException("Unable to download: " + contentInfo.link());
@@ -59,7 +59,7 @@ public class JackettRestGateway implements JackettGateway {
         try {
             val decodedFilename = URLDecoder.decode(requireNonNull(fileResp.getFilename()), StandardCharsets.UTF_8);
             val escapedFilename = WLFilenameUtils.escapeFilename(decodedFilename);
-            return new DownloadedContent(escapedFilename, fileResp.getContentAsByteArray());
+            return new FileContent(escapedFilename, fileResp.getContentAsByteArray());
         } catch (IOException ioException) {
             throw new IllegalArgumentException("Unable to read downloaded file: " + contentInfo.link(), ioException);
         }

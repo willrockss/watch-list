@@ -2,6 +2,7 @@ package io.kluev.watchlist.infra.config.beans;
 
 import com.google.api.services.sheets.v4.Sheets;
 import io.kluev.watchlist.app.*;
+import io.kluev.watchlist.app.downloadcontent.DownloadProcessCoordinator;
 import io.kluev.watchlist.app.searchcontent.SearchContentHandler;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
@@ -10,6 +11,7 @@ import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
 import io.kluev.watchlist.infra.config.props.*;
+import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
@@ -154,11 +156,21 @@ public class MainBeansConfig {
 
     @Bean
     public SearchContentHandler searchContentHandler(
+            SearchContentProperties properties,
             JackettGateway jackettGateway,
             ChatGateway chatGateway,
-            SearchContentProperties properties
+            ApplicationEventPublisher eventPublisher
     ) {
-        return new SearchContentHandler(jackettGateway, chatGateway, properties);
+        return new SearchContentHandler(properties, jackettGateway, chatGateway, eventPublisher);
     }
 
+    @Bean
+    public DownloadContentProcessDao downloadContentProcessDao(JdbcClient jdbcClient) {
+        return new DownloadContentProcessDao(jdbcClient);
+    }
+
+    @Bean
+    public DownloadProcessCoordinator downloadProcessCoordinator(DownloadContentProcessDao downloadContentProcessDao) {
+        return new DownloadProcessCoordinator(downloadContentProcessDao);
+    }
 }
