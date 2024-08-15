@@ -105,7 +105,8 @@ public class TelegramChatGateway implements ChatGateway {
 
     @Override
     public void sendMessage(String chatId, String msg) {
-        SendMessage sm = new SendMessage(chatId, msg);
+        SendMessage sm = new SendMessage(chatId, escapeMarkdown(msg));
+        sm.setParseMode("MarkdownV2");
         try {
             telegramClient.execute(sm);
         } catch (TelegramApiException e) {
