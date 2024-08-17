@@ -40,6 +40,8 @@ integration:
   jackett:
     apiKey: <your Jackett API key>
     baseUrl: http://localhost:9117
+  qbit:
+    url: http://localhost:8080
 
 search-content:
   torrFolder: /home/${USER}/Downloads/torr

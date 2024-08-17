@@ -3,6 +3,7 @@ package io.kluev.watchlist.infra.config.beans;
 import com.google.api.services.sheets.v4.Sheets;
 import io.kluev.watchlist.app.*;
 import io.kluev.watchlist.app.downloadcontent.DownloadProcessCoordinator;
+import io.kluev.watchlist.app.downloadcontent.QBitClient;
 import io.kluev.watchlist.app.searchcontent.SearchContentHandler;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
@@ -15,6 +16,7 @@ import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
+import io.kluev.watchlist.infra.qbit.QBitClientImpl;
 import io.kluev.watchlist.infra.telegrambot.TelegramChatGateway;
 import io.kluev.watchlist.infra.telegrambot.PgTelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.NoopTelegramSessionStore;
@@ -172,5 +174,10 @@ public class MainBeansConfig {
     @Bean
     public DownloadProcessCoordinator downloadProcessCoordinator(DownloadContentProcessDao downloadContentProcessDao) {
         return new DownloadProcessCoordinator(downloadContentProcessDao);
+    }
+
+    @Bean
+    public QBitClient qBitClient(RestClient restClient, QBitClientProperties properties) {
+        return new QBitClientImpl(restClient, properties);
     }
 }
