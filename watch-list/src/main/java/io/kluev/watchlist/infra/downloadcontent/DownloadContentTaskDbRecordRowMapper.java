@@ -22,7 +22,10 @@ public class DownloadContentTaskDbRecordRowMapper implements RowMapper<DownloadC
                 .runIteration(rs.getInt("run_iteration"))
                 .contentItemIdentity(rs.getString("content_item_identity"))
                 .torrFilePath(rs.getString("torr_file_path"))
+                .torrInfoHash(rs.getString("torr_info_hash"))
+                .contentPath(rs.getString("content_path"))
                 .createdAt(rs.getObject("created_at", OffsetDateTime.class))
+                .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))
                 .nextRunAfter(rs.getObject("next_run_after", OffsetDateTime.class))
                 .context(rs.getBytes("context"))
                 .build();

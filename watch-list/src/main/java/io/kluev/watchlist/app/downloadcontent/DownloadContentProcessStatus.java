@@ -5,6 +5,7 @@ import java.util.Set;
 public enum DownloadContentProcessStatus {
     INITIAL,
     PROCESSING,
+    PAUSED,
     FINISHED,
     ERROR;
 

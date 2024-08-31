@@ -6,7 +6,6 @@ import io.kluev.watchlist.app.downloadcontent.DownloadContentProcessStatus;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +20,21 @@ public class DownloadContentProcessDao {
         VALUES (?, ?, ?)
     """;
 
+    public static final String UPDATE_PROCESS_SQL =
+    """
+    UPDATE download_content_process
+    SET
+        status=:status,
+        torr_info_hash=:torrInfoHash,
+        content_path=:contentPath,
+        updated_at=CURRENT_TIMESTAMP,
+        context=:context
+    WHERE id=:id;
+    """;
+
     public static final String SELECT_NON_FINISHED_PROCESSES_SQL =
     """
-        SELECT id, status, run_iteration, content_item_identity, torr_file_path, created_at, next_run_after, context
+        SELECT id, status, run_iteration, content_item_identity, torr_file_path, torr_info_hash, content_path, created_at, updated_at, next_run_after, context
         FROM download_content_process
         WHERE status not in (:final_statuses)
         LIMIT :limit
@@ -32,16 +43,23 @@ public class DownloadContentProcessDao {
     public final JdbcClient jdbcClient;
 
     @Transactional
-    public void save(@NonNull DownloadContentProcess task) {
+    public boolean save(@NonNull DownloadContentProcess task) {
         val rec = toDbRecord(task);
         val isNew = rec.id() == null;
         if (isNew) {
-            jdbcClient
+            return jdbcClient
                     .sql(INSERT_PROCESS_SQL)
                     .params(rec.status(), rec.contentItemIdentity(), rec.torrFilePath())
-                    .update();
+                    .update() > 0;
         } else {
-            throw new NotImplementedException("Update not implemented yet");
+            return jdbcClient
+                    .sql(UPDATE_PROCESS_SQL)
+                    .param("id", rec.id())
+                    .param("status", rec.status())
+                    .param("torrInfoHash", rec.torrInfoHash())
+                    .param("contentPath", rec.contentPath())
+                    .param("context", rec.context())
+                    .update() > 0;
         }
     }
 
@@ -63,7 +81,10 @@ public class DownloadContentProcessDao {
                 task.getRunIteration(),
                 task.getContentItemIdentity().value(),
                 task.getTorrFilePath(),
-                null,
+                task.getTorrInfoHash(),
+                task.getContentPath(),
+                task.getCreatedAt(),
+                task.getUpdatedAt(),
                 null,
                 null
         );

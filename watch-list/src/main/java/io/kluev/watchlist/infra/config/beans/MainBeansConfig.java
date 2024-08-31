@@ -1,7 +1,12 @@
 package io.kluev.watchlist.infra.config.beans;
 
 import com.google.api.services.sheets.v4.Sheets;
-import io.kluev.watchlist.app.*;
+import io.kluev.watchlist.app.ChatGateway;
+import io.kluev.watchlist.app.EnlistMovieHandler;
+import io.kluev.watchlist.app.GetWatchListHandler;
+import io.kluev.watchlist.app.JackettGateway;
+import io.kluev.watchlist.app.LockService;
+import io.kluev.watchlist.app.PlayHandler;
 import io.kluev.watchlist.app.downloadcontent.DownloadProcessCoordinator;
 import io.kluev.watchlist.app.downloadcontent.QBitClient;
 import io.kluev.watchlist.app.searchcontent.SearchContentHandler;
@@ -11,15 +16,20 @@ import io.kluev.watchlist.domain.SeriesRepository;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
-import io.kluev.watchlist.infra.config.props.*;
+import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
+import io.kluev.watchlist.infra.config.props.JackettProperties;
+import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
+import io.kluev.watchlist.infra.config.props.QBitClientProperties;
+import io.kluev.watchlist.infra.config.props.SearchContentProperties;
+import io.kluev.watchlist.infra.config.props.TelegramBotProperties;
 import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
 import io.kluev.watchlist.infra.qbit.QBitClientImpl;
-import io.kluev.watchlist.infra.telegrambot.TelegramChatGateway;
-import io.kluev.watchlist.infra.telegrambot.PgTelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.NoopTelegramSessionStore;
+import io.kluev.watchlist.infra.telegrambot.PgTelegramSessionStore;
+import io.kluev.watchlist.infra.telegrambot.TelegramChatGateway;
 import io.kluev.watchlist.infra.telegrambot.TelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
 import lombok.val;
@@ -35,6 +45,7 @@ import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
+import java.time.Duration;
 import java.util.Set;
 
 @SuppressWarnings("unused")
@@ -56,6 +67,19 @@ public class MainBeansConfig {
     public RestClient restClient(RestClient.Builder builder) {
         return builder
                 .requestFactory(new HttpComponentsClientHttpRequestFactory())
+                .build();
+    }
+
+    /**
+     * This client has small timeout to quickly check remote service availability
+     */
+    @Bean
+    public RestClient restClientChecker(RestClient.Builder builder) {
+        val factory = new HttpComponentsClientHttpRequestFactory();
+        factory.setConnectionRequestTimeout(Duration.ofSeconds(2));
+        factory.setConnectTimeout(Duration.ofSeconds(2));
+        return builder
+                .requestFactory(factory)
                 .build();
     }
 
@@ -172,12 +196,15 @@ public class MainBeansConfig {
     }
 
     @Bean
-    public DownloadProcessCoordinator downloadProcessCoordinator(DownloadContentProcessDao downloadContentProcessDao) {
-        return new DownloadProcessCoordinator(downloadContentProcessDao);
+    public DownloadProcessCoordinator downloadProcessCoordinator(
+            DownloadContentProcessDao downloadContentProcessDao,
+            QBitClient qBitClient
+    ) {
+        return new DownloadProcessCoordinator(downloadContentProcessDao, qBitClient);
     }
 
     @Bean
-    public QBitClient qBitClient(RestClient restClient, QBitClientProperties properties) {
-        return new QBitClientImpl(restClient, properties);
+    public QBitClient qBitClient(RestClient restClient, RestClient restClientChecker, QBitClientProperties properties) {
+        return new QBitClientImpl(restClient, restClientChecker, properties);
     }
 }

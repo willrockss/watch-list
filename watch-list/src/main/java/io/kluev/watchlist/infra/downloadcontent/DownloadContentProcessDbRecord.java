@@ -11,7 +11,10 @@ public record DownloadContentProcessDbRecord(
         int runIteration,
         String contentItemIdentity,
         String torrFilePath,
+        String torrInfoHash,
+        String contentPath,
         OffsetDateTime createdAt,
+        OffsetDateTime updatedAt,
         OffsetDateTime nextRunAfter,
         byte[] context
 ) {

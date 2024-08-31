@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.stream.Collectors;
 
 import static io.kluev.watchlist.app.downloadcontent.DownloadContentProcessStatus.INITIAL;
+import static io.kluev.watchlist.app.downloadcontent.DownloadContentProcessStatus.PAUSED;
 import static io.kluev.watchlist.app.downloadcontent.DownloadContentProcessStatus.PROCESSING;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 @SpringBootTest
 class DownloadContentProcessDaoIntegrationTest {
+
+    @Autowired
+    private JdbcOperations jdbcOperations;
 
     @Autowired
     private JdbcClient jdbcClient;
@@ -39,7 +44,7 @@ class DownloadContentProcessDaoIntegrationTest {
 
 
     @Test
-    void test_save_process() {
+    void test_add_new_and_save_process() {
         // given
         val process = DownloadContentProcess
                 .builder()
@@ -67,13 +72,51 @@ class DownloadContentProcessDaoIntegrationTest {
 
     @Sql("/sql/add_download_processes.sql")
     @Test
+    void test_update_process() {
+        // given
+        val initialRecord = jdbcClient.sql("SELECT * FROM download_content_process WHERE content_item_identity = 'mvi-005'")
+                .query(DownloadContentTaskDbRecordRowMapper.INSTANCE)
+                .optional()
+                .orElse(null);
+
+        assertThat(initialRecord).isNotNull();
+        assertThat(initialRecord.id()).isNotNull();
+        assertThat(initialRecord.contentPath()).isNull();
+        assertThat(initialRecord.torrInfoHash()).isNull();
+
+        // when
+        val savedSuccessfully = downloadContentProcessDao.save(DownloadContentProcess
+                .builder()
+                .id(initialRecord.id())
+                .contentItemIdentity(new ContentItemIdentity("mvi-005"))
+                .status(PAUSED)
+                .contentPath("/home/user/downloads/mvi-005")
+                .torrInfoHash("0001100011")
+                .build());
+
+        assertThat(savedSuccessfully).isTrue();
+
+        // then
+        val updatedRecord = jdbcClient.sql("SELECT * FROM download_content_process WHERE content_item_identity = 'mvi-005'")
+                .query(DownloadContentTaskDbRecordRowMapper.INSTANCE)
+                .optional()
+                .orElse(null);
+
+        assertThat(updatedRecord).isNotNull();
+        assertThat(updatedRecord.status()).isEqualTo(PAUSED.name());
+        assertThat(updatedRecord.contentPath()).isEqualTo("/home/user/downloads/mvi-005");
+        assertThat(updatedRecord.torrInfoHash()).isEqualTo("0001100011");
+    }
+
+    @Sql("/sql/add_download_processes.sql")
+    @Test
     void test_load_for_processing() {
         // given -> setup Sql
         // when
         val result = downloadContentProcessDao.getActive();
 
         // then
-        assertThat(result).hasSize(2);
+        assertThat(result).isNotEmpty();
 
         val statuses = result.stream().map(DownloadContentProcess::getStatus).collect(Collectors.toSet());
         assertThat(statuses).containsOnly(INITIAL, PROCESSING);

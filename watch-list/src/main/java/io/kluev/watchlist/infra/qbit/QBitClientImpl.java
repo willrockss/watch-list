@@ -25,10 +25,11 @@ public class QBitClientImpl implements QBitClient {
     public static final String ID_TAG_TEMPLATE = "id=%s";
 
     private final RestClient restClient;
+    private final RestClient restClientChecker;
     private final QBitClientProperties properties;
 
     @Override
-    public EnqueuedTorr addTorr(String torrFilePath, ContentItemIdentity contentItemIdentity) {
+    public EnqueuedTorr addTorrPaused(String torrFilePath, ContentItemIdentity contentItemIdentity) {
         val alreadyPresent = findByIdTagOrNull(contentItemIdentity);
         if (alreadyPresent != null) {
             log.info("Already present: {}", alreadyPresent);
@@ -38,6 +39,7 @@ public class QBitClientImpl implements QBitClient {
         val body = new HttpHeaders();
         body.add("urls", torrFilePath);
         body.add("tags", String.format(ID_TAG_TEMPLATE, contentItemIdentity.value()));
+        body.add("paused", Boolean.TRUE.toString());
 
         restClient.post()
                 .uri(properties.getUrl() + "/api/v2/torrents/add")
@@ -84,6 +86,34 @@ public class QBitClientImpl implements QBitClient {
                 .body(body)
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    @Override
+    public void start(@NonNull EnqueuedTorr torr) {
+        Assert.notNull(torr, "torr cannot be null");
+
+        val body = new LinkedMultiValueMap<String, String>();
+        body.add("hashes", torr.infoHash());
+        restClient.post()
+                .uri(properties.getUrl() + "/api/v2/torrents/resume")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(body)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    @Override
+    public boolean isAvailable() {
+        try {
+            restClientChecker.post()
+                    .uri(properties.getUrl() + "/api/v2/app/webapiVersion")
+                    .retrieve()
+                    .toBodilessEntity();
+            return true;
+        } catch (Exception e) {
+            log.debug("QBit is not available due to {}", e.toString());
+            return false;
+        }
     }
 
     private EnqueuedTorr toEnqueuedTorr(TorrDto torrDto) {

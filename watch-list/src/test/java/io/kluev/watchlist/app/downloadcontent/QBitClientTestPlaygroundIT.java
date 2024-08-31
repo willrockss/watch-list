@@ -37,8 +37,15 @@ class QBitClientTestPlaygroundIT {
     @Test
     public void test_add() {
         val torrPath = "/home/alex/Downloads/torr/Головоломка_2_Inside_Out_2_(Келси_Манн)_[2024_комедия_приключения_семейный_WEBRip]_тизер.torrent";
-        val torr = qBitClient.addTorr(torrPath, new ContentItemIdentity("inside_out_2"));
+        val torr = qBitClient.addTorrPaused(torrPath, new ContentItemIdentity("inside_out_2"));
         Assertions.assertThat(torr).isNotNull();
+    }
+
+    @Test
+    public void test_start() {
+        val found = qBitClient.findByIdTagOrNull(new ContentItemIdentity("inside_out_2"));
+        Assertions.assertThat(found).isNotNull();
+        qBitClient.start(found);
     }
 
     @Test
