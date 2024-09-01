@@ -48,7 +48,7 @@ public class QBitClientImpl implements QBitClient {
                 .toBodilessEntity();
 
         val justAdded = findByIdTagOrNull(contentItemIdentity);
-        Assert.notNull(justAdded, "Unable to find just added torr");
+        Assert.notNull(justAdded, () -> "Unable to find just added torr by " + contentItemIdentity);
         return justAdded;
     }
 

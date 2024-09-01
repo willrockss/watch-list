@@ -72,6 +72,14 @@ public class DownloadProcessCoordinator {
                 process.start(qBitClient);
                 downloadContentProcessDao.save(process);
             }
+            case PROCESSING -> {
+                log.info("Handle processing process {}", process);
+                val updated = process.checkFinished(qBitClient);
+                if (updated) {
+                    downloadContentProcessDao.save(process);
+                    markCacheExpired();
+                }
+            }
         }
     }
 

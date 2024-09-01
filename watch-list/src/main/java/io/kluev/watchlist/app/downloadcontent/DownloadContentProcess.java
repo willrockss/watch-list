@@ -5,11 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.util.Assert;
 
 import java.time.OffsetDateTime;
 
+@Slf4j
 @ToString
 @Getter
 @Builder
@@ -50,5 +52,20 @@ public class DownloadContentProcess {
 
     public boolean hasInitialStatus() {
         return status == DownloadContentProcessStatus.INITIAL;
+    }
+
+    public boolean checkFinished(QBitClient qBitClient) {
+        val torr = qBitClient.findByIdTagOrNull(getContentItemIdentity());
+        if (torr == null) {
+            // TODO count that type of errors in the context and after sine threshold mark download as failed
+            log.warn("Unable to find downloading torr by {}", getContentItemIdentity());
+            return false;
+        }
+        if (torr.completionOn() > 0) {
+            log.info("Download {} finished", getContentItemIdentity());
+            status = DownloadContentProcessStatus.FINISHED;
+            return true;
+        }
+        return false;
     }
 }
