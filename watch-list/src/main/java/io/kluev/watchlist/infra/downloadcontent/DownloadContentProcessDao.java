@@ -63,6 +63,7 @@ public class DownloadContentProcessDao {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<DownloadContentProcess> getActive() {
         return jdbcClient
                 .sql(SELECT_NON_FINISHED_PROCESSES_SQL)

@@ -59,15 +59,19 @@ public class DownloadProcessCoordinator {
         enqueueNewAsPaused();
 
         val process = activeProcessesCache.getFirst();
-        if (process.getStatus() == DownloadContentProcessStatus.INITIAL) {
-            log.info("Enqueue and starting download process {}", process);
-            process.enqueuePaused(qBitClient);
-            process.start(qBitClient);
-            downloadContentProcessDao.save(process);
-        } else if (process.getStatus() == DownloadContentProcessStatus.PAUSED) {
-            log.info("Start download process {}", process);
-            process.start(qBitClient);
-            downloadContentProcessDao.save(process);
+        val status = process.getStatus();
+        switch (status) {
+            case INITIAL -> {
+                log.info("Enqueue and starting download process {}", process);
+                process.enqueuePaused(qBitClient);
+                process.start(qBitClient);
+                downloadContentProcessDao.save(process);
+            }
+            case PAUSED -> {
+                log.info("Start download process {}", process);
+                process.start(qBitClient);
+                downloadContentProcessDao.save(process);
+            }
         }
     }
 

@@ -45,3 +45,9 @@ integration:
 
 search-content:
   torrFolder: /home/${USER}/Downloads/torr
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: metrics,loggers,prometheus
