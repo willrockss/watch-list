@@ -5,6 +5,7 @@ import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Data;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -27,6 +28,9 @@ public class Channel {
     @XmlElement
     @JacksonXmlProperty(localName = "item")
     public List<Item> getItem() {
+        if (item == null) {
+            item = new ArrayList<>();
+        }
         return item;
     }
 

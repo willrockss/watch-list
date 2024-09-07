@@ -89,7 +89,7 @@ public class QBitClientImpl implements QBitClient {
                 .retrieve()
                 .body(ResponseDto.class);
 
-        log.info("Found {} torrs by tag {}", resp, idTagValue);
+        log.debug("Found {} torrs by tag {}", resp, idTagValue);
         Assert.notNull(resp, "response should not be null!");
 
         if (resp.isEmpty()) {

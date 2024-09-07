@@ -15,4 +15,8 @@ public record EnqueuedTorr(
         this.contentPath = contentPath;
         this.completionOn = completionOn <= 0 ? null : completionOn;
     }
+
+    public boolean isFinished() {
+        return completionOn != null;
+    }
 }

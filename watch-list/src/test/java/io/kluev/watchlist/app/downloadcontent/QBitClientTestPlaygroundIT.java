@@ -15,6 +15,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @Disabled
 @Tag("IntegrationTest")
 @EnableConfigurationProperties(value = QBitClientProperties.class)
@@ -38,20 +40,22 @@ class QBitClientTestPlaygroundIT {
     public void test_add() {
         val torrPath = "/home/alex/Downloads/torr/Головоломка_2_Inside_Out_2_(Келси_Манн)_[2024_комедия_приключения_семейный_WEBRip]_тизер.torrent";
         val torr = qBitClient.addTorrPaused(torrPath, new ContentItemIdentity("inside_out_2"));
-        Assertions.assertThat(torr).isNotNull();
+        assertThat(torr).isNotNull();
+        assertThat(torr.infoHash()).isNotNull();
+        assertThat(torr.contentPath()).isNotNull();
     }
 
     @Test
     public void test_start() {
         val found = qBitClient.findByIdTagOrNull(new ContentItemIdentity("inside_out_2"));
-        Assertions.assertThat(found).isNotNull();
+        assertThat(found).isNotNull();
         qBitClient.start(found);
     }
 
     @Test
     public void find_torr() {
         val found = qBitClient.findByIdTagOrNull(new ContentItemIdentity("inside_out_2"));
-        Assertions.assertThat(found).isNotNull();
+        assertThat(found).isNotNull();
     }
 
     @Test

@@ -10,6 +10,7 @@ import lombok.val;
 import org.springframework.util.Assert;
 
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
 @Slf4j
 @ToString
@@ -36,8 +37,8 @@ public class DownloadContentProcess {
         val enqueuedPaused = client.addTorrPaused(getTorrFilePath(), getContentItemIdentity());
 
         status = DownloadContentProcessStatus.PAUSED;
-        torrInfoHash = enqueuedPaused.infoHash();
-        contentPath = enqueuedPaused.contentPath();
+        torrInfoHash = Objects.requireNonNull(enqueuedPaused.infoHash(), () -> "hash should not be null in" + enqueuedPaused);
+        contentPath = Objects.requireNonNull(enqueuedPaused.contentPath(), () -> "contentPath should not be null in" + enqueuedPaused);
         createdAt = OffsetDateTime.now();
         // TODO add history into contextInfo
     }
@@ -61,10 +62,12 @@ public class DownloadContentProcess {
             log.warn("Unable to find downloading torr by {}", getContentItemIdentity());
             return false;
         }
-        if (torr.completionOn() > 0) {
+        if (torr.isFinished()) {
             log.info("Download {} finished", getContentItemIdentity());
             status = DownloadContentProcessStatus.FINISHED;
             return true;
+        } else {
+            log.debug("Download {} not finished yet", getContentItemIdentity());
         }
         return false;
     }
