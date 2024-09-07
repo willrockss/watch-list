@@ -205,6 +205,6 @@ public class MainBeansConfig {
 
     @Bean
     public QBitClient qBitClient(RestClient restClient, RestClient restClientChecker, QBitClientProperties properties) {
-        return new QBitClientImpl(restClient, restClientChecker, properties);
+        return new QBitClientImpl(restClient, properties);
     }
 }

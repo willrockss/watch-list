@@ -61,6 +61,12 @@ class QBitClientTestPlaygroundIT {
         qBitClient.deleteWithContent(found);
     }
 
+    @Test
+    public void test_available() {
+        val isAvailable = qBitClient.isAvailable();
+        Assertions.assertThat(isAvailable).isTrue();
+    }
+
     @TestConfiguration
     public static class TestConfig {
         @Bean

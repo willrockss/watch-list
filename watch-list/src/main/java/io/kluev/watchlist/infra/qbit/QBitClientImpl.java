@@ -1,5 +1,6 @@
 package io.kluev.watchlist.infra.qbit;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.kluev.watchlist.app.downloadcontent.ContentItemIdentity;
 import io.kluev.watchlist.app.downloadcontent.EnqueuedTorr;
@@ -11,22 +12,38 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.http.HttpHeaders;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * For some reason Spring's RestClient encodes Form-Data incorrectly (put content type on each form element) and
+ * QBittorrent doesn't accept it. With OkHttpClient everything works fine out of the box.
+ */
 @Slf4j
 @RequiredArgsConstructor
 public class QBitClientImpl implements QBitClient {
     public static final String ID_TAG_TEMPLATE = "id=%s";
 
     private final RestClient restClient;
-    private final RestClient restClientChecker;
     private final QBitClientProperties properties;
+
+    private final OkHttpClient okHttpClient = new OkHttpClient();
+    private final OkHttpClient okHttpClientChecker = new OkHttpClient.Builder()
+            .connectTimeout(2, TimeUnit.SECONDS)
+            .readTimeout(2, TimeUnit.SECONDS)
+            .build();
 
     @Override
     public EnqueuedTorr addTorrPaused(String torrFilePath, ContentItemIdentity contentItemIdentity) {
@@ -36,16 +53,27 @@ public class QBitClientImpl implements QBitClient {
             return alreadyPresent;
         }
 
-        val body = new HttpHeaders();
-        body.add("urls", torrFilePath);
-        body.add("tags", String.format(ID_TAG_TEMPLATE, contentItemIdentity.value()));
-        body.add("paused", Boolean.TRUE.toString());
+        RequestBody body = new MultipartBody.Builder()
+                .addFormDataPart("tags", String.format(ID_TAG_TEMPLATE, contentItemIdentity.value()))
+                .addFormDataPart("paused", Boolean.TRUE.toString())
+                .addFormDataPart("torrents", torrFilePath, RequestBody.create(
+                        new File(torrFilePath),
+                        okhttp3.MediaType.parse("application/x-bittorrent"))
+                )
+                .setType(MultipartBody.FORM)
+                .build();
 
-        restClient.post()
-                .uri(properties.getUrl() + "/api/v2/torrents/add")
-                .body(body)
-                .retrieve()
-                .toBodilessEntity();
+        Request request = new Request.Builder()
+                .url(properties.getUrl() + "/api/v2/torrents/add")
+                .post(body)
+                .build();
+
+        try(Response response = okHttpClient.newCall(request).execute()) {
+            val bodyOrNull = response.body() == null ? null : response.body().string();
+            log.info("Response code: {} {} with body {}", response.code(), response.message(), bodyOrNull);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         val justAdded = findByIdTagOrNull(contentItemIdentity);
         Assert.notNull(justAdded, () -> "Unable to find just added torr by " + contentItemIdentity);
@@ -104,14 +132,14 @@ public class QBitClientImpl implements QBitClient {
 
     @Override
     public boolean isAvailable() {
-        try {
-            restClientChecker.post()
-                    .uri(properties.getUrl() + "/api/v2/app/webapiVersion")
-                    .retrieve()
-                    .toBodilessEntity();
-            return true;
-        } catch (Exception e) {
-            log.debug("QBit is not available due to {}", e.toString());
+        val request = new Request.Builder()
+                .url(properties.getUrl() + "/api/v2/app/webapiVersion")
+                .build();
+        try(val resp = okHttpClientChecker.newCall(request).execute()) {
+            log.debug("Web API version: {}", resp.body() == null ? null : resp.body().string());
+            return resp.isSuccessful();
+        } catch (IOException e) {
+            log.info("Unable to execute check availability request due to {}", e.toString());
             return false;
         }
     }
@@ -122,6 +150,7 @@ public class QBitClientImpl implements QBitClient {
 
     private static class ResponseDto extends ArrayList<TorrDto> {}
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
     private static class TorrDto {
         @JsonProperty("hash")
