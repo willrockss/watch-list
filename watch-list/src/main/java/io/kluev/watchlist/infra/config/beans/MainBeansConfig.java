@@ -198,9 +198,10 @@ public class MainBeansConfig {
     @Bean
     public DownloadProcessCoordinator downloadProcessCoordinator(
             DownloadContentProcessDao downloadContentProcessDao,
-            QBitClient qBitClient
+            QBitClient qBitClient,
+            ApplicationEventPublisher eventPublisher
     ) {
-        return new DownloadProcessCoordinator(downloadContentProcessDao, qBitClient);
+        return new DownloadProcessCoordinator(downloadContentProcessDao, qBitClient, eventPublisher);
     }
 
     @Bean

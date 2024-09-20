@@ -2,17 +2,26 @@ package io.kluev.watchlist.infra.googlesheet;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.*;
+import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadFinishedEvent;
+import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadStartedEvent;
+import io.kluev.watchlist.app.downloadcontent.event.ContentItemEnqueuedEvent;
 import io.kluev.watchlist.domain.MovieItem;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.context.event.EventListener;
+import org.springframework.util.Assert;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.IntStream;
 
+@Slf4j
 public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     private final Sheets service;
@@ -92,5 +101,96 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
         ));
 
         service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
+    }
+
+    @EventListener(ContentItemEnqueuedEvent.class)
+    public void markAsEnqueued(ContentItemEnqueuedEvent event) throws IOException {
+        val itemIndex = findRowByItemKinopoiskIdOrNull(event.identity().value());
+        if (itemIndex == null) {
+            log.error("Unable to find row by {}. Do nothing", event.identity());
+            return;
+        }
+        updateStatus(itemIndex, "ENQUEUED");
+    }
+
+    @EventListener(ContentItemDownloadStartedEvent.class)
+    public void markAsStarted(ContentItemDownloadStartedEvent event) throws IOException {
+        val itemIndex = findRowByItemKinopoiskIdOrNull(event.identity().value());
+        if (itemIndex == null) {
+            log.error("Unable to find row by {}. Do nothing", event.identity());
+            return;
+        }
+        updateStatusAndContentPath(itemIndex, "DOWNLOADING", event.contentPath());
+    }
+
+    @EventListener(ContentItemDownloadFinishedEvent.class)
+    public void markAsFinished(ContentItemDownloadFinishedEvent event) throws IOException {
+        val itemIndex = findRowByItemKinopoiskIdOrNull(event.identity().value());
+        if (itemIndex == null) {
+            log.error("Unable to find row by {}. Do nothing", event.identity());
+            return;
+        }
+        updateStatus(itemIndex, "READY");
+    }
+
+    /**
+     * First we need to find raw by identifier (kinopoisk id for now)
+     * Since there is no direct way to do so in Google Sheets API v4 we just read first 20 rows and
+     * try to find among them.
+     * @return row index. 1 is the first row
+     */
+    private Integer findRowByItemKinopoiskIdOrNull(@NotNull String kinopoiskId) {
+        Assert.notNull(kinopoiskId, "kinopoiskId cannot be null");
+
+        val range = "'Посмотреть'!J2:J22"; // TODO read from properties
+        try {
+            val result = service.spreadsheets().values().get(properties.getSpreadsheetId(), range).execute();
+            val values = result.getValues();
+            if (values == null) {
+                return null;
+            }
+            for(int i = 0; i < values.size(); i++) {
+                List<Object> row = values.get(i);
+                if (row.isEmpty()) {
+                    continue;
+                }
+                if (kinopoiskId.equals(row.getFirst())) {
+                    return i + 2; // TODO read from properties
+                }
+            }
+        } catch (IOException e) {
+            log.error(
+                    "Unable to fetch first 20 rows from {}, range {}. Error: {}",
+                    properties.getSpreadsheetId(),
+                    range,
+                    e.toString()
+            );
+        }
+        return null;
+    }
+
+    private void updateStatus(int rowIndex, String status) throws IOException {
+        val statusRange = "Посмотреть!K" + rowIndex + ":K" + rowIndex; // TODO read from properties
+        update(statusRange, List.of(status));
+    }
+
+    private void updateStatusAndContentPath(int rowIndex, String status, String contentPath) throws IOException {
+        val range = "Посмотреть!K" + rowIndex + ":L" + rowIndex; // TODO read from properties
+        update(range, List.of(status, contentPath));
+    }
+
+    private void update(String range, List<Object> values) throws IOException {
+        val rawResponse = service.spreadsheets().values().update(
+                        properties.getSpreadsheetId(),
+                        range,
+                        new ValueRange()
+                                .setValues(List.of(values))
+                                .setMajorDimension("ROWS")
+
+                                .setRange(range)
+                )
+                .setValueInputOption("USER_ENTERED")
+                .execute();
+        log.debug("Updated data: {}", rawResponse.getUpdatedData());
     }
 }

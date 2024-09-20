@@ -1,10 +1,14 @@
 package io.kluev.watchlist.app.downloadcontent;
 
+import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadFinishedEvent;
+import io.kluev.watchlist.app.downloadcontent.event.ContentItemEnqueuedEvent;
+import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadStartedEvent;
 import io.kluev.watchlist.app.event.ContentSelectedForDownload;
 import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,6 +25,7 @@ public class DownloadProcessCoordinator {
 
     private final DownloadContentProcessDao downloadContentProcessDao;
     private final QBitClient qBitClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     private final List<DownloadContentProcess> activeProcessesCache = new ArrayList<>();
     private long nextCacheUpdateAfterTimestampMillis = 0L;
@@ -66,17 +71,24 @@ public class DownloadProcessCoordinator {
                 process.enqueuePaused(qBitClient);
                 process.start(qBitClient);
                 downloadContentProcessDao.save(process);
+                eventPublisher.publishEvent(new ContentItemDownloadStartedEvent(
+                        process.getContentItemIdentity(), process.getContentPath()
+                ));
             }
             case PAUSED -> {
                 log.info("Start download process {}", process);
                 process.start(qBitClient);
                 downloadContentProcessDao.save(process);
+                eventPublisher.publishEvent(new ContentItemDownloadStartedEvent(
+                        process.getContentItemIdentity(), process.getContentPath()
+                ));
             }
             case PROCESSING -> {
                 log.info("Handle processing process {}", process);
-                val updated = process.checkFinished(qBitClient);
-                if (updated) {
+                val finished = process.checkFinished(qBitClient);
+                if (finished) {
                     downloadContentProcessDao.save(process);
+                    eventPublisher.publishEvent(new ContentItemDownloadFinishedEvent(process.getContentItemIdentity()));
                     markCacheExpired();
                 }
             }
@@ -87,6 +99,7 @@ public class DownloadProcessCoordinator {
         activeProcessesCache.stream().filter(DownloadContentProcess::hasInitialStatus).forEach(it -> {
             it.enqueuePaused(qBitClient);
             downloadContentProcessDao.save(it);
+            eventPublisher.publishEvent(new ContentItemEnqueuedEvent(it.getContentItemIdentity()));
         });
     }
 
@@ -101,6 +114,7 @@ public class DownloadProcessCoordinator {
         activeProcessesCache.clear();
         activeProcessesCache.addAll(downloadContentProcessDao.getActive());
         activeProcessesCache.sort(Comparator.comparing(DownloadContentProcess::getCreatedAt));
+        log.info("Cache is updated. Current {}", activeProcessesCache);
     }
 
     private void markCacheExpired() {

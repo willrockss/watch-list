@@ -71,7 +71,7 @@ public class DownloadContentProcessDao {
                 .param("limit", 10)
                 .query(DownloadContentTaskDbRecordRowMapper.INSTANCE)
                 .stream()
-                .map(this::toTask)
+                .map(this::toEntity)
                 .toList();
     }
 
@@ -91,13 +91,15 @@ public class DownloadContentProcessDao {
         );
     }
 
-    private DownloadContentProcess toTask(@NonNull DownloadContentProcessDbRecord rec) {
+    private DownloadContentProcess toEntity(@NonNull DownloadContentProcessDbRecord rec) {
         return DownloadContentProcess.builder()
                 .id(rec.id())
                 .status(DownloadContentProcessStatus.valueOf(rec.status()))
                 .runIteration(rec.runIteration())
                 .contentItemIdentity(new ContentItemIdentity(rec.contentItemIdentity()))
                 .torrFilePath(rec.torrFilePath())
+                .torrInfoHash(rec.torrInfoHash())
+                .contentPath(rec.contentPath())
                 .createdAt(rec.createdAt())
                 .nextRunAfter(rec.nextRunAfter())
                 .build();
