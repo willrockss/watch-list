@@ -8,6 +8,7 @@ import io.kluev.watchlist.app.downloadcontent.event.ContentItemEnqueuedEvent;
 import io.kluev.watchlist.domain.MovieItem;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
+import jakarta.annotation.Nullable;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -56,6 +58,39 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                 )
                 .setValueInputOption("USER_ENTERED")
                 .execute();
+    }
+
+    @Override
+    public List<MovieItem> getMoviesToWatch() {
+        val toWatchMoviesRows = findToWatchMoviesRows();
+        return toWatchMoviesRows.stream()
+                .map(this::mapToMovieItemOrNull)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private @NotNull List<List<Object>> findToWatchMoviesRows() {
+        val range = "'Посмотреть'!A2:N22"; // TODO read from properties
+        try {
+            val result = service.spreadsheets().values().get(properties.getSpreadsheetId(), range).execute();
+            val values = result.getValues();
+            if (values == null) {
+                return List.of();
+            }
+            return values;
+        } catch (IOException e) {
+            log.error(
+                    "Unable to fetch first 20 rows from {}, range {}. Error: {}",
+                    properties.getSpreadsheetId(),
+                    range,
+                    e.toString()
+            );
+        }
+        return List.of();
+    }
+
+    private @Nullable MovieItem mapToMovieItemOrNull(List<Object> row) {
+        return new MovieItemRowMapper(row).toMovieItemOrNull();
     }
 
     @SneakyThrows

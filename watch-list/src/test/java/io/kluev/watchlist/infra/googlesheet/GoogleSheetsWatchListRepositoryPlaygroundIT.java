@@ -10,7 +10,6 @@ import io.kluev.watchlist.infra.config.beans.GoogleSheetServiceConfig;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +22,7 @@ import org.springframework.context.annotation.Import;
 /**
  * This is not a real test. Just a playground with Google Sheet API
  */
-@Disabled
+//@Disabled
 @SuppressWarnings("unused")
 @Tag("IntegrationTest")
 @EnableConfigurationProperties(value = GoogleSheetProperties.class)
@@ -74,5 +73,13 @@ class GoogleSheetsWatchListRepositoryPlaygroundIT {
     public void should_update_status_ready() {
         var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
         googleSheetsWatchListRepository.markAsFinished(new ContentItemDownloadFinishedEvent(new ContentItemIdentity("7510")));
+    }
+
+    @SneakyThrows
+    @Test
+    public void should_get_movie_list() {
+        var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
+        val result = googleSheetsWatchListRepository.getMoviesToWatch();
+        System.out.println(result);
     }
 }

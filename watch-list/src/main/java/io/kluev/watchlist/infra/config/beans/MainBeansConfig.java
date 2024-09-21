@@ -12,7 +12,6 @@ import io.kluev.watchlist.app.downloadcontent.QBitClient;
 import io.kluev.watchlist.app.searchcontent.SearchContentHandler;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
-import io.kluev.watchlist.domain.SeriesRepository;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
@@ -89,8 +88,11 @@ public class MainBeansConfig {
     }
 
     @Bean
-    public GetWatchListHandler getWatchListHandler(SeriesRepository seriesRepository) {
-        return new GetWatchListHandler(seriesRepository);
+    public GetWatchListHandler getWatchListHandler(
+            NodeRedSeriesRepository seriesRepository,
+            MovieRepository movieRepository
+    ) {
+        return new GetWatchListHandler(seriesRepository, movieRepository);
     }
 
     @Bean

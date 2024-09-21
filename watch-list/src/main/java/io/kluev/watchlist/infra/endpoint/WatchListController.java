@@ -25,7 +25,12 @@ public class WatchListController {
 
     @GetMapping("/watch-list")
     public List<SeriesDto> index() {
-        return getWatchListHandler.handle().seriesDtos();
+        return getWatchListHandler.handle().series();
+    }
+
+    @GetMapping("/v2/watch-list")
+    public WatchListResponse watchList() {
+        return getWatchListHandler.handle();
     }
 
     @PostMapping("/play")
