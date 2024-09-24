@@ -1,18 +1,18 @@
 package io.kluev.watchlist.presenter;
 
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.kluev.watchlist.presenter.config.WatchListBackendProperties;
+import io.kluev.watchlist.presenter.dto.Movie;
 import io.kluev.watchlist.presenter.dto.PlayRequest;
 import io.kluev.watchlist.presenter.dto.Series;
+import io.kluev.watchlist.presenter.dto.WatchListResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,17 +22,14 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Map;
 
 @Controller
 @Slf4j
 @RequiredArgsConstructor
 public class WatchListController {
-    private static final ParameterizedTypeReference<ArrayList<Series>> SERIES_LIST_TYPE_REF =
-            ParameterizedTypeReference.forType(
-                    TypeFactory.defaultInstance().constructCollectionType(ArrayList.class, Series.class)
-            );
+
+    public static final String MOVIE_READY_STATUS = "READY";
 
     private final WatchListBackendProperties backendProperties;
     private final RestClient restClient;
@@ -45,15 +42,25 @@ public class WatchListController {
 
         if (Boolean.TRUE == mock) {
             // TODO move to NODE-RED/WireMock
-            model.put("watchlist", java.util.List.of(
+            model.put("series", java.util.List.of(
                     new Series("Друзья", "Друзья", "/home/user/Downloads/Friends/s02e05.mkv"),
                     new Series("Хороший_доктор", "Хороший доктор", "/home/user/Videos/The.Best.Doctor/s01e01.mkv")));
+
+            model.put("movies", java.util.List.of(
+                    new Movie("123", "Терминатор", "READY", "/home/user/Videos/Terminator.mkv"),
+                    new Movie("456", "Терминатор 2", "DOWNLOADING", "/home/user/Videos/Terminator_2.mkv"),
+                    new Movie("789", "Брат", "READY", "/home/user/Videos/Brat.mp4")
+            ));
+
         } else {
             val resp = restClient.get()
-                    .uri(backendProperties.getUrl() + "/watch-list")
+                    .uri(backendProperties.getUrl() + "/v2/watch-list")
                     .retrieve()
-                    .body(SERIES_LIST_TYPE_REF);
-            model.put("watchlist", resp);
+                    .body(WatchListResponse.class);
+            Assert.notNull(resp, "WatchList response is null");
+
+            model.put("series", resp.series());
+            model.put("movies", resp.movies().stream().filter(it -> MOVIE_READY_STATUS.equals(it.status())).toList());
         }
 
         return new ModelAndView("index", model);

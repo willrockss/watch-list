@@ -59,7 +59,7 @@
     </script>
 
     <div class="container">
-      {{#watchlist}}
+      {{#series}}
       <div class="row justify-content-md-center" onclick="play('{{toWatchEpisodePath}}', '{{id}}')">
         <div class="col-md-1"></div>
         <div class="col-md-10">
@@ -75,7 +75,36 @@
           </div>
         </div>
       </div>
-      {{/watchlist}}
+      {{/series}}
+    </div>
+
+    <div class="container">
+      <div class="row justify-content-md-center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10 text-center">
+          <h2 class="text-primary">Фильмы</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      {{#movies}}
+      <div class="row justify-content-md-center" onclick="play('{{path}}', '{{id}}')">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+          <div class="p-2">
+            <div class="panel panel-primary card">
+              <div class="panel-heading">
+                  <h3 class="panel-title">{{title}}</h3>
+              </div>
+              <div class="panel-body align-middle">
+                <span class="text-justify align-middle">{{path}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/movies}}
     </div>
   </body>
 </html>
