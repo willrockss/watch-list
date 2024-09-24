@@ -52,7 +52,11 @@ public class ProgressHandler {
     }
 
     private String updateWatchedEpisode(ProgressRequest request) {
-        val series = seriesRepository.getInProgressById(request.seriesId()).orElseThrow();
+        val series = seriesRepository.getInProgressById(request.seriesId()).orElse(null);
+        if (series == null) {
+            return "Cannot find series by %s to mark episode as watched".formatted(request.seriesId());
+        }
+
         val isSuccess = series.markEpisodeWatched(request.videoId());
         if (!isSuccess) {
             return "Cannot find episode to mark as watched or it's already marked as watched";
