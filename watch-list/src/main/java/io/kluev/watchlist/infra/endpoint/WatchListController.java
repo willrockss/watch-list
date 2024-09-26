@@ -21,6 +21,7 @@ public class WatchListController {
     private final GetWatchListHandler getWatchListHandler;
     private final PlayHandler playHandler;
     private final ProgressHandler progressHandler;
+    private final ProgressHandlerV2 progressHandlerV2;
 
 
     @Deprecated
@@ -43,10 +44,21 @@ public class WatchListController {
         return ResponseEntity.badRequest().body(resp.error());
     }
 
+    @Deprecated
     @PostMapping("/progress")
     public ResponseEntity<String> progress(@RequestBody ProgressRequest request) {
         log.trace("Received progress request {}", request);
         val resp = progressHandler.handle(request);
+        if (resp.error() == null) {
+            return ResponseEntity.ok(null);
+        }
+        return ResponseEntity.badRequest().body(resp.error());
+    }
+
+    @PostMapping("/v2/progress")
+    public ResponseEntity<String> progress(@RequestBody ProgressRequestV2 request) {
+        log.trace("Received progress request v2 {}", request);
+        val resp = progressHandlerV2.handle(request);
         if (resp.error() == null) {
             return ResponseEntity.ok(null);
         }
