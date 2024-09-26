@@ -23,6 +23,7 @@ public class WatchListController {
     private final ProgressHandler progressHandler;
 
 
+    @Deprecated
     @GetMapping("/watch-list")
     public List<SeriesDto> index() {
         return getWatchListHandler.handle().series();

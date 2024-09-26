@@ -1,8 +1,9 @@
 package io.kluev.watchlist.app;
 
-public record PlayRequest(
+public record ProgressRequestV2(
+        VideoType videoType,
         String videoId,
         String videoPath,
-        VideoType videoType
+        Float progress
 ) {
 }
