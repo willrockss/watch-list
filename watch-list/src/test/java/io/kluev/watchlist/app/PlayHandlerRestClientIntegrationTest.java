@@ -3,6 +3,7 @@ package io.kluev.watchlist.app;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.kluev.watchlist.infra.telegrambot.TelegramSessionStore;
 import lombok.val;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
  * Since RestClientTest doesn't support RestClient with specified request factory we have to use
  * Wiremock with SpringBootTest
  */
+@Tag("IntegrationTest")
 @SuppressWarnings("unused")
 @SpringBootTest (
         properties = {
@@ -53,13 +55,13 @@ class PlayHandlerRestClientIntegrationTest {
         wm.stubFor(post("/mock/play").willReturn(ok()));
 
         // when
-        val request = new PlayRequest("testId", "testPath");
+        val request = new PlayRequest("testId", "testPath", VideoType.MOVIE);
         sut.handle(request);
 
         // then
         wm.verify(
                 postRequestedFor(urlEqualTo("/mock/play"))
-                        .withRequestBody(equalToJson("{\"videoId\":\"testId\",\"videoPath\":\"testPath\"}"))
+                        .withRequestBody(equalToJson("{\"videoId\":\"testId\",\"videoPath\":\"testPath\",\"videoType\":\"MOVIE\"}"))
         );
     }
 }
