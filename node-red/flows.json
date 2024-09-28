@@ -66,8 +66,8 @@
         "winHide": false,
         "oldrc": false,
         "name": "",
-        "x": 1070,
-        "y": 780,
+        "x": 1290,
+        "y": 740,
         "wires": [
             [
                 "0d2fee726d13f0b2"
@@ -83,7 +83,7 @@
         "type": "function",
         "z": "1c100426f1edcec5",
         "name": "generate video URL",
-        "func": "//msg.payload = 'http://localhost:8000/video?path=' + msg.videoPath\n\nvar currHost = global.get('MODE') == 'TEST' ? 'localhost' : env.get('CURR_HOST');\nmsg.payload = 'http://' + currHost + ':8000/video/' + msg.videoId + '?path=' + msg.videoPath;\n\nconsole.log(\"generated video URL:\", msg.payload);\nreturn msg;",
+        "func": "var currHost = global.get('MODE') == 'TEST' ? 'localhost' : env.get('CURR_HOST');\nmsg.payload = 'http://' + currHost + ':8000/video/' + msg.videoId\n     + '?path=' + msg.videoPath + '&videoType=' + msg.videoType;\n\nconsole.log(\"generated video URL:\", msg.payload);\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -111,8 +111,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1220,
-        "y": 820,
+        "x": 1440,
+        "y": 780,
         "wires": []
     },
     {
@@ -127,8 +127,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1220,
-        "y": 740,
+        "x": 1440,
+        "y": 700,
         "wires": []
     },
     {
@@ -194,7 +194,7 @@
         "y": 900,
         "wires": [
             [
-                "4686ed98659d3989"
+                "6a8601daf81cf4e1"
             ],
             [
                 "e845e64143a0c037"
@@ -208,7 +208,7 @@
         "creds": "c76fea402f365772",
         "method": "get",
         "action": "",
-        "sheet": "13_eekNC9DtOpr5Lax48IniYQnLJby2dUNen-R-vfEVw",
+        "sheet": "1agl6pPZIGwhMmS8rkkewp38DZl7TvcU0-UeyszjfIeQ",
         "cells": "",
         "flatten": false,
         "name": "",
@@ -321,7 +321,7 @@
         "type": "function",
         "z": "1c100426f1edcec5",
         "name": "Prepare videoPath request",
-        "func": "var body = msg.req.body;\nconsole.log(\"play request body:\", body);\nmsg.payload = \"Video \" + body.videoPath + \" is send to player\";\nreturn [msg, {\"videoPath\": body.videoPath, \"videoId\": body.videoId}];",
+        "func": "var body = msg.req.body;\nconsole.log(\"play request body:\", body);\nmsg.payload = \"Video \" + body.videoPath + \" is send to player\";\nreturn [msg, {\"videoPath\": body.videoPath, \"videoId\": body.videoId, \"videoType\": body.videoType}];",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
@@ -484,7 +484,7 @@
         "creds": "c76fea402f365772",
         "method": "update",
         "action": "",
-        "sheet": "13_eekNC9DtOpr5Lax48IniYQnLJby2dUNen-R-vfEVw",
+        "sheet": "1agl6pPZIGwhMmS8rkkewp38DZl7TvcU0-UeyszjfIeQ",
         "cells": "",
         "flatten": false,
         "name": "",
@@ -506,8 +506,8 @@
         "method": "post",
         "upload": false,
         "swaggerDoc": "",
-        "x": 140,
-        "y": 1060,
+        "x": 120,
+        "y": 1220,
         "wires": [
             [
                 "a0c733cca865039d",
@@ -521,8 +521,8 @@
         "z": "1c100426f1edcec5",
         "tv": "25bea8bf132b5b4c",
         "name": "",
-        "x": 590,
-        "y": 1060,
+        "x": 570,
+        "y": 1220,
         "wires": []
     },
     {
@@ -537,8 +537,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 380,
-        "y": 1060,
+        "x": 360,
+        "y": 1220,
         "wires": [
             [
                 "990d4d970fb330eb"
@@ -552,8 +552,8 @@
         "name": "",
         "statusCode": "",
         "headers": {},
-        "x": 370,
-        "y": 1140,
+        "x": 350,
+        "y": 1300,
         "wires": []
     },
     {
@@ -691,6 +691,71 @@
         "x": 900,
         "y": 320,
         "wires": []
+    },
+    {
+        "id": "dbc354ac819c97d2",
+        "type": "http in",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "url": "/mock/play",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 80,
+        "y": 920,
+        "wires": [
+            [
+                "4bcd58249ce952ee",
+                "70ade6d5526965e6"
+            ]
+        ]
+    },
+    {
+        "id": "4bcd58249ce952ee",
+        "type": "http response",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 310,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "70ade6d5526965e6",
+        "type": "debug",
+        "z": "1c100426f1edcec5",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 340,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "6a8601daf81cf4e1",
+        "type": "function",
+        "z": "1c100426f1edcec5",
+        "name": "wrap into quotes",
+        "func": "if (msg.payload != null && msg.payload.indexOf('\"') != 0) {\n    msg.payload = '\"' + msg.payload + '\"';\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 860,
+        "wires": [
+            [
+                "4686ed98659d3989"
+            ]
+        ]
     },
     {
         "id": "c76fea402f365772",
