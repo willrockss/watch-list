@@ -23,3 +23,4 @@
 hs_err_pid*
 replay_pid*
 video-server/package-lock.json
+.vscode/settings.json

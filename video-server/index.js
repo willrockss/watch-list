@@ -61,6 +61,8 @@ const requestListener = async function (req, res) {
     var end = positions[1] ? parseInt(positions[1], 10) : total - 1;
     var chunksize = (end - start) + 1;
 
+    start = Math.min(start, end);
+
     const respHeaders = {
         "Content-Range" : "bytes " + start + "-" + end + "/" + total,
         "Accept-Ranges" : "bytes",
@@ -72,7 +74,7 @@ const requestListener = async function (req, res) {
     if (etagValue) {
         respHeaders['etag'] = 'W/"' + etagValue + '"';
     }
-
+    console.log('respHeaders', respHeaders);
     res.writeHead(206, respHeaders);
 
     var progressStream = progress({
@@ -90,10 +92,11 @@ const requestListener = async function (req, res) {
             prevProgress = currProgress;
             sendProgress({
                 progress: progress.percentage,
-                seriesId: videoId,
-                    videoId: fileName
-                });
-            }
+                videoId: videoId,
+                videoPath: fileName,
+                videoType: params.videoType
+            });
+        }
             
     });
 
@@ -122,7 +125,7 @@ function sendProgress(progressRequest) {
     const progressReq = http.request({
         host: 'localhost',
         port: 8060,
-        path: '/progress',
+        path: '/v2/progress',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json;charset=utf-8',
@@ -178,16 +181,16 @@ function showIndex(req, res) {
     res.end();
 }
 
-function parseParams (req){
-    let q=req.url.split('?'),result={};
-    if(q.length >=2 ){
-        q[1].split('&').forEach((item)=>{
+function parseParams(req) {
+    let q = req.url.split('?'), result = {};
+    if(q.length >= 2 ){
+        q[1].split('&').forEach((item) => {
              try {
-               result[item.split('=')[0]]=decodeURIComponent(item.split('=')[1]);
-             } catch (e) {
-               result[item.split('=')[0]]='';
+               result[item.split('=')[0]] = decodeURIComponent(item.split('=')[1]);
+             } catch(e) {
+               result[item.split('=')[0]] = '';
              }
         })
     }
     return result;
-  }
+}
