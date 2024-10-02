@@ -31,8 +31,10 @@ import io.kluev.watchlist.infra.telegrambot.PgTelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.TelegramChatGateway;
 import io.kluev.watchlist.infra.telegrambot.TelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -210,4 +212,14 @@ public class MainBeansConfig {
     public QBitClient qBitClient(RestClient restClient, RestClient restClientChecker, QBitClientProperties properties) {
         return new QBitClientImpl(restClient, properties);
     }
+
+    @Bean
+    MeterRegistryCustomizer<MeterRegistry> metricsCommonTags(
+            @Value("${spring.application.name}") String appName
+    ) {
+        return registry -> registry
+                .config()
+                .commonTags("application", appName);
+    }
+
 }
