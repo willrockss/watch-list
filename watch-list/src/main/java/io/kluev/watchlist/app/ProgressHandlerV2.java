@@ -34,7 +34,11 @@ public class ProgressHandlerV2 {
                 return new ProgressResponse("Episode update already in progress");
             }
             try {
-                var error = updateWatchedEpisode(request);
+                String error = null;
+                switch (request.videoType()) {
+                    case EPISODE -> error = updateWatchedEpisode(request);
+                    case MOVIE -> error = "Movie progress handler not yet implemented";
+                }
                 if (error != null) {
                     return new ProgressResponse(error);
                 }

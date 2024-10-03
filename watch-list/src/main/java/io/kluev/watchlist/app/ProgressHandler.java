@@ -11,6 +11,7 @@ import org.springframework.web.client.RestClient;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+@Deprecated
 @Component
 @Slf4j
 @RequiredArgsConstructor
