@@ -11,6 +11,7 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.lang.NonNullApi;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,7 +45,7 @@ public class WatchListController {
             // TODO move to NODE-RED/WireMock
             model.put("series", java.util.List.of(
                     new Series("Друзья", "Друзья", "/home/user/Downloads/Friends/s02e05.mkv"),
-                    new Series("Хороший_доктор", "Хороший доктор", "/home/user/Videos/The.Best.Doctor/s01e01.mkv")));
+                    new Series("Хороший_доктор", "Хороший доктор", "/home/user/Videos/The.Best.Doctor/s01e0'1.mkv")));
 
             model.put("movies", java.util.List.of(
                     new Movie("123", "Терминатор", "READY", "/home/user/Videos/Terminator.mkv"),
