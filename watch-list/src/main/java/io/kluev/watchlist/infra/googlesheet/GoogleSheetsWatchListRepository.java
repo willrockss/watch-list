@@ -19,17 +19,22 @@ import org.springframework.util.Assert;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
 @Slf4j
 public class GoogleSheetsWatchListRepository implements MovieRepository {
+    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private final Sheets service;
     private final GoogleSheetProperties properties;
 
     private final String insertRange;
+
+    private final Map<String, Integer> sheetIdByName = new HashMap<>();
 
     public GoogleSheetsWatchListRepository(Sheets service, GoogleSheetProperties properties) {
         this.service = service;
@@ -95,7 +100,6 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     @SneakyThrows
     public void addWatched(String fullTitle, String postComment, String kinopoiskId) {
-
         var rowData = IntStream
                 .rangeClosed(0, 9) // TODO Make column indexes configurable
                 .mapToObj(i -> switch (i) {
@@ -110,13 +114,12 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                     default -> new CellData();
                 })
                 .toList();
-
         BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest();
         request.setRequests(List.of(
                 new Request()
                         .setInsertDimension(new InsertDimensionRequest()
                                 .setRange(new DimensionRange()
-                                        .setSheetId(1)  // TODO Make sheet id configurable
+                                        .setSheetId(getSheetIdByName("Просмотренные"))  // TODO Make sheet name configurable
                                         .setDimension("ROWS")
                                         .setStartIndex(1)  // Insert one empty row at the beginning
                                         .setEndIndex(2))
@@ -125,7 +128,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                         .setUpdateCells(
                                 new UpdateCellsRequest()
                                         .setStart(new GridCoordinate()
-                                                .setSheetId(0)  // Assuming the first sheet in the spreadsheet
+                                                .setSheetId(getSheetIdByName("Просмотренные"))  // TODO Make sheet name configurable
                                                 .setRowIndex(1)  // Insert at the beginning
                                                 .setColumnIndex(0))
                                         .setRows(List.of(
@@ -134,13 +137,80 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                                         .setFields("*")
                         )
         ));
+        service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
+
+    }
+
+    @SneakyThrows
+    @Override
+    public void markWatched(String kinopoiskId, LocalDate watchedAt) {
+        val watchedMovieRowIndex = findRowIndexByItemKinopoiskIdOrNull(kinopoiskId);
+        if (watchedMovieRowIndex == null) {
+            throw new IllegalArgumentException("Movie with id " + kinopoiskId + " not found");
+        }
+
+        BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest();
+        request.setRequests(List.of(
+                new Request()
+                        .setInsertDimension(new InsertDimensionRequest()
+                                .setRange(new DimensionRange()
+                                        .setSheetId(getSheetIdByName("Просмотренные"))  // TODO Make sheet name configurable
+                                        .setDimension("ROWS")
+                                        .setStartIndex(1)  // Insert one empty row at the beginning
+                                        .setEndIndex(2))
+                        ),
+                new Request()
+                        .setCutPaste(
+                                new CutPasteRequest()
+                                        .setSource(
+                                                new GridRange()
+                                                        .setSheetId(getSheetIdByName("Посмотреть"))  // TODO Make sheet name configurable
+                                                        .setStartRowIndex(watchedMovieRowIndex)
+                                                        .setEndRowIndex(watchedMovieRowIndex + 1)
+                                        )
+                                        .setDestination(
+                                                new GridCoordinate()
+                                                        .setSheetId(getSheetIdByName("Просмотренные"))  // TODO Make sheet name configurable
+                                                        .setRowIndex(1)
+                                        )
+
+
+                        ),
+                new Request()
+                        .setUpdateCells(
+                                new UpdateCellsRequest()
+                                        .setStart(new GridCoordinate()
+                                                .setSheetId(getSheetIdByName("Просмотренные"))  // TODO Make sheet name configurable
+                                                .setRowIndex(1)  // Insert at the beginning
+                                                .setColumnIndex(1)) // TODO make "Дата просмотра" column index configurable
+                                        .setRows(List.of(
+                                                new RowData().setValues(List.of(
+                                                        new CellData()
+                                                                .setUserEnteredValue(new ExtendedValue().setStringValue(
+                                                                    watchedAt.format(DATE_FORMATTER)
+                                                                ))
+                                                                .setUserEnteredFormat(getDateStrCellFormat())
+
+                                                ))
+                                        ))
+                                        .setFields("*")
+                        ),
+                new Request()
+                        .setDeleteDimension(new DeleteDimensionRequest().setRange(
+                                new DimensionRange()
+                                        .setSheetId(getSheetIdByName("Посмотреть"))
+                                        .setDimension("ROWS")
+                                        .setStartIndex(watchedMovieRowIndex)
+                                        .setEndIndex(watchedMovieRowIndex + 1))
+                        )
+        ));
 
         service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
     }
 
     @EventListener(ContentItemEnqueuedEvent.class)
     public void markAsEnqueued(ContentItemEnqueuedEvent event) throws IOException {
-        val itemIndex = findRowByItemKinopoiskIdOrNull(event.identity().value());
+        val itemIndex = findRowIndexByItemKinopoiskIdOrNull(event.identity().value());
         if (itemIndex == null) {
             log.error("Unable to find row by {}. Do nothing", event.identity());
             return;
@@ -150,7 +220,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     @EventListener(ContentItemDownloadStartedEvent.class)
     public void markAsStarted(ContentItemDownloadStartedEvent event) throws IOException {
-        val itemIndex = findRowByItemKinopoiskIdOrNull(event.identity().value());
+        val itemIndex = findRowIndexByItemKinopoiskIdOrNull(event.identity().value());
         if (itemIndex == null) {
             log.error("Unable to find row by {}. Do nothing", event.identity());
             return;
@@ -160,7 +230,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     @EventListener(ContentItemDownloadFinishedEvent.class)
     public void markAsFinished(ContentItemDownloadFinishedEvent event) throws IOException {
-        val itemIndex = findRowByItemKinopoiskIdOrNull(event.identity().value());
+        val itemIndex = findRowIndexByItemKinopoiskIdOrNull(event.identity().value());
         if (itemIndex == null) {
             log.error("Unable to find row by {}. Do nothing", event.identity());
             return;
@@ -172,9 +242,9 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
      * First we need to find raw by identifier (kinopoisk id for now)
      * Since there is no direct way to do so in Google Sheets API v4 we just read first 20 rows and
      * try to find among them.
-     * @return row index. 1 is the first row
+     * @return row index. 0 is the first row
      */
-    private Integer findRowByItemKinopoiskIdOrNull(@NotNull String kinopoiskId) {
+    private Integer findRowIndexByItemKinopoiskIdOrNull(@NotNull String kinopoiskId) {
         Assert.notNull(kinopoiskId, "kinopoiskId cannot be null");
 
         val range = "'Посмотреть'!J2:J22"; // TODO read from properties
@@ -190,7 +260,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                     continue;
                 }
                 if (kinopoiskId.equals(row.getFirst())) {
-                    return i + 2; // TODO read from properties
+                    return i + 1; // TODO read from properties
                 }
             }
         } catch (IOException e) {
@@ -205,12 +275,14 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
     }
 
     private void updateStatus(int rowIndex, String status) throws IOException {
-        val statusRange = "Посмотреть!K" + rowIndex + ":K" + rowIndex; // TODO read from properties
+        val oneBasedRowNumber = rowIndex + 1;
+        val statusRange = "Посмотреть!K" + oneBasedRowNumber + ":K" + oneBasedRowNumber; // TODO read from properties
         update(statusRange, List.of(status));
     }
 
     private void updateStatusAndContentPath(int rowIndex, String status, String contentPath) throws IOException {
-        val range = "Посмотреть!K" + rowIndex + ":L" + rowIndex; // TODO read from properties
+        val oneBasedRowNumber = rowIndex + 1;
+        val range = "Посмотреть!K" + oneBasedRowNumber + ":L" + oneBasedRowNumber; // TODO read from properties
         update(range, List.of(status, contentPath));
     }
 
@@ -227,5 +299,24 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                 .setValueInputOption("USER_ENTERED")
                 .execute();
         log.debug("Updated data: {}", rawResponse.getUpdatedData());
+    }
+
+    // TODO make private
+    @SneakyThrows
+    private Integer getSheetIdByName(@NotNull String sheetName) {
+        if (sheetIdByName.isEmpty()) {
+            Spreadsheet spreadsheet = service.spreadsheets().get(properties.getSpreadsheetId()).execute();
+            for (Sheet sheet : spreadsheet.getSheets()) {
+                val props = Objects.requireNonNull(sheet.getProperties(), () -> "Properties is null for " + sheet);
+                sheetIdByName.put(props.getTitle(), props.getSheetId());
+            }
+        }
+        return Objects.requireNonNull(sheetIdByName.get(sheetName), () -> "Sheet not found by " + sheetName);
+    }
+
+    private CellFormat getDateStrCellFormat() {
+        val cellFormat = new CellFormat();
+         cellFormat.setHorizontalAlignment("RIGHT");
+        return cellFormat;
     }
 }

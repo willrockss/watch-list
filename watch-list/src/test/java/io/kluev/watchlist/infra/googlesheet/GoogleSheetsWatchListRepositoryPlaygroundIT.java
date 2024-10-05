@@ -10,6 +10,7 @@ import io.kluev.watchlist.infra.config.beans.GoogleSheetServiceConfig;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +19,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
+import java.time.LocalDate;
+
 
 /**
  * This is not a real test. Just a playground with Google Sheet API
  */
-//@Disabled
+@Disabled
 @SuppressWarnings("unused")
 @Tag("IntegrationTest")
 @EnableConfigurationProperties(value = GoogleSheetProperties.class)
@@ -53,6 +56,14 @@ class GoogleSheetsWatchListRepositoryPlaygroundIT {
         googleSheetsWatchListRepository.enlist(movieItem);
         // No exceptions are expected at this point
     }
+
+    @SneakyThrows
+    @Test
+    public void should_mark_movie_as_watched() {
+        var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
+        googleSheetsWatchListRepository.markWatched("968375", LocalDate.now());
+    }
+
 
     @SneakyThrows
     @Test

@@ -7,11 +7,15 @@ import io.kluev.watchlist.app.GetWatchListHandler;
 import io.kluev.watchlist.app.JackettGateway;
 import io.kluev.watchlist.app.LockService;
 import io.kluev.watchlist.app.PlayHandler;
+import io.kluev.watchlist.app.ProgressHandlerV2;
 import io.kluev.watchlist.app.downloadcontent.DownloadProcessCoordinator;
 import io.kluev.watchlist.app.downloadcontent.QBitClient;
 import io.kluev.watchlist.app.searchcontent.SearchContentHandler;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
+import io.kluev.watchlist.domain.SeriesRepository;
+import io.kluev.watchlist.domain.SimpleOffsetWatchDateStrategy;
+import io.kluev.watchlist.domain.WatchDateStrategy;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
@@ -46,6 +50,7 @@ import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Set;
 
@@ -220,6 +225,30 @@ public class MainBeansConfig {
         return registry -> registry
                 .config()
                 .commonTags("application", appName);
+    }
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemDefaultZone();
+    }
+
+    @Bean
+    public WatchDateStrategy watchDateStrategy() {
+        return new SimpleOffsetWatchDateStrategy(3); // TODO read from config
+    }
+
+    @Bean
+    public ProgressHandlerV2 progressHandlerV2(
+            MovieRepository movieRepository,
+            WatchDateStrategy watchDateStrategy,
+            Clock clock,
+            RestClient restClient,
+            NodeRedIntegrationProperties properties,
+            LockService lockService,
+            SeriesRepository seriesRepository
+
+    ) {
+        return new ProgressHandlerV2(movieRepository, watchDateStrategy, clock, restClient, properties, lockService, seriesRepository);
     }
 
 }
