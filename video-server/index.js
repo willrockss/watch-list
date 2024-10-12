@@ -107,7 +107,7 @@ const requestListener = async function (req, res) {
         throttleChunksize = 512 * 1024;
         console.log("For movie use extended chunksize", throttleChunksize);
     }
-    var throttle = new streamThrottle.Throttle({rate: 2*1024*1024  /*bytes per second*/ , chunksize: throttleChunksize});
+    var throttle = new streamThrottle.Throttle({rate: 10*1024*1024  /*bytes per second*/ , chunksize: throttleChunksize});
 
     var stream = fs.createReadStream(file, {
         start : start,
