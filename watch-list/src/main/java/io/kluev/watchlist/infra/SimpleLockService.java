@@ -34,7 +34,6 @@ public class SimpleLockService implements LockService {
         } catch (InterruptedException e) {
             log.warn("Unable to acquire lock by {}. Do nothing", lockId);
         }
-        locks.remove(lockId);
         return null;
     }
 
@@ -82,6 +81,14 @@ public class SimpleLockService implements LockService {
         @Override
         public @NonNull Condition newCondition() {
             return delegate.newCondition();
+        }
+
+        @Override
+        public String toString() {
+            return "LockDecorator{" +
+                    "lockId='" + lockId + '\'' +
+                    ", delegate=" + delegate +
+                    '}';
         }
     }
 

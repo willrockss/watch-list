@@ -205,7 +205,8 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                         )
         ));
 
-        service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
+        val resp = service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
+        log.info("Mark {} as watched with result {}", kinopoiskId, resp);
     }
 
     @EventListener(ContentItemEnqueuedEvent.class)

@@ -52,7 +52,7 @@ public class ProgressHandlerV2 {
                 if (error != null) {
                     return new ProgressResponse(error);
                 }
-                log.info("Video {} should be marked as watched", request.videoId());
+                log.info("Video {} should be marked as watched. Used lock: {}", request.videoId(), lock);
             } finally {
                 lock.unlock();
             }
