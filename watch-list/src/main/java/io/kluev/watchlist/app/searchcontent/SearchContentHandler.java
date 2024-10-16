@@ -44,7 +44,7 @@ public class SearchContentHandler {
         val top10HighQuality = found
                 .stream()
                 // TODO Add proper filter, sorter based on strategy
-                .sorted(Comparator.comparing(DownloadableContentInfo::size).reversed())
+                .sorted(Comparator.comparing(DownloadableContentInfo::getSize).reversed())
                 .limit(10)
                 .toList();
 

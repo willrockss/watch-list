@@ -33,7 +33,7 @@ class JackettRestGatewayPlaygroundIT {
         val response = jackettRestGateway.query(query);
         System.out.println(response);
         for (DownloadableContentInfo con : response) {
-            System.out.println(con.link());
+            System.out.println(con.getLink());
         }
 
 //        val torrFileResource = jackettRestGateway.download(response.getFirst());

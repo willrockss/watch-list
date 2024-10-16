@@ -45,6 +45,7 @@ public class DownloadContentProcess {
 
     public void start(QBitClient client) {
         val paused = client.findByIdTagOrNull(getContentItemIdentity());
+        // TODO change status to ERROR instead of throwing exception
         Assert.notNull(paused, "Unable to find paused torr " + getContentItemIdentity());
 
         client.start(paused);

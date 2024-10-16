@@ -56,22 +56,29 @@ public class TelegramChatGateway implements ChatGateway {
         val textBuilder = new StringBuilder("Выберите контент для добавления в список: \n\n");
         for (int i = 0; i < found.size(); i++) {
             val elem = found.get(i);
-            val readableSize = FileUtils.byteCountToDisplaySize(elem.size());
-            textBuilder.append("\t*%d*. %s. \n\\[Размер: `%s`, Скачан раз: `%d`\\]\n\n".formatted(i + 1, elem.title(), readableSize, elem.statistics().downloadedTimes()));
+            val readableSize = FileUtils.byteCountToDisplaySize(elem.getSize());
+            textBuilder.append("\t*%d*\\. %s\\. \n\\[Размер: `%s`, Скачан раз: `%d`\\]\n\n".formatted(i + 1, escapeMarkdown(elem.getTitle()), readableSize, elem.getStatistics().getDownloadedTimes()));
         }
-        return escapeMarkdown(textBuilder.toString());
+        return textBuilder.toString();
     }
 
     private String escapeMarkdown(String text) {
         return text
                 .replace(".", "\\.")
+                .replace("`", "\\`")
+                .replace("*", "\\*")
                 .replace("-", "\\-")
+                .replace("_", "\\_")
                 .replace("+", "\\+")
                 .replace(">", "\\>")
                 .replace("<", "\\<")
                 .replace("|", "\\|")
                 .replace("(", "\\(")
-                .replace(")", "\\)");
+                .replace(")", "\\)")
+                .replace("[", "\\[")
+                .replace("]", "\\]")
+                .replace("{", "\\{")
+                .replace("}", "\\}");
     }
 
     private ReplyKeyboard generateKeyboard(UUID sagaId, List<DownloadableContentInfo> found) {

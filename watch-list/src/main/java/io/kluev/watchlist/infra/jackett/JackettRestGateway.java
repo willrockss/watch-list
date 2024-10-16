@@ -52,16 +52,16 @@ public class JackettRestGateway implements JackettGateway {
 
     @Override
     public FileContent download(@NonNull DownloadableContentInfo contentInfo) {
-        val fileResp = restClient.get().uri(contentInfo.link()).retrieve().body(Resource.class);
+        val fileResp = restClient.get().uri(contentInfo.getLink()).retrieve().body(Resource.class);
         if (fileResp == null) {
-            throw new IllegalArgumentException("Unable to download: " + contentInfo.link());
+            throw new IllegalArgumentException("Unable to download: " + contentInfo.getLink());
         }
         try {
             val decodedFilename = URLDecoder.decode(requireNonNull(fileResp.getFilename()), StandardCharsets.UTF_8);
             val escapedFilename = WLFilenameUtils.escapeFilename(decodedFilename);
             return new FileContent(escapedFilename, fileResp.getContentAsByteArray());
         } catch (IOException ioException) {
-            throw new IllegalArgumentException("Unable to read downloaded file: " + contentInfo.link(), ioException);
+            throw new IllegalArgumentException("Unable to read downloaded file: " + contentInfo.getLink(), ioException);
         }
     }
 
