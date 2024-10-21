@@ -4,6 +4,7 @@ import io.kluev.watchlist.app.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +21,6 @@ public class WatchListController {
 
     private final GetWatchListHandler getWatchListHandler;
     private final PlayHandler playHandler;
-    private final ProgressHandler progressHandler;
     private final ProgressHandlerV2 progressHandlerV2;
 
 
@@ -46,13 +46,9 @@ public class WatchListController {
 
     @Deprecated
     @PostMapping("/progress")
-    public ResponseEntity<String> progress(@RequestBody ProgressRequest request) {
+    public ResponseEntity<String> progress(@RequestBody Object request) {
         log.trace("Received progress request {}", request);
-        val resp = progressHandler.handle(request);
-        if (resp.error() == null) {
-            return ResponseEntity.ok(null);
-        }
-        return ResponseEntity.badRequest().body(resp.error());
+        return ResponseEntity.status(HttpStatus.GONE).build();
     }
 
     @PostMapping("/v2/progress")
