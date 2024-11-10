@@ -1,4 +1,28 @@
 <configuration>
+    <appender name="file-json" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>./logs/watch.list.log.json</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>./logs/%d{yyyy-MM-dd}-watch.list.log.json</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <version/>
+                <pattern>
+                    <pattern>
+                        {
+                        "logger": "%logger",
+                        "level": "%level",
+                        "thread": "%thread",
+                        "message": "%message",
+                        "traceId": "%mdc"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>./logs/watch.list.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -17,5 +41,6 @@
     <root level="info">
         <appender-ref ref="console"/>
         <appender-ref ref="file"/>
+        <appender-ref ref="file-json"/>
     </root>
 </configuration>
