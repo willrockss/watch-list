@@ -6,16 +6,20 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 @ToString
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class MovieItem {
+    @Getter
     private String title;
+    @Getter
     private String foreignTitle;
+    @Getter
     private Integer year;
-    private String fullTitle; // TODO remove
+    private String fullTitle;
     @Getter
     private String externalId;
     @Getter
@@ -47,6 +51,10 @@ public class MovieItem {
             fullTitle = calculateFullTitle();
         }
         return fullTitle;
+    }
+
+    public boolean hasForeignTitle() {
+        return StringUtils.isNotBlank(foreignTitle);
     }
 
     private String calculateFullTitle() {

@@ -14,6 +14,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.core.io.Resource;
+import org.springframework.util.Assert;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriBuilder;
 
@@ -22,6 +23,7 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -36,10 +38,12 @@ public class JackettRestGateway implements JackettGateway {
     private final RestClient restClient;
 
     @Override
-    public List<DownloadableContentInfo> query(String query) {
+    public List<DownloadableContentInfo> query(@NonNull String query) {
+        Assert.notNull(query, "Query must not be null!");
+
         val rawResp = restClient
                 .get()
-                .uri(createQueryUriFunc(properties.getApiKey(), query))
+                .uri(createQueryUriFunc(properties.getApiKey(), query.toLowerCase(Locale.ROOT)))
                 .retrieve()
                 .body(String.class);
         try {

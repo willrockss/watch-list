@@ -40,16 +40,31 @@ public class SearchContentHandler {
         val saga = SearchContentSaga.create(event.movie());
         sagaById.put(saga.getSagaId(), saga);
 
-        val found = jackettGateway.query(event.movie().getFullTitle());
+        val found = findDownloadableContext(event.movie());
         val top10HighQuality = found
                 .stream()
                 // TODO Add proper filter, sorter based on strategy
+                .filter(it -> !it.getTitle().contains("DVD9"))
                 .sorted(Comparator.comparing(DownloadableContentInfo::getSize).reversed())
                 .limit(10)
                 .toList();
 
         saga.setFound(top10HighQuality);
         chatGateway.sendSelectContentRequest(saga.getSagaId(), top10HighQuality);
+    }
+
+    private @NonNull List<DownloadableContentInfo> findDownloadableContext(MovieItem item) {
+        var found = jackettGateway.query(item.getFullTitle());
+        if (!found.isEmpty()) {
+            return found;
+        }
+        if (item.hasForeignTitle()) {
+            found = jackettGateway.query("%s %s".formatted(item.getTitle(), item.getForeignTitle()));
+            if (!found.isEmpty()) {
+                return found;
+            }
+        }
+        return jackettGateway.query(item.getTitle());
     }
 
     @Async
