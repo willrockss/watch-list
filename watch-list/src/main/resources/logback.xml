@@ -16,7 +16,8 @@
                         "level": "%level",
                         "thread": "%thread",
                         "message": "%message",
-                        "traceId": "%mdc"
+                        "stack-trace": "%exception",
+                        "mdc": "%mdc"
                         }
                     </pattern>
                 </pattern>
