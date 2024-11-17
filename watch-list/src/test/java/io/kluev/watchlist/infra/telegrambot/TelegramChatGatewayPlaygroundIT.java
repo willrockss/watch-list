@@ -79,6 +79,12 @@ class TelegramChatGatewayPlaygroundIT {
         );
     }
 
+    @Test
+    public void send_message() {
+        Mockito.when(telegramSessionStore.findChatIdsByUsernames(Mockito.any())).thenReturn(List.of("521320812"));
+        chatGateway.sendMessage("521320812", "`File: %s` is ready", "[{some file with chars to escape}].txt");
+    }
+
     @TestConfiguration
     public static class TestConfig {
         @Bean

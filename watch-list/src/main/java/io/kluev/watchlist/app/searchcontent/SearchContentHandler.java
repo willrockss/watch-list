@@ -85,7 +85,7 @@ public class SearchContentHandler {
         val selectedContent = findSelectedDownloadableContentInfoOrNull(saga, resp);
         val torrFileContent = jackettGateway.download(selectedContent);
         val savedFilename = save(torrFileContent);
-        chatGateway.sendMessage(rawResponse.chatId(), "`file://%s` был успешно скачан".formatted(savedFilename));
+        chatGateway.sendMessage(rawResponse.chatId(), "`file://%s` был успешно скачан", savedFilename);
         eventPublisher.publishEvent(new ContentSelectedForDownload(saga.getMovieItem(), savedFilename));
     }
 

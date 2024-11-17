@@ -6,5 +6,5 @@ import java.util.UUID;
 public interface ChatGateway {
     void sendSelectContentRequest(UUID sagaId, List<DownloadableContentInfo> found);
 
-    void sendMessage(String chatId, String notification);
+    void sendMessage(String chatId, String notificationTemplate, String... args);
 }

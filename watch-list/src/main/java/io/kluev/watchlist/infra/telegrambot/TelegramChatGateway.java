@@ -3,9 +3,12 @@ package io.kluev.watchlist.infra.telegrambot;
 import io.kluev.watchlist.app.ChatGateway;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.infra.config.props.TelegramBotProperties;
+import jakarta.annotation.Nullable;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -16,6 +19,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -111,13 +115,28 @@ public class TelegramChatGateway implements ChatGateway {
     }
 
     @Override
-    public void sendMessage(String chatId, String msg) {
-        SendMessage sm = new SendMessage(chatId, escapeMarkdown(msg));
-        sm.setParseMode("MarkdownV2");
+    public void sendMessage(@NonNull String chatId, @NonNull String notificationTemplate, @Nullable String... args) {
+        Assert.notNull(chatId, "chatId must not be null");
+        Assert.notNull(notificationTemplate, "notificationTemplate must not be null");
         try {
+            SendMessage sm = new SendMessage(chatId, prepareMessageText(notificationTemplate, args));
+            sm.setParseMode("MarkdownV2");
+
             telegramClient.execute(sm);
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String prepareMessageText(String template, String... args) {
+        if (ArrayUtils.isEmpty(args)) {
+            return template;
+        }
+
+        val escapedArgs = Arrays
+                .stream(args)
+                .map(this::escapeMarkdown)
+                .toArray();
+        return template.formatted(escapedArgs);
     }
 }
