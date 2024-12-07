@@ -16,6 +16,10 @@ integration:
     url: http://${CURR_HOST:localhost}:1880
     play-video-url: /play
 
+  video-server:
+    base-url: http://localhost:8000
+    video-path: /video?path=
+
   google:
     credentialsFile: <path to your credentials JSON file>
     sheet:

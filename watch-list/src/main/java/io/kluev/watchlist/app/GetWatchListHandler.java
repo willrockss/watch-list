@@ -5,10 +5,15 @@ import io.kluev.watchlist.domain.MovieItem;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.Series;
 import io.kluev.watchlist.domain.SeriesRepository;
+import io.kluev.watchlist.infra.config.props.VideoServerProperties;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.apache.commons.lang3.StringUtils;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -20,6 +25,7 @@ public class GetWatchListHandler {
 
     private final SeriesRepository seriesRepository;
     private final MovieRepository movieRepository;
+    private final VideoServerProperties videoServerProperties;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     @SneakyThrows
@@ -50,11 +56,14 @@ public class GetWatchListHandler {
                 .map(Path::toString)
                 .orElse(null);
 
-        return new SeriesDto(
-                series.getId().getValue(),
-                series.getTitle(),
-                path
-        );
+        return SeriesDto
+                .builder()
+                .id(series.getId().getValue())
+                .title(series.getTitle())
+                .toWatchEpisodePath(path)
+                .localPath(path)
+                .contentStreamUrl(getContentUrlOrNull(path))
+                .build();
     }
 
     private MovieDto map(MovieItem movieItem) {
@@ -62,7 +71,18 @@ public class GetWatchListHandler {
                 movieItem.getExternalId(),
                 movieItem.getFullTitle(),
                 movieItem.getStatus(),
-                movieItem.getFilePath()
+                movieItem.getFilePath(),
+                movieItem.getFilePath(),
+                getContentUrlOrNull(movieItem.getFilePath())
         );
+    }
+
+    private @Nullable String getContentUrlOrNull(@Nullable String path) {
+        if (StringUtils.isBlank(path)) {
+            return null;
+        }
+        return videoServerProperties.getBaseUrl()
+                + videoServerProperties.getVideoPath()
+                + URLEncoder.encode(path, StandardCharsets.UTF_8);
     }
 }

@@ -25,6 +25,7 @@ import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import io.kluev.watchlist.infra.config.props.QBitClientProperties;
 import io.kluev.watchlist.infra.config.props.SearchContentProperties;
 import io.kluev.watchlist.infra.config.props.TelegramBotProperties;
+import io.kluev.watchlist.infra.config.props.VideoServerProperties;
 import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
@@ -97,9 +98,10 @@ public class MainBeansConfig {
     @Bean
     public GetWatchListHandler getWatchListHandler(
             NodeRedSeriesRepository seriesRepository,
-            MovieRepository movieRepository
+            MovieRepository movieRepository,
+            VideoServerProperties videoServerProperties
     ) {
-        return new GetWatchListHandler(seriesRepository, movieRepository);
+        return new GetWatchListHandler(seriesRepository, movieRepository, videoServerProperties);
     }
 
     @Bean
