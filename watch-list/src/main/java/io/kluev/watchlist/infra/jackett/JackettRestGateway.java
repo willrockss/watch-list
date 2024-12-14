@@ -79,6 +79,7 @@ public class JackettRestGateway implements JackettGateway {
 
     private DownloadableContentInfo map(Item item) {
         return new DownloadableContentInfo(
+                item.getGuid(),
                 item.getTitle(),
                 item.getLink(),
                 item.getSize(),

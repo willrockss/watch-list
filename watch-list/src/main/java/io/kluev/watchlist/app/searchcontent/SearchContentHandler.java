@@ -1,20 +1,32 @@
 package io.kluev.watchlist.app.searchcontent;
 
-import io.kluev.watchlist.app.*;
+import io.kluev.watchlist.app.ChatGateway;
+import io.kluev.watchlist.app.ChatMessageResponse;
+import io.kluev.watchlist.app.DownloadableContentInfo;
+import io.kluev.watchlist.app.FileContent;
+import io.kluev.watchlist.app.JackettGateway;
 import io.kluev.watchlist.app.event.ContentSelectedForDownload;
 import io.kluev.watchlist.common.utils.NumberUtils;
 import io.kluev.watchlist.domain.MovieItem;
 import io.kluev.watchlist.domain.event.MovieEnlisted;
 import io.kluev.watchlist.infra.config.props.SearchContentProperties;
-import lombok.*;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings("unused")
 @RequiredArgsConstructor
 public class SearchContentHandler {
+
+    public static int OK_FOUND_SIZE_THRESHOLD = 3;
 
     private final SearchContentProperties properties;
     private final JackettGateway jackettGateway;
@@ -45,6 +59,7 @@ public class SearchContentHandler {
                 .stream()
                 // TODO Add proper filter, sorter based on strategy
                 .filter(it -> !it.getTitle().contains("DVD9"))
+                .distinct()
                 .sorted(Comparator.comparing(DownloadableContentInfo::getSize).reversed())
                 .limit(10)
                 .toList();
@@ -54,17 +69,34 @@ public class SearchContentHandler {
     }
 
     private @NonNull List<DownloadableContentInfo> findDownloadableContext(MovieItem item) {
-        var found = jackettGateway.query(item.getFullTitle());
-        if (!found.isEmpty()) {
-            return found;
+        var foundByFullTitle = jackettGateway.query(item.getFullTitle());
+        if (isResultConsideredOk(foundByFullTitle)) {
+            return foundByFullTitle;
         }
+
+        List<DownloadableContentInfo> foundByForeignTitle = List.of();
         if (item.hasForeignTitle()) {
-            found = jackettGateway.query("%s %s".formatted(item.getTitle(), item.getForeignTitle()));
-            if (!found.isEmpty()) {
-                return found;
+            foundByForeignTitle = jackettGateway.query("%s %s".formatted(item.getTitle(), item.getForeignTitle()));
+            if (isResultConsideredOk(foundByForeignTitle)) {
+                return combine(foundByFullTitle, foundByForeignTitle);
             }
         }
-        return jackettGateway.query(item.getTitle());
+        return combine(foundByFullTitle, foundByForeignTitle, jackettGateway.query(item.getTitle()));
+    }
+
+    // TODO Use Specification instead
+    private boolean isResultConsideredOk(List<DownloadableContentInfo> result) {
+        return result.size() > OK_FOUND_SIZE_THRESHOLD;
+    }
+
+    // TODO use Composite collection
+    @SafeVarargs
+    private List<DownloadableContentInfo> combine(@NotNull Collection<DownloadableContentInfo>... results) {
+        var res = new ArrayList<DownloadableContentInfo>(results.length);
+        for (Collection<DownloadableContentInfo> result : results) {
+            res.addAll(result);
+        }
+        return res;
     }
 
     @Async

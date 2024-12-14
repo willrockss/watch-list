@@ -3,6 +3,7 @@ package io.kluev.watchlist.app;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 // TODO move to another app|module later
@@ -10,7 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class DownloadableContentInfo {
+    @EqualsAndHashCode.Include
+    String guid;
     String title;
     String link;
     Long size;
