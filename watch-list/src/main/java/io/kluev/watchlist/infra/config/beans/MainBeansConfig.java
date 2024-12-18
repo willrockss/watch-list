@@ -54,6 +54,8 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @SuppressWarnings("unused")
 @Configuration
@@ -103,9 +105,10 @@ public class MainBeansConfig {
     public GetWatchListHandler getWatchListHandler(
             NodeRedSeriesRepository seriesRepository,
             MovieRepository movieRepository,
-            VideoServerProperties videoServerProperties
+            VideoServerProperties videoServerProperties,
+            ExecutorService virtualThreadExecutorService
     ) {
-        return new GetWatchListHandler(seriesRepository, movieRepository, videoServerProperties);
+        return new GetWatchListHandler(seriesRepository, movieRepository, videoServerProperties, virtualThreadExecutorService);
     }
 
     @Bean
@@ -255,6 +258,12 @@ public class MainBeansConfig {
 
     ) {
         return new ProgressHandlerV2(movieRepository, watchDateStrategy, clock, restClient, properties, lockService, seriesRepository);
+    }
+
+    @Bean
+    public ExecutorService virtualThreadExecutorService() {
+        val factory = Thread.ofVirtual().name("virtual-thread-", 0).factory();
+        return Executors.newThreadPerTaskExecutor(factory);
     }
 
 }

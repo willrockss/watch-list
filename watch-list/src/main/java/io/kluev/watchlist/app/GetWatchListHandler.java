@@ -6,13 +6,14 @@ import io.kluev.watchlist.infra.config.props.VideoServerProperties;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
@@ -21,26 +22,28 @@ public class GetWatchListHandler {
     private final SeriesRepository seriesRepository;
     private final MovieRepository movieRepository;
     private final VideoServerProperties videoServerProperties;
-    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    private final ExecutorService executor;
 
     @SneakyThrows
     public WatchListResponse handle() {
+        val seriesFuture = getSeriesFuture();
+        val moviesFuture = getMoviesFuture();
         return new WatchListResponse(
-                getSeries(),
-                getMovies().stream().map(this::map).toList()
+                seriesFuture.get(2, TimeUnit.MINUTES),
+                moviesFuture.get(2, TimeUnit.MINUTES)
+                        .stream().map(this::map).toList()
         );
     }
 
     @SneakyThrows
-    private List<SeriesDto> getSeries() {
-        return executor.submit(seriesRepository::getAllInProgress)
-                .get(2, TimeUnit.MINUTES);
+    private Future<List<SeriesDto>> getSeriesFuture() {
+        return executor.submit(seriesRepository::getAllInProgress);
     }
 
     @SneakyThrows
-    private List<MovieItem> getMovies() {
-        return executor.submit(movieRepository::getMoviesToWatch)
-                .get(2, TimeUnit.MINUTES);
+    private Future<List<MovieItem>> getMoviesFuture() {
+        return executor.submit(movieRepository::getMoviesToWatch);
+
     }
 
     private MovieDto map(MovieItem movieItem) {
