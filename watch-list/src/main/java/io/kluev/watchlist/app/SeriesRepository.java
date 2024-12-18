@@ -1,10 +1,12 @@
-package io.kluev.watchlist.domain;
+package io.kluev.watchlist.app;
+
+import io.kluev.watchlist.domain.Series;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface SeriesRepository {
-    List<Series> getInProgress();
+    List<SeriesDto> getAllInProgress();
 
     Optional<Series> getInProgressById(String seriesId);
 

@@ -1,7 +1,6 @@
 package io.kluev.watchlist.app;
 
 import io.kluev.watchlist.domain.MovieRepository;
-import io.kluev.watchlist.domain.SeriesRepository;
 import io.kluev.watchlist.domain.WatchDateStrategy;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import lombok.RequiredArgsConstructor;

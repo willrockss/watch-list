@@ -1,12 +1,15 @@
 package io.kluev.watchlist.infra;
 
+import io.kluev.watchlist.app.SeriesDto;
+import io.kluev.watchlist.app.SeriesRepository;
 import io.kluev.watchlist.domain.Episode;
 import io.kluev.watchlist.domain.Series;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
-import io.kluev.watchlist.domain.SeriesRepository;
 import io.kluev.watchlist.domain.event.EpisodeWatched;
 import io.kluev.watchlist.domain.event.Event;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
+import io.kluev.watchlist.infra.config.props.VideoServerProperties;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -15,10 +18,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -32,15 +42,16 @@ public class NodeRedSeriesRepository implements SeriesRepository {
     private final SeriesIdGenerator seriesIdGenerator;
     private final RestClient restClient;
     private final NodeRedIntegrationProperties properties;
+    private final VideoServerProperties videoServerProperties;
 
     // Since it's single tenant app don't bother about memory leak here
     private final ConcurrentHashMap<String, List<Episode>> episodesCacheByPath = new ConcurrentHashMap<>();
 
     @Override
-    public List<Series> getInProgress() {
+    public List<SeriesDto> getAllInProgress() {
         val fromNodeRed = getFromNodeRed();
         return fromNodeRed.stream()
-                .map(this::createFromRaw)
+                .map(this::map)
                 .toList();
     }
 
@@ -52,6 +63,13 @@ public class NodeRedSeriesRepository implements SeriesRepository {
                 .findFirst();
     }
 
+    private List<Series> getInProgress() {
+        val fromNodeRed = getFromNodeRed();
+        return fromNodeRed.stream()
+                .map(this::createFromRaw)
+                .toList();
+    }
+
     @Override
     public void save(Series series) {
         // TODO Implement properly
@@ -60,8 +78,9 @@ public class NodeRedSeriesRepository implements SeriesRepository {
 
         for (Event event : series.getEvents()) {
             switch (event) {
+                // TODO make sure this is a last watched episode (in case of multiple EpisodeWatched events)
                 case EpisodeWatched episodeWatched -> req.put("watchedEpisodeNumber", episodeWatched.episode().getNumber());
-                default -> throw new IllegalStateException("Unexpected value: " + event);
+                default -> throw new IllegalStateException("Unexpected event: " + event);
             }
         }
 
@@ -114,6 +133,41 @@ public class NodeRedSeriesRepository implements SeriesRepository {
             }
         }
         return List.of();
+    }
+
+    private SeriesDto map(NodeRedWatchListResponse nodeResp) {
+        val serisPath = Path.of(nodeResp.path());
+        val episodesFromCache = episodesCacheByPath.computeIfAbsent(nodeResp.path(), it -> loadEpisodes(serisPath));
+
+        val toWatchEpisode = episodesFromCache.stream()
+                .sorted()
+                .filter(it -> it.getNumber() > nodeResp.watchedEpisodeNumber())
+                .findFirst()
+                .orElse(null);
+
+        final String localPath;
+        if (toWatchEpisode != null) {
+            localPath = serisPath.resolve(toWatchEpisode.getFilename()).toString();
+        } else {
+            localPath = null;
+        }
+
+        return SeriesDto.builder()
+                .id(seriesIdGenerator.generateId(nodeResp.name(), nodeResp.seasonNumber()))
+                .title(generateFullTitle(nodeResp))
+                .toWatchEpisodePath(localPath)
+                .localPath(localPath)
+                .contentStreamUrl(getContentUrlOrNull(localPath))
+                .build();
+    }
+
+    private @Nullable String getContentUrlOrNull(@Nullable String path) {
+        if (StringUtils.isBlank(path)) {
+            return null;
+        }
+        return videoServerProperties.getBaseUrl()
+                + videoServerProperties.getVideoPath()
+                + URLEncoder.encode(path, StandardCharsets.UTF_8);
     }
 
     private String calculateEpisodeFileExtension(Path seriesPath) {
@@ -193,16 +247,12 @@ public class NodeRedSeriesRepository implements SeriesRepository {
     }
 
     private Integer parseInt(Object raw) {
-        if (raw == null) {
-            return null;
-        }
-        if (raw instanceof Integer integerRaw) {
-            return integerRaw;
-        }
-        if (raw instanceof Number numberRaw) {
-            return numberRaw.intValue();
-        }
-        return Integer.parseInt(raw.toString());
+        return switch (raw) {
+            case null -> null;
+            case Integer integerRaw -> integerRaw;
+            case Number numberRaw -> numberRaw.intValue();
+            default -> Integer.parseInt(raw.toString());
+        };
     }
 }
 

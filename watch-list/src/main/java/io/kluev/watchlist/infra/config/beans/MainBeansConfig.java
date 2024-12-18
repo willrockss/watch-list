@@ -13,7 +13,7 @@ import io.kluev.watchlist.app.downloadcontent.QBitClient;
 import io.kluev.watchlist.app.searchcontent.SearchContentHandler;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
-import io.kluev.watchlist.domain.SeriesRepository;
+import io.kluev.watchlist.app.SeriesRepository;
 import io.kluev.watchlist.domain.SimpleOffsetWatchDateStrategy;
 import io.kluev.watchlist.domain.WatchDateStrategy;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
@@ -91,8 +91,12 @@ public class MainBeansConfig {
     }
 
     @Bean
-    public NodeRedSeriesRepository nodeRedSeriesRepository(NodeRedIntegrationProperties properties, RestClient restClient) {
-        return new NodeRedSeriesRepository(seriesIdGenerator(), restClient, properties);
+    public NodeRedSeriesRepository nodeRedSeriesRepository(
+            RestClient restClient,
+            NodeRedIntegrationProperties properties,
+            VideoServerProperties videoServerProperties
+    ) {
+        return new NodeRedSeriesRepository(seriesIdGenerator(), restClient, properties, videoServerProperties);
     }
 
     @Bean
