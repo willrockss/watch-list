@@ -561,7 +561,7 @@
         "type": "function",
         "z": "1c100426f1edcec5",
         "name": "prepare get row request",
-        "func": "var params = msg.req.params;\nif (params.length == 0 || !params[0]) {\n    msg.cells = 'Сериалы!A1:H11';\n} else {\n    var rowN = params[0];\n    msg.cells = 'Сериалы!A' + rowN + ':H' + rowN;\n}\nreturn msg;",
+        "func": "var params = msg.req.params;\nif (params.length == 0 || !params[0]) {\n    msg.cells = 'Сериалы!A1:J11';\n} else {\n    var rowN = params[0];\n    msg.cells = 'Сериалы!A' + rowN + ':J' + rowN;\n}\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
