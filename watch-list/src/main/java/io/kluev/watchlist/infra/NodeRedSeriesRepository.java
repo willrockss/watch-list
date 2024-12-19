@@ -158,6 +158,8 @@ public class NodeRedSeriesRepository implements SeriesRepository {
                 .toWatchEpisodePath(localPath)
                 .localPath(localPath)
                 .contentStreamUrl(getContentUrlOrNull(localPath))
+                .audioTrack(nodeResp.audioTrack())
+                .skipIntroOffsetSec(nodeResp.skipIntroOffsetSec())
                 .build();
     }
 
@@ -231,6 +233,14 @@ public class NodeRedSeriesRepository implements SeriesRepository {
             if (it.size() >= 6) {
                 path = (String) it.get(5);
             }
+            Integer audioTrack = null;
+            if (it.size() >= 9) {
+                audioTrack = parseInt(it.get(8));
+            }
+            Integer skipIntroOffsetSec = null;
+            if (it.size() >= 10) {
+                skipIntroOffsetSec = parseInt(it.get(9));
+            }
 
             result.add(new NodeRedWatchListResponse(
                     rowNumber,
@@ -238,7 +248,9 @@ public class NodeRedSeriesRepository implements SeriesRepository {
                     seasonNumber,
                     watchedEpisodeNumber,
                     episodesCount,
-                    path
+                    path,
+                    audioTrack,
+                    skipIntroOffsetSec
             ));
 
         }
@@ -262,6 +274,8 @@ record NodeRedWatchListResponse(
         Integer seasonNumber,
         Integer watchedEpisodeNumber,
         Integer episodesCount,
-        String path
+        String path,
+        Integer audioTrack,
+        Integer skipIntroOffsetSec
 ) {
 }

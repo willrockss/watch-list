@@ -9,6 +9,8 @@ public record SeriesDto(
         @Deprecated // use localPath instead
         String toWatchEpisodePath,
         String localPath,
-        String contentStreamUrl
+        String contentStreamUrl,
+        Integer audioTrack,
+        Integer skipIntroOffsetSec
 ) {
 }
