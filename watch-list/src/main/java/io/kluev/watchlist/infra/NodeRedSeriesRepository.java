@@ -2,6 +2,7 @@ package io.kluev.watchlist.infra;
 
 import io.kluev.watchlist.app.SeriesDto;
 import io.kluev.watchlist.app.SeriesRepository;
+import io.kluev.watchlist.app.VideoType;
 import io.kluev.watchlist.domain.Episode;
 import io.kluev.watchlist.domain.Series;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
@@ -10,6 +11,7 @@ import io.kluev.watchlist.domain.event.Event;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import io.kluev.watchlist.infra.config.props.VideoServerProperties;
 import jakarta.annotation.Nullable;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -152,24 +154,28 @@ public class NodeRedSeriesRepository implements SeriesRepository {
             localPath = null;
         }
 
+        val seriesId = seriesIdGenerator.generateId(nodeResp.name(), nodeResp.seasonNumber());
         return SeriesDto.builder()
-                .id(seriesIdGenerator.generateId(nodeResp.name(), nodeResp.seasonNumber()))
+                .id(seriesId)
                 .title(generateFullTitle(nodeResp))
                 .toWatchEpisodePath(localPath)
                 .localPath(localPath)
-                .contentStreamUrl(getContentUrlOrNull(localPath))
+                .contentStreamUrl(getContentUrlOrNull(localPath, seriesId))
                 .audioTrack(nodeResp.audioTrack())
                 .skipIntroOffsetSec(nodeResp.skipIntroOffsetSec())
                 .build();
     }
 
-    private @Nullable String getContentUrlOrNull(@Nullable String path) {
+    private @Nullable String getContentUrlOrNull(@Nullable String path, @NonNull String id) {
         if (StringUtils.isBlank(path)) {
             return null;
         }
-        return videoServerProperties.getBaseUrl()
-                + videoServerProperties.getVideoPath()
-                + URLEncoder.encode(path, StandardCharsets.UTF_8);
+        val requestPart = videoServerProperties.getVideoPathTemplate().formatted(
+                id,
+                URLEncoder.encode(path, StandardCharsets.UTF_8),
+                VideoType.EPISODE.name()
+        );
+        return videoServerProperties.getBaseUrl() + requestPart;
     }
 
     private String calculateEpisodeFileExtension(Path seriesPath) {

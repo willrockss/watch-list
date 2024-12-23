@@ -4,6 +4,7 @@ import io.kluev.watchlist.domain.MovieItem;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.infra.config.props.VideoServerProperties;
 import jakarta.annotation.Nullable;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -53,16 +54,19 @@ public class GetWatchListHandler {
                 movieItem.getStatus(),
                 movieItem.getFilePath(),
                 movieItem.getFilePath(),
-                getContentUrlOrNull(movieItem.getFilePath())
+                getContentUrlOrNull(movieItem.getFilePath(), movieItem.getExternalId())
         );
     }
 
-    private @Nullable String getContentUrlOrNull(@Nullable String path) {
+    private @Nullable String getContentUrlOrNull(@Nullable String path, @NonNull String id) {
         if (StringUtils.isBlank(path)) {
             return null;
         }
-        return videoServerProperties.getBaseUrl()
-                + videoServerProperties.getVideoPath()
-                + URLEncoder.encode(path, StandardCharsets.UTF_8);
+        val requestPart = videoServerProperties.getVideoPathTemplate().formatted(
+                id,
+                URLEncoder.encode(path, StandardCharsets.UTF_8),
+                VideoType.MOVIE.name()
+        );
+        return videoServerProperties.getBaseUrl() + requestPart;
     }
 }

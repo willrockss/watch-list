@@ -18,7 +18,7 @@ integration:
 
   video-server:
     base-url: http://localhost:8000
-    video-path: /video?path=
+    video-path-template: /video/%s?path=%s&videoType=%s
 
   google:
     credentialsFile: <path to your credentials JSON file>

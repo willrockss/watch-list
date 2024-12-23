@@ -11,5 +11,5 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "integration.video-server")
 public class VideoServerProperties {
     private String baseUrl;
-    private String videoPath;
+    private String videoPathTemplate;
 }
