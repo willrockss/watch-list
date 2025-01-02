@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <title>Watch List</title>
+
+  <!-- Bootstrap -->
+  <link href="bootstrap-3.3.7-dist/css/bootstrap.css" rel="stylesheet">
+  <link href="css/dark-mode.css" rel="stylesheet">
+
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="js/jquery-1-12-4.js"></script>
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <script src="bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+
+  <style>
+    .panel-body {
+        border-radius: 4px;
+    }
+
+    .bd-example-modal-lg .modal-dialog{
+        display: table;
+        position: relative;
+        margin: 0 auto;
+        top: calc(50% - 24px);
+    }
+
+    .bd-example-modal-lg .modal-dialog .modal-content{
+        background-color: transparent;
+        border: none;
+    }
+
+    .card{
+        box-shadow: 0 6px 10px rgba(0,0,0,.08), 0 0 6px rgba(0,0,0,.05);
+        transition: .3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s -webkit-transform cubic-bezier(.155,1.105,.295,1.12);
+    }
+    .video-item:hover {
+        outline: 3px solid white;
+    }
+  </style>
+  <style>
+    .bd-placeholder-img {
+      font-size: 1.125rem;
+      text-anchor: middle;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    @media (min-width: 768px) {
+      .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+      }
+    }
+  </style>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    .controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .video-container {
+        display: inline-block;
+        white-space: nowrap;
+        overflow-x: auto;
+        padding-left: 20px; /* Левый отступ */
+        padding-right: 20px; /* Правый отступ */
+        width: 100%;
+        /* Настройки полосы прокрутки */
+        scrollbar-width: thin; /* Узкая полоса прокрутки */
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent; /* Цвет полосы прокрутки */
+    }
+    .video-container::-webkit-scrollbar {
+        width: 4px; /* Толщина полосы прокрутки */
+        height: 4px; /* Толщина полосы прокрутки */
+    }
+    .video-container::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2); /* Цвет бегунка */
+        border-radius: 10px; /* Закруглённые углы бегунка */
+    }
+    .video-container::-webkit-scrollbar-track {
+        background: transparent; /* Фоновая область полосы прокрутки */
+    }
+    .video-item {
+        display: inline-block;
+        margin-top: 10px;
+        margin-right: 10px; /* Отступ между видео */
+        margin-bottom: 0px;
+        width: 30%; /* Ширина одного видео */
+        max-width: 400px; /* Максимальная ширина видео */
+        height: 200px; /* Высота одного видео */
+        background-color: #f0f0f0;
+        border-radius: 5px;
+        text-align: center;
+        line-height: 200px; /* Центрирование текста по вертикали */
+        position: relative; /* Позиционирование для видео */
+        overflow: hidden; /* Чтобы видео не выходило за пределы */
+    }
+    .video-item-video {
+        width: 100%; /* Растягиваем видео на весь блок */
+        height: calc(100% - 40px);
+        object-fit: cover; /* Заполняет пространство, обрезая края */
+        position: absolute; /* Абсолютное позиционирование */
+        top: 40px;
+        left: 0;
+    }
+    .scroll-btn {
+        font-size: 24px; /* Увеличение размера кнопок */
+        padding: 12px 18px; /* Увеличенный внутренний отступ */
+    }
+    .my-tooltip {
+        display: none;
+        position: absolute;
+        top: 80px;
+        left: 240px;
+        background-color: black;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        z-index: 9999;
+        opacity: 100;
+    }
+  </style>
+  <style>
+    #debugButton {
+      position: fixed;
+      top: 5px; /* Расстояние от верхнего края экрана */
+      right: 5px; /* Расстояние от правого края экрана */
+      background-color: #1d1864;
+    }
+  </style>
+</head>
+
+<body data-theme="dark">
+  <!-- Modal window with loading spinner -->
+  <div class="modal fade bd-example-modal-lg" data-backdrop="static" data-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content" style="width: 48px">
+        <img src="pendulum.gif" alt="Loading...">
+      </div>
+    </div>
+  </div>
+  <p class="my-tooltip" id="tooltip">You hovered over me!</p>
+  <div class="modal fade bd-example-modal-lg" id="tooltip2" data-backdrop="static" data-keyboard="false" tabindex="-1">DIV You hovered over me!</div>
+
+  <div class="container">
+    <div class="row justify-content-md-center">
+      <div class="col-md-1"></div>
+      <div class="col-md-10 text-center">
+        <h2 class="text-primary">Сериалы</h2>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function play(path, videoId, videoType){
+      $('.modal').modal('show');
+
+      var xhr = new XMLHttpRequest();
+
+      xhr.addEventListener("readystatechange", function() {
+        if (this.readyState === 4) {
+          $('.modal').modal('hide');
+        }
+      });
+
+      var body = '{"videoId": "' + encodeURIComponent(videoId)
+          + '", "videoPath": "' + encodeURIComponent(path)
+          + '", "videoType": "' + videoType + '"}';
+      xhr.open("POST", '/play', true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.send(body);
+    }
+  </script>
+  <script>
+    function setupVideo(videoElementId, audioTrack) {
+      var video = document.getElementById(videoElementId);
+      if (!video) {
+        console.warn('video with id ' + videoElementId + ' is not defined. Do nothing');
+        return;
+      }
+
+      if (audioTrack) {
+        video.onloadedmetadata = function(event) {
+          var audioTrackIndex = audioTrack - 1;
+          if (video.audioTracks) {
+              if (audioTrackIndex < video.audioTracks.length) {
+                for (var i = 0; i < video.audioTracks.length; i += 1) {
+                  console.log(JSON.stringify(video.audioTracks[i]));
+                  video.audioTracks[i].enabled = false;
+                }
+                video.audioTracks[audioTrackIndex].enabled = true;
+              } else {
+                console.warn('audioTrackIndex ' + audioTrackIndex + ' is invalid. There are ' + video.audioTracks.length + ' tracks only');
+              }
+          } else {
+              console.log('Bufferization is over. No audioTracks :(');
+          }
+        }
+      }
+
+      video.addEventListener('click', function() {
+
+          if (video.requestFullscreen) {
+              console.log('fullscreen, default');
+              video.requestFullscreen(); // Стандартный метод
+          } else if (video.mozRequestFullScreen) {
+              console.log('mozilla fullscreen');
+              /* Firefox */ video.mozRequestFullScreen();
+          } else if (video.webkitEnterFullscreen) {
+              console.log('chrome fullscreen');
+              /* Safari/Chrome */
+              var resp = video.webkitEnterFullscreen();
+              console.log('fullscreen resp: ', resp);
+          } else {
+             console.log('Unknown browser and fullscreen is probably not supported');
+          }
+
+
+          if (this.paused) {
+              this.play();
+          } else {
+              this.pause();
+          }
+
+      });
+
+      var tooltip = document.getElementById("tooltip");
+
+      video.addEventListener("mouseenter", function() {
+          tooltip.innerText = video.src;
+          tooltip.style.display = "inline"; // Показать подсказку при наведении
+      });
+
+      video.addEventListener("mouseleave", function() {
+          tooltip.innerText = '';
+          tooltip.style.display = "none"; // Скрыть подсказку при уходе курсора
+      });
+    }
+  </script>
+
+  <div class="container mt-5">
+    <hr>
+    <div class="controls">
+      <button id="scrollLeft" class="btn btn-primary scroll-btn"><i class="fas fa-angle-left"></i><<</button>
+      <div class="video-container">
+        {{#series}}
+        <div class="video-item panel panel-primary card">
+          <div class="panel-heading">
+            <h3 class="panel-title">{{title}}</h3>
+          </div>
+          <div class="panel-body align-middle">
+            <video id="video-{{index}}" class="video-item-video" src="{{contentStreamUrl}}" preload="none" controls>
+              Ваш браузер не поддерживает тег video.
+            </video>
+            <script>
+              setupVideo("video-{{index}}", {{audioTrack}});
+            </script>
+          </div>
+        </div>
+        {{/series}}
+      </div>
+      <button id="scrollRight" class="btn btn-primary scroll-btn"><i class="fas fa-angle-right"></i>>></button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('scrollLeft').addEventListener('click', function() {
+        const container = document.querySelector('.video-container');
+        container.scrollLeft -= 150; // Прокручиваем влево на 150px
+    });
+
+    document.getElementById('scrollRight').addEventListener('click', function() {
+        const container = document.querySelector('.video-container');
+        container.scrollLeft += 150; // Прокручиваем вправо на 150px
+    });
+  </script>
+
+  <!-- Текстовая область для вывода сообщений -->
+  <textarea id="logArea" readonly rows="10" cols="50" style="display: none; width: 100%; position: fixed; bottom: 0; left: 0; color: #333;"></textarea>
+
+  <script>
+    var originalLog = console.log;
+    // Переопределяем console.log
+    console.log = function() {
+        // Получаем массив аргументов
+        var args = Array.prototype.slice.call(arguments);
+
+        // Вызываем оригинальный console.log (если нужно)
+        originalLog.apply(console, args);
+
+        // Получаем текстовую область по ID
+        var logArea = document.getElementById('logArea');
+
+        // Добавляем новое сообщение в конец области
+        logArea.value += args.join(' ') + '\n';
+
+        // Прокручиваем текстовую область вниз, чтобы всегда видеть последние сообщения
+        logArea.scrollTop = logArea.scrollHeight;
+    };
+
+    var originalError = console.error;
+    console.error = function() {
+        // Получаем массив аргументов
+        var args = Array.prototype.slice.call(arguments);
+
+        // Вызываем оригинальный console.log (если нужно)
+        originalError.apply(console, args);
+
+        // Получаем текстовую область по ID
+        var logArea = document.getElementById('logArea');
+
+        // Добавляем новое сообщение в конец области
+        logArea.value += 'ERROR: ' + args.join(' ') + '\n';
+
+        // Прокручиваем текстовую область вниз, чтобы всегда видеть последние сообщения
+        logArea.scrollTop = logArea.scrollHeight;
+    };
+
+    var originalWarn = console.warn;
+    console.warn = function() {
+        // Получаем массив аргументов
+        var args = Array.prototype.slice.call(arguments);
+
+        // Вызываем оригинальный console.log (если нужно)
+        originalWarn.apply(console, args);
+
+        // Получаем текстовую область по ID
+        var logArea = document.getElementById('logArea');
+
+        // Добавляем новое сообщение в конец области
+        logArea.value += 'WARN: ' + args.join(' ') + '\n';
+
+        // Прокручиваем текстовую область вниз, чтобы всегда видеть последние сообщения
+        logArea.scrollTop = logArea.scrollHeight;
+    };
+  </script>
+  <script>
+    function toggleDebugOutput() {
+      var element = document.getElementById('logArea');
+      if (element) {
+        if (element.style.display === 'none') {
+          element.style.display = 'block';
+        } else {
+          element.style.display = 'none';
+        }
+      }
+    }
+  </script>
+  <button id="debugButton" onclick="toggleDebugOutput()">🐛</button>
+</body>
+</html>

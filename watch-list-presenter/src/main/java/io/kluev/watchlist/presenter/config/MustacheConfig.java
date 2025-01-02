@@ -15,7 +15,7 @@ public class MustacheConfig {
     ) {
         return Mustache
                 .compiler()
-                .defaultValue("---")
+                .defaultValue("null")
                 .withLoader(templateLoader);
     }
 }

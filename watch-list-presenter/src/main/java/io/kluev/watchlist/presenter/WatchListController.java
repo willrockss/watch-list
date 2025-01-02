@@ -3,7 +3,7 @@ package io.kluev.watchlist.presenter;
 import io.kluev.watchlist.presenter.config.WatchListBackendProperties;
 import io.kluev.watchlist.presenter.dto.Movie;
 import io.kluev.watchlist.presenter.dto.PlayRequest;
-import io.kluev.watchlist.presenter.dto.Series;
+import io.kluev.watchlist.presenter.dto.SeriesWithIndex;
 import io.kluev.watchlist.presenter.dto.WatchListResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +11,6 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.lang.NonNullApi;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +22,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 
 @Controller
@@ -44,8 +44,8 @@ public class WatchListController {
         if (Boolean.TRUE == mock) {
             // TODO move to NODE-RED/WireMock
             model.put("series", java.util.List.of(
-                    new Series("Друзья", "Друзья", "/home/user/Downloads/Friends/s02e05.mkv"),
-                    new Series("Хороший_доктор", "Хороший доктор", "/home/user/Videos/The.Best.Doctor/s01e0'1.mkv")));
+                    new SeriesWithIndex(0, "Друзья", "Друзья", "/home/user/Downloads/Friends/s02e05.mkv", null, null, null),
+                    new SeriesWithIndex(1, "Хороший_доктор", "Хороший доктор", "/home/user/Videos/The.Best.Doctor/s01e0'1.mkv", null, null, null)));
 
             model.put("movies", java.util.List.of(
                     new Movie("123", "Терминатор", "READY", "/home/user/Videos/Terminator.mkv"),
@@ -65,6 +65,39 @@ public class WatchListController {
         }
 
         return new ModelAndView("index", model);
+    }
+
+    @GetMapping("/embedded")
+    public ModelAndView getEmbeddedSeriesToWatch(Map<String, Object> model) {
+        if (Boolean.TRUE == mock) {
+            // TODO move to NODE-RED/WireMock
+            model.put("series", java.util.List.of(
+                    new SeriesWithIndex(0, "Симпсоны_20", "Симпсоны(20, 0/20)", null, "http://192.168.0.2:8000/video?path=/home/alex/Videos/The.Simpsons.S34.WEBDL.1080p.Rus.Eng/The.Simpsons.S34E01.WEBDL.1080p.RGzsRutracker.mkv", null,null),
+                    new SeriesWithIndex(1, "Сопрано_2", "Сопрано(2, 1/14)", null, "http://192.168.0.2:8000/video?path=/home/alex/Videos/The.Sopranos.S02.720p.BluRay.3xRus.Eng.TeamHD/The.Sopranos.S02E01.720p.BluRay.3xRus.Eng.TeamHD.mkv", 3, 90)
+             ));
+        } else {
+            val resp = restClient.get()
+                    .uri(backendProperties.getUrl() + "/v2/watch-list")
+                    .retrieve()
+                    .body(WatchListResponse.class);
+            Assert.notNull(resp, "WatchList response is null");
+            val seriesResp = new ArrayList<SeriesWithIndex>(resp.series().size());
+            for (int i = 0; i < resp.series().size(); i++) {
+                val ser = resp.series().get(i);
+                seriesResp.add(
+                        new SeriesWithIndex()
+                                .setIndex(i)
+                                .setId(ser.id())
+                                .setTitle(ser.title())
+                                .setToWatchEpisodePath(ser.toWatchEpisodePath())
+                                .setContentStreamUrl(ser.contentStreamUrl())
+                                .setAudioTrack(ser.audioTrack())
+                                .setSkipIntroOffsetSec(ser.skipIntroOffsetSec())
+                );
+            }
+            model.put("series", seriesResp);
+        }
+        return new ModelAndView("embedded-video-player", model);
     }
 
     @PostMapping("/play")
