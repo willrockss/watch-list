@@ -12,6 +12,18 @@ async function delay(time) {
 }
 
 const requestListener = async function (req, res) {
+    const headers = {
+        'Access-Control-Allow-Origin': '*', /* @dev First, read about security */
+        'Access-Control-Allow-Methods': 'OPTIONS, POST, GET',
+        'Access-Control-Max-Age': 2592000, // 30 days
+    };
+
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204, headers);
+        res.end();
+        return;
+    }
+
     if (req.method !== 'GET') {
         res.writeHead(400);
         res.end(req.method + ' is not supported!');
@@ -26,7 +38,7 @@ const requestListener = async function (req, res) {
     }
 
     const params = parseParams(req);
-    console.log('params', params);
+    console.log('params', params, 'url', req.url);
 
     var file = params.path;
 
@@ -39,7 +51,7 @@ const requestListener = async function (req, res) {
 
 
     var range = req.headers.range;
-    console.log('receve request', req.method, ', url:', req.url, ', range:', range);
+    console.log('receve request', req.method, ', videoId:', videoId, ', url:', req.url, ', range:', range);
 
     if(!range) range = 'bytes=0-';
 
@@ -67,7 +79,11 @@ const requestListener = async function (req, res) {
         "Content-Range" : "bytes " + start + "-" + end + "/" + total,
         "Accept-Ranges" : "bytes",
         "Content-Length" : chunksize,
-        "Content-Type" : 'video/x-matroska'
+        "Content-Type" : 'video/x-matroska',
+        "Access-Control-Allow-Origin": '*',
+        "Access-Control-Allow-Methods": 'OPTIONS, GET',
+        "Access-Control-Max-Age": 2592000,
+        "Access-Control-Allow-Headers": 'content-type'
     };
 
     const etagValue = req.headers['If-Match'];
