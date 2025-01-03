@@ -5,10 +5,14 @@ plugins {
 }
 
 group = 'io.kluev'
-version = '0.3.1-SNAPSHOT'
+version = '0.4.0-SNAPSHOT'
 
 java {
 	sourceCompatibility = '21'
+}
+
+springBoot {
+	buildInfo()
 }
 
 repositories {
@@ -23,6 +27,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-mustache'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation('org.springframework.boot:spring-boot-starter-actuator')
+	implementation('io.micrometer:micrometer-registry-prometheus')
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
 	testAnnotationProcessor('org.projectlombok:lombok')
