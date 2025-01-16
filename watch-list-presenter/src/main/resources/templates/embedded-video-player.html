@@ -21,19 +21,19 @@
         border-radius: 4px;
     }
 
-    .bd-example-modal-lg .modal-dialog{
+    .bd-example-modal-lg .modal-dialog {
         display: table;
         position: relative;
         margin: 0 auto;
         top: calc(50% - 24px);
     }
 
-    .bd-example-modal-lg .modal-dialog .modal-content{
+    .bd-example-modal-lg .modal-dialog .modal-content {
         background-color: transparent;
         border: none;
     }
 
-    .card{
+    .card {
         box-shadow: 0 6px 10px rgba(0,0,0,.08), 0 0 6px rgba(0,0,0,.05);
         transition: .3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s -webkit-transform cubic-bezier(.155,1.105,.295,1.12);
     }
@@ -43,17 +43,17 @@
   </style>
   <style>
     .bd-placeholder-img {
-      font-size: 1.125rem;
-      text-anchor: middle;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
     }
 
     @media (min-width: 768px) {
       .bd-placeholder-img-lg {
-        font-size: 3.5rem;
+          font-size: 3.5rem;
       }
     }
   </style>
@@ -128,6 +128,7 @@
         opacity: 100;
     }
     .top-left-link {
+        display: inline;
         color: #FFFFFF; /* Цвет текста ссылки */
         text-decoration: none; /* Убираем подчёркивание */
         font-size: 12px; /* Размер шрифта */
@@ -137,10 +138,10 @@
   </style>
   <style>
     #debugButton {
-      position: fixed;
-      top: 5px; /* Расстояние от верхнего края экрана */
-      right: 5px; /* Расстояние от правого края экрана */
-      background-color: #1d1864;
+        position: fixed;
+        top: 5px; /* Расстояние от верхнего края экрана */
+        right: 5px; /* Расстояние от правого края экрана */
+        background-color: #1d1864;
     }
   </style>
 </head>
@@ -156,7 +157,6 @@
     </div>
   </div>
   <p class="my-tooltip" id="tooltip">You hovered over me!</p>
-  <div class="modal fade bd-example-modal-lg" id="tooltip2" data-backdrop="static" data-keyboard="false" tabindex="-1">DIV You hovered over me!</div>
 
   <div class="container">
     <div class="row justify-content-md-center">
@@ -166,93 +166,7 @@
       </div>
     </div>
   </div>
-
-  <script>
-    function play(path, videoId, videoType){
-      $('.modal').modal('show');
-
-      var xhr = new XMLHttpRequest();
-
-      xhr.addEventListener("readystatechange", function() {
-        if (this.readyState === 4) {
-          $('.modal').modal('hide');
-        }
-      });
-
-      var body = '{"videoId": "' + encodeURIComponent(videoId)
-          + '", "videoPath": "' + encodeURIComponent(path)
-          + '", "videoType": "' + videoType + '"}';
-      xhr.open("POST", '/play', true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.send(body);
-    }
-  </script>
-  <script>
-    function setupVideo(videoElementId, audioTrack) {
-      var video = document.getElementById(videoElementId);
-      if (!video) {
-        console.warn('video with id ' + videoElementId + ' is not defined. Do nothing');
-        return;
-      }
-
-      if (audioTrack) {
-        video.onloadedmetadata = function(event) {
-          var audioTrackIndex = audioTrack - 1;
-          if (video.audioTracks) {
-              if (audioTrackIndex < video.audioTracks.length) {
-                for (var i = 0; i < video.audioTracks.length; i += 1) {
-                  console.log(JSON.stringify(video.audioTracks[i]));
-                  video.audioTracks[i].enabled = false;
-                }
-                video.audioTracks[audioTrackIndex].enabled = true;
-              } else {
-                console.warn('audioTrackIndex ' + audioTrackIndex + ' is invalid. There are ' + video.audioTracks.length + ' tracks only');
-              }
-          } else {
-              console.log('Bufferization is over. No audioTracks :(');
-          }
-        }
-      }
-
-      video.addEventListener('click', function() {
-
-          if (video.requestFullscreen) {
-              console.log('fullscreen, default');
-              video.requestFullscreen(); // Стандартный метод
-          } else if (video.mozRequestFullScreen) {
-              console.log('mozilla fullscreen');
-              /* Firefox */ video.mozRequestFullScreen();
-          } else if (video.webkitEnterFullscreen) {
-              console.log('chrome fullscreen');
-              /* Safari/Chrome */
-              var resp = video.webkitEnterFullscreen();
-              console.log('fullscreen resp: ', resp);
-          } else {
-             console.log('Unknown browser and fullscreen is probably not supported');
-          }
-
-
-          if (this.paused) {
-              this.play();
-          } else {
-              this.pause();
-          }
-
-      });
-
-      var tooltip = document.getElementById("tooltip");
-
-      video.addEventListener("mouseenter", function() {
-          tooltip.innerText = video.src;
-          tooltip.style.display = "inline"; // Показать подсказку при наведении
-      });
-
-      video.addEventListener("mouseleave", function() {
-          tooltip.innerText = '';
-          tooltip.style.display = "none"; // Скрыть подсказку при уходе курсора
-      });
-    }
-  </script>
+  <script src="/js/video.js"></script>
 
   <div class="container mt-5">
     <hr>
@@ -282,84 +196,53 @@
   <script>
     document.getElementById('scrollLeft').addEventListener('click', function() {
         const container = document.querySelector('.video-container');
-        container.scrollLeft -= 150; // Прокручиваем влево на 150px
+        container.scrollLeft -= 150; // scroll left 150px
     });
 
     document.getElementById('scrollRight').addEventListener('click', function() {
         const container = document.querySelector('.video-container');
-        container.scrollLeft += 150; // Прокручиваем вправо на 150px
+        container.scrollLeft += 150; // scroll left 150px
     });
   </script>
 
-  <!-- Текстовая область для вывода сообщений -->
+  <!-- Debug Output required for LG TV where DevTools unavailable -->
   <textarea id="logArea" readonly rows="10" cols="50" style="display: none; width: 100%; position: fixed; bottom: 0; left: 0; color: #333;"></textarea>
-
   <script>
+    var logArea = document.getElementById('logArea');
     var originalLog = console.log;
-    // Переопределяем console.log
     console.log = function() {
-        // Получаем массив аргументов
         var args = Array.prototype.slice.call(arguments);
-
-        // Вызываем оригинальный console.log (если нужно)
         originalLog.apply(console, args);
-
-        // Получаем текстовую область по ID
-        var logArea = document.getElementById('logArea');
-
-        // Добавляем новое сообщение в конец области
         logArea.value += args.join(' ') + '\n';
-
-        // Прокручиваем текстовую область вниз, чтобы всегда видеть последние сообщения
         logArea.scrollTop = logArea.scrollHeight;
     };
 
     var originalError = console.error;
     console.error = function() {
-        // Получаем массив аргументов
         var args = Array.prototype.slice.call(arguments);
-
-        // Вызываем оригинальный console.log (если нужно)
         originalError.apply(console, args);
-
-        // Получаем текстовую область по ID
-        var logArea = document.getElementById('logArea');
-
-        // Добавляем новое сообщение в конец области
         logArea.value += 'ERROR: ' + args.join(' ') + '\n';
-
-        // Прокручиваем текстовую область вниз, чтобы всегда видеть последние сообщения
         logArea.scrollTop = logArea.scrollHeight;
     };
 
     var originalWarn = console.warn;
     console.warn = function() {
-        // Получаем массив аргументов
         var args = Array.prototype.slice.call(arguments);
-
-        // Вызываем оригинальный console.log (если нужно)
         originalWarn.apply(console, args);
-
-        // Получаем текстовую область по ID
-        var logArea = document.getElementById('logArea');
-
-        // Добавляем новое сообщение в конец области
         logArea.value += 'WARN: ' + args.join(' ') + '\n';
-
-        // Прокручиваем текстовую область вниз, чтобы всегда видеть последние сообщения
         logArea.scrollTop = logArea.scrollHeight;
     };
   </script>
   <script>
     function toggleDebugOutput() {
-      var element = document.getElementById('logArea');
-      if (element) {
-        if (element.style.display === 'none') {
-          element.style.display = 'block';
-        } else {
-          element.style.display = 'none';
+        var element = document.getElementById('logArea');
+        if (element) {
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+            } else {
+                element.style.display = 'none';
+            }
         }
-      }
     }
   </script>
   <button id="debugButton" onclick="toggleDebugOutput()">🐛</button>
