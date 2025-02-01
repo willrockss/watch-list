@@ -53,7 +53,13 @@ search-content:
   torrFolder: /home/${USER}/Downloads/torr
 
 management:
+  endpoint:
+    shutdown.enabled: true
+    info.enabled: true
   endpoints:
     web:
       exposure:
-        include: metrics,loggers,prometheus
+        include: metrics,loggers,prometheus,info,shutdown
+endpoints:
+  shutdown:
+    enabled: true

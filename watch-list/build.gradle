@@ -5,12 +5,16 @@ plugins {
 }
 
 group = 'io.kluev'
-version = '0.20.1-SNAPSHOT'
+version = '0.21.0-SNAPSHOT'
 
 java.sourceCompatibility = '21'
 
 bootRun {
     environment SPRING_PROFILES_ACTIVE: environment.SPRING_PROFILES_ACTIVE ?: 'local'
+}
+
+springBoot {
+    buildInfo()
 }
 
 repositories {
