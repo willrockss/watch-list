@@ -19,6 +19,7 @@ import io.kluev.watchlist.domain.WatchDateStrategy;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
+import io.kluev.watchlist.infra.config.management.PidInfoContributor;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
@@ -266,4 +267,9 @@ public class MainBeansConfig {
         return Executors.newThreadPerTaskExecutor(factory);
     }
 
+
+    @Bean
+    public PidInfoContributor pidInfoContributor() {
+        return new PidInfoContributor();
+    }
 }
