@@ -61,7 +61,7 @@ class GoogleSheetsWatchListRepositoryPlaygroundIT {
     @Test
     public void should_mark_movie_as_watched() {
         var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
-        googleSheetsWatchListRepository.markWatched("968375", LocalDate.now());
+        googleSheetsWatchListRepository.markWatched("123", LocalDate.now());
     }
 
 
@@ -93,4 +93,14 @@ class GoogleSheetsWatchListRepositoryPlaygroundIT {
         val result = googleSheetsWatchListRepository.getMoviesToWatch();
         System.out.println(result);
     }
+
+    @SneakyThrows
+    @Test
+    public void should_add_watched_movie() {
+        var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
+        val movieItem = MovieItem.create("Терминатор 2", 2015, "123");
+        googleSheetsWatchListRepository.enlistWatched(movieItem, LocalDate.now());
+        // No exceptions are expected at this point
+    }
+
 }

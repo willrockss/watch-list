@@ -32,17 +32,17 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
     private final Sheets service;
     private final GoogleSheetProperties properties;
 
-    private final String insertRange;
+    private final String toWatchInsertRange;
 
     private final Map<String, Integer> sheetIdByName = new HashMap<>();
 
     public GoogleSheetsWatchListRepository(Sheets service, GoogleSheetProperties properties) {
         this.service = service;
         this.properties = properties;
-        this.insertRange = calculateInsertRange();
+        this.toWatchInsertRange = calculateToWatchInsertRange();
     }
 
-    private String calculateInsertRange() {
+    private String calculateToWatchInsertRange() {
         val headerRange = properties.getMoviesToWatch().getHeaderRange();
         int delimiterIndex = headerRange.indexOf("!");
         return headerRange.substring(0, delimiterIndex + 1) + "A2:A2";
@@ -54,7 +54,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
         val preComment = "";
         service.spreadsheets().values().append(
                         properties.getSpreadsheetId(),
-                        insertRange,
+                        toWatchInsertRange,
                         new ValueRange()
                                 .setValues(List.of(List.of(
                                         movieItem.getFullTitle(), "", preComment, "", "", "", "", "", "", movieItem.getExternalId()
@@ -99,14 +99,19 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
     }
 
     @SneakyThrows
-    public void addWatched(String fullTitle, String postComment, String kinopoiskId) {
+    public void enlistWatched(MovieItem movieItem, LocalDate watchedAt) {
+        val fullTitle = movieItem.getFullTitle();
+        val postComment = "";
+        val kinopoiskId = movieItem.getExternalId();
         var rowData = IntStream
                 .rangeClosed(0, 9) // TODO Make column indexes configurable
                 .mapToObj(i -> switch (i) {
                     case 0 -> new CellData().setUserEnteredValue(new ExtendedValue().setStringValue(fullTitle));
                     case 1 -> new CellData().setUserEnteredValue(new ExtendedValue().setStringValue(
-                            LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_TIME)
-                    ));
+                            Objects.requireNonNullElse(watchedAt, LocalDate.now())
+                                    .format(DATE_FORMATTER)
+                    ))
+                            .setUserEnteredFormat(getDateStrCellFormat());
                     case 5 -> new CellData().setUserEnteredValue(new ExtendedValue().setStringValue(postComment));
                     case 9 -> new CellData().setUserEnteredValue(new ExtendedValue().setNumberValue(
                             Double.parseDouble(kinopoiskId)
@@ -114,12 +119,13 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                     default -> new CellData();
                 })
                 .toList();
+        val watchedSheetId = getSheetIdByName("Просмотренные"); // TODO Make sheet name configurable
         BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest();
         request.setRequests(List.of(
                 new Request()
                         .setInsertDimension(new InsertDimensionRequest()
                                 .setRange(new DimensionRange()
-                                        .setSheetId(getSheetIdByName("Просмотренные"))  // TODO Make sheet name configurable
+                                        .setSheetId(watchedSheetId)
                                         .setDimension("ROWS")
                                         .setStartIndex(1)  // Insert one empty row at the beginning
                                         .setEndIndex(2))
@@ -128,7 +134,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                         .setUpdateCells(
                                 new UpdateCellsRequest()
                                         .setStart(new GridCoordinate()
-                                                .setSheetId(getSheetIdByName("Просмотренные"))  // TODO Make sheet name configurable
+                                                .setSheetId(watchedSheetId)
                                                 .setRowIndex(1)  // Insert at the beginning
                                                 .setColumnIndex(0))
                                         .setRows(List.of(

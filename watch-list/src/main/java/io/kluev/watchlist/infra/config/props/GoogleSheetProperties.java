@@ -13,15 +13,21 @@ import java.util.Map;
 @Validated
 @ConfigurationProperties(prefix = "integration.google.sheet")
 public class GoogleSheetProperties {
+
     private String spreadsheetId;
+
     @NotNull
-    private MoviesToWatchProperties moviesToWatch;
+    private GoogleSheetProperties.BaseSheetProperties moviesToWatch;
+
+    @NotNull
+    private GoogleSheetProperties.BaseSheetProperties watchedMovies;
 
     @Data
-    public static class MoviesToWatchProperties {
+    public static class BaseSheetProperties {
         private String headerRange;
         private Map<String, String> columnsMapping;
     }
+
 }
 
 

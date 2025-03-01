@@ -32,6 +32,13 @@ integration:
           kinopoiskId: KinopoiskId
           readyToWatch: ReadyToWatch
           File: File
+      watchedMovies:
+        headerRange: Просмотренные!R1C1:R10C12
+        columnsMapping:
+          fullName: Название фильма(year, EngName)
+          watchedAt: Дата просмотра
+          preComment: ПреКоммент
+          kinopoiskId: KinopoiskId
 
   kinopoisk:
     apiKey: <your Kinopoisk API Key>

@@ -5,6 +5,7 @@ import java.util.List;
 
 public interface MovieRepository {
     void enlist(MovieItem movieItem);
+    void enlistWatched(MovieItem movieItem, LocalDate watchedAt);
     List<MovieItem> getMoviesToWatch();
     void markWatched(String kinopoiskId, LocalDate watchedAt);
 }

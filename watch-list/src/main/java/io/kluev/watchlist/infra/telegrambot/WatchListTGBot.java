@@ -4,6 +4,8 @@ import io.kluev.watchlist.app.ChatMessage;
 import io.kluev.watchlist.app.ChatMessageResponse;
 import io.kluev.watchlist.app.EnlistMovieHandler;
 import io.kluev.watchlist.app.EnlistMovieRequest;
+import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
+import io.kluev.watchlist.app.EnlistWatchedMovieRequest;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Set;
 
 @Slf4j
@@ -34,6 +38,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
     private final TelegramClient telegramClient;
     private final ExternalMovieDatabase externalMovieDatabase;
     private final EnlistMovieHandler enlistMovieHandler;
+    private final EnlistWatchedMovieHandler enlistWatchedMovieHandler;
     private final TelegramSessionStore telegramSessionStore;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -93,7 +98,39 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
         ));
 
         // Move to Search saga
-        if (callData.startsWith("add_movie_")) {
+        if (callData.startsWith("add_movie_watched_")) {
+            var msgBuilder = SendMessage
+                    .builder()
+                    .chatId(chatId)
+                    .replyToMessageId(messageId);
+
+
+            var extId = callData.replace("add_movie_watched_", "");
+            var movieDto = externalMovieDatabase.getByExternalId(extId).orElse(null);
+            if (movieDto != null) {
+
+                var watchAtInstant = Instant.ofEpochSecond(update.getCallbackQuery().getMessage().getDate());
+                // TODO take timezone from User configuration
+                var watchAt = watchAtInstant.atZone(ZoneId.systemDefault()).toLocalDate();
+                var enlistRequest = EnlistWatchedMovieRequest
+                        .builder()
+                        .title(movieDto.name())
+                        .foreignTitle(movieDto.enName())
+                        .year(movieDto.year())
+                        .externalId(extId)
+                        .watchedAt(watchAt)
+                        .username(update.getCallbackQuery().getFrom().getUserName())
+                        .build();
+
+                var response = enlistWatchedMovieHandler.handle(enlistRequest);
+
+                msgBuilder.text("Фильм " + response.fullTitle() + " добавлен как просмотренный");
+            } else {
+                msgBuilder.text("Invalid id " + extId);
+            }
+
+            telegramClient.execute(msgBuilder.build());
+        } else if (callData.startsWith("add_movie_")) {
             var msgBuilder = SendMessage
                     .builder()
                     .chatId(chatId)
@@ -153,6 +190,12 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
                                     .builder()
                                     .text("Добавить в список")
                                     .callbackData("add_movie_" + firstFoundMovie.externalId())
+                                    .build())
+                            )
+                            .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton
+                                    .builder()
+                                    .text("Добавить просмотренным")
+                                    .callbackData("add_movie_watched_" + firstFoundMovie.externalId())
                                     .build())
                             )
                             .build()

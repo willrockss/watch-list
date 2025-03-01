@@ -3,6 +3,7 @@ package io.kluev.watchlist.infra.config.beans;
 import com.google.api.services.sheets.v4.Sheets;
 import io.kluev.watchlist.app.ChatGateway;
 import io.kluev.watchlist.app.EnlistMovieHandler;
+import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.GetWatchListHandler;
 import io.kluev.watchlist.app.JackettGateway;
 import io.kluev.watchlist.app.LockService;
@@ -166,6 +167,7 @@ public class MainBeansConfig {
             TelegramClient telegramClient,
             ExternalMovieDatabase externalMovieDatabase,
             EnlistMovieHandler enlistMovieHandler,
+            EnlistWatchedMovieHandler enlistWatchedMovieHandler,
             TelegramSessionStore telegramSessionStore,
             ApplicationEventPublisher eventPublisher
     ) {
@@ -175,6 +177,7 @@ public class MainBeansConfig {
                 telegramClient,
                 externalMovieDatabase,
                 enlistMovieHandler,
+                enlistWatchedMovieHandler,
                 telegramSessionStore,
                 eventPublisher
         );
@@ -183,6 +186,11 @@ public class MainBeansConfig {
     @Bean
     public EnlistMovieHandler enlistMovieHandler(MovieRepository movieRepository, ApplicationEventPublisher publisher) {
         return new EnlistMovieHandler(movieRepository, publisher);
+    }
+
+    @Bean
+    public EnlistWatchedMovieHandler enlistWatchedMovieHandler(MovieRepository movieRepository) {
+        return new EnlistWatchedMovieHandler(movieRepository);
     }
 
     @Bean
