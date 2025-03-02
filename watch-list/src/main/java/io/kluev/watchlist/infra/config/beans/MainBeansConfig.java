@@ -8,7 +8,11 @@ import io.kluev.watchlist.app.GetWatchListHandler;
 import io.kluev.watchlist.app.JackettGateway;
 import io.kluev.watchlist.app.LockService;
 import io.kluev.watchlist.app.PlayHandler;
-import io.kluev.watchlist.app.ProgressHandlerV2;
+import io.kluev.watchlist.app.VideoType;
+import io.kluev.watchlist.app.progress.EpisodeWatchedSpecification;
+import io.kluev.watchlist.app.progress.VideoItemWatchedSpecification;
+import io.kluev.watchlist.app.progress.VideoWatchedSpecification;
+import io.kluev.watchlist.app.progress.ProgressHandlerV2;
 import io.kluev.watchlist.app.downloadcontent.DownloadProcessCoordinator;
 import io.kluev.watchlist.app.downloadcontent.QBitClient;
 import io.kluev.watchlist.app.searchcontent.SearchContentHandler;
@@ -55,9 +59,12 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 @Configuration
@@ -263,10 +270,12 @@ public class MainBeansConfig {
             RestClient restClient,
             NodeRedIntegrationProperties properties,
             LockService lockService,
-            SeriesRepository seriesRepository
+            SeriesRepository seriesRepository,
+            List<VideoItemWatchedSpecification> specs
 
     ) {
-        return new ProgressHandlerV2(movieRepository, watchDateStrategy, clock, restClient, properties, lockService, seriesRepository);
+        val specsMap = specs.stream().collect(Collectors.toMap(VideoItemWatchedSpecification::getVideoType, Function.identity()));
+        return new ProgressHandlerV2(movieRepository, watchDateStrategy, clock, restClient, properties, lockService, seriesRepository, specsMap);
     }
 
     @Bean
@@ -279,5 +288,39 @@ public class MainBeansConfig {
     @Bean
     public PidInfoContributor pidInfoContributor() {
         return new PidInfoContributor();
+    }
+
+    @Bean
+    public VideoItemWatchedSpecification episodeWatchedSpecification(
+            @Value("${watch-threshold.episode.percent:98.0}")
+            Double episodeThresholdPercent
+    ) {
+        return new EpisodeWatchedSpecification(episodeThresholdPercent);
+    }
+
+    @Bean
+    public VideoItemWatchedSpecification movieWatchedSpecification(
+            @Value("${watch-threshold.movie.percent:95.0}")
+            Double episodeThresholdPercent
+    ) {
+        return new VideoWatchedSpecification(episodeThresholdPercent);
+    }
+
+    @Bean
+    public VideoItemWatchedSpecification defaultWatchedSpecification(
+            @Value("${watch-threshold.default.percent:99.0}")
+            Double episodeThresholdPercent
+    ) {
+        return new VideoItemWatchedSpecification() {
+            @Override
+            public VideoType getVideoType() {
+                return null;
+            }
+
+            @Override
+            public boolean isWatched(double progress) {
+                return progress > 99.0;
+            }
+        };
     }
 }

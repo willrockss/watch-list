@@ -1,5 +1,8 @@
-package io.kluev.watchlist.app;
+package io.kluev.watchlist.app.progress;
 
+import io.kluev.watchlist.app.LockService;
+import io.kluev.watchlist.app.SeriesRepository;
+import io.kluev.watchlist.app.VideoType;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.WatchDateStrategy;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
@@ -11,6 +14,7 @@ import org.springframework.web.client.RestClient;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,11 +31,13 @@ public class ProgressHandlerV2 {
     private final LockService lockService;
     private final SeriesRepository seriesRepository;
 
+    private final Map<VideoType, VideoItemWatchedSpecification> watchedSpecs;
+
     public ProgressResponse handle(ProgressRequestV2 request) {
         log.debug("Going to handle progress update {}", request);
 
-        // TODO extract to specification
-        if (request.progress() > 99.0) {
+        val watchedSpec = getWatchedSpecification(request);
+        if (watchedSpec.isWatched(request.progress())) {
             val lock = lockService.acquireLock(request.videoId());
             if (lock == null) {
                 log.debug("Unable to acquire to acquire lock to update progress for {}", request.videoId());
@@ -40,8 +46,8 @@ public class ProgressHandlerV2 {
             try {
                 String error = null;
                 switch (request.videoType()) {
-                    case EPISODE -> error = updateWatchedEpisode(request);
-                    case MOVIE -> error = updateWatchedMovie(request);
+                    case VideoType.EPISODE -> error = updateWatchedEpisode(request);
+                    case VideoType.MOVIE -> error = updateWatchedMovie(request);
                 }
                 if (error != null) {
                     return new ProgressResponse(error);
@@ -57,6 +63,19 @@ public class ProgressHandlerV2 {
             }
         }
         return new ProgressResponse();
+    }
+
+    private VideoItemWatchedSpecification getWatchedSpecification(ProgressRequestV2 req) {
+        val type = req.videoType();
+        val byTypeSpec = watchedSpecs.get(type);
+        if (byTypeSpec != null) {
+            return byTypeSpec;
+        }
+        val defaultSpec = watchedSpecs.get(null);
+        if (defaultSpec != null) {
+            return defaultSpec;
+        }
+        throw new RuntimeException("Unable to find neither specific nor default specification for " + type);
     }
 
     private String updateWatchedEpisode(ProgressRequestV2 request) {

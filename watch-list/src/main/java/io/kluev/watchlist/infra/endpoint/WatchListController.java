@@ -1,6 +1,8 @@
 package io.kluev.watchlist.infra.endpoint;
 
 import io.kluev.watchlist.app.*;
+import io.kluev.watchlist.app.progress.ProgressHandlerV2;
+import io.kluev.watchlist.app.progress.ProgressRequestV2;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
