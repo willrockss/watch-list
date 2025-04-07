@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import static org.apache.commons.io.FilenameUtils.getExtension;
 
 public abstract class WLFilenameUtils {
-    public static final int MAX_FILENAME_LENGTH = 165;
+    public static final int MAX_FILENAME_LENGTH = 100;
 
     /**
      * Remove all inappropriate symbols for Unix filename
