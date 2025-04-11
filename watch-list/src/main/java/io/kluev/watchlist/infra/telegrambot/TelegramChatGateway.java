@@ -68,6 +68,7 @@ public class TelegramChatGateway implements ChatGateway {
 
     private String escapeMarkdown(String text) {
         return text
+                .replace("!", "\\!")
                 .replace(".", "\\.")
                 .replace("`", "\\`")
                 .replace("*", "\\*")
