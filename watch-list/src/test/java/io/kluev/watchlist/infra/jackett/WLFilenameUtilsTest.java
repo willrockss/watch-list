@@ -28,11 +28,11 @@ class WLFilenameUtilsTest {
                 Arguments.of("with multi   spaces.txt", "with_multi_spaces.txt"),
                 Arguments.of(
                         "Терминатор 2: Судный день / Terminator 2: Judgment Day (Джеймс Кэмерон / James Cameron) [1991, фантастика, боевик, триллер, AC3, NTSC] [EXTENDED / REMASTERED] VO (Данис Нурмухаметов / версия 2016).txt",
-                        "Терминатор_2:_Судный_день_Terminator_2:_Judgment_Day_(Джеймс_Кэмерон_James_Cameron)_[1991_фантастика_боевик_триллер_AC3_NTSC]_[EXTENDED_REMASTERED]_VO_(Данис_Нур.txt"
+                        "Терминатор_2:_Судный_день_Terminator_2:_Judgment_Day_(Джеймс_Кэмерон_James_Cameron)_[1991_фантас.txt"
                 ),
                 Arguments.of(
                         "Терминатор 2: Судный день / Terminator 2: Judgment Day (Джеймс Кэмерон / James Cameron) [1991, фантастика, боевик, триллер, AC3, NTSC] [EXTENDED / REMASTERED] VO (Данис Нурмухаметов / версия 2016)",
-                        "Терминатор_2:_Судный_день_Terminator_2:_Judgment_Day_(Джеймс_Кэмерон_James_Cameron)_[1991_фантастика_боевик_триллер_AC3_NTSC]_[EXTENDED_REMASTERED]_VO_(Данис_Нурмуха"
+                        "Терминатор_2:_Судный_день_Terminator_2:_Judgment_Day_(Джеймс_Кэмерон_James_Cameron)_[1991_фантастика"
                 )
         );
     }
