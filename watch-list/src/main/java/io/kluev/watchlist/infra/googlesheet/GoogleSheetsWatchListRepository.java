@@ -44,8 +44,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     private String calculateToWatchInsertRange() {
         val headerRange = properties.getMoviesToWatch().getHeaderRange();
-        int delimiterIndex = headerRange.indexOf("!");
-        return headerRange.substring(0, delimiterIndex + 1) + "A2:A2";
+        return headerRange.getSheetName() + "!A2:A2";
     }
 
     @SneakyThrows

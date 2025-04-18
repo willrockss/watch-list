@@ -35,7 +35,7 @@ import java.time.LocalDate;
         },
         properties = {
             "integration.google.credentialsFile=/home/alex/gkeys/test_key.json",
-            "integration.google.sheet.spreadsheetId=1agl6pPZIGwhMmS8rkkewp38DZl7TvcU0-UeyszjfIeQ"
+            "integration.google.spreadsheet.spreadsheetId=1agl6pPZIGwhMmS8rkkewp38DZl7TvcU0-UeyszjfIeQ"
         }
 )
 @Import(GoogleSheetServiceConfig.class)

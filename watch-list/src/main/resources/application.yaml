@@ -22,23 +22,32 @@ integration:
 
   google:
     credentialsFile: <path to your credentials JSON file>
-    sheet:
+    spreadsheet:
       spreadsheetId: <your spreadsheet ID>
-      moviesToWatch:
-        headerRange: Посмотреть!R1C1:R10C12
-        columnsMapping:
-          fullName: Название фильма(year, EngName)
-          preComment: ПреКоммент
-          kinopoiskId: KinopoiskId
-          readyToWatch: ReadyToWatch
-          File: File
-      watchedMovies:
-        headerRange: Просмотренные!R1C1:R10C12
-        columnsMapping:
-          fullName: Название фильма(year, EngName)
-          watchedAt: Дата просмотра
-          preComment: ПреКоммент
-          kinopoiskId: KinopoiskId
+      sheets:
+        moviesToWatch:
+          headerRange: Посмотреть!R1C1:R1C12
+          columnsMapping:
+            fullName: Название фильма(year, EngName)
+            preComment: ПреКоммент
+            kinopoiskId: KinopoiskId
+            readyToWatch: ReadyToWatch
+            file: File
+        watchedMovies:
+          headerRange: Просмотренные!R1C1:R1C12
+          columnsMapping:
+            fullName: Название фильма(year, EngName)
+            watchedAt: Дата просмотра
+            preComment: ПреКоммент
+            postComment: ПостКоммент
+            kinopoiskId: KinopoiskId
+        series:
+          headerRange: Сериалы!R1C1:R1C4
+          columnsMapping:
+            name: Название
+            seasonNumber: Номер сезона
+            lastWatchedEpisodeNumber: Номер эпизода
+            episodesCount: Всего серий
 
   kinopoisk:
     apiKey: <your Kinopoisk API Key>
