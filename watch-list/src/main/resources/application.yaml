@@ -48,6 +48,11 @@ integration:
             seasonNumber: Номер сезона
             lastWatchedEpisodeNumber: Номер эпизода
             episodesCount: Всего серий
+        watchedSeries:
+          headerRange: Просмотренные сериалы!R1C1:R1C2
+          columnsMapping:
+            name: Название
+            watchedAt: Дата просмотра
 
   kinopoisk:
     apiKey: <your Kinopoisk API Key>

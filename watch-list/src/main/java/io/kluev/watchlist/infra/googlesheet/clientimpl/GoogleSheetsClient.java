@@ -2,7 +2,9 @@ package io.kluev.watchlist.infra.googlesheet.clientimpl;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
+import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetResponse;
 import com.google.api.services.sheets.v4.model.CellData;
+import com.google.api.services.sheets.v4.model.CellFormat;
 import com.google.api.services.sheets.v4.model.CutPasteRequest;
 import com.google.api.services.sheets.v4.model.DeleteDimensionRequest;
 import com.google.api.services.sheets.v4.model.DimensionRange;
@@ -25,6 +27,8 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +40,8 @@ import static java.util.Objects.requireNonNull;
 @Slf4j
 public class GoogleSheetsClient {
 
+    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final CellFormat DATE_CELL_FORMAT = getDateStrCellFormat();
     private static final int PAGE_SIZE = 20;
 
     private final Sheets service;
@@ -153,7 +159,7 @@ public class GoogleSheetsClient {
         }
     }
 
-    public boolean cutInsertWithUpdate(CutInsertWithUpdateRowCommand command) throws IOException {
+    public boolean cutInsertWithUpdate(CutInsertWithUpdateRowCommand command) {
         val reqList = new ArrayList<Request>();
         reqList.add(
                 new Request()
@@ -198,8 +204,13 @@ public class GoogleSheetsClient {
         BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest();
         request.setRequests(reqList);
 
-        val resp = service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
-        return !resp.isEmpty();
+        final BatchUpdateSpreadsheetResponse resp;
+        try {
+            resp = service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
+            return !resp.isEmpty();
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to perform " + command, e);
+        }
     }
 
     private List<Request> generateUpdateRequests(CutInsertWithUpdateRowCommand command) {
@@ -215,7 +226,7 @@ public class GoogleSheetsClient {
         Map<String, Integer> colNumberByCode = requireNonNull(colNumberByCodeBySheet.get(command.getSheetCodeInsertInto()),
                 () -> "Column mapping is not defined for sheet [" + command.getSheetCodeInsertInto() + "]");
 
-        for (Map.Entry<String, String> colCodeValuePair : command.getUpdatedFields().entrySet()) {
+        for (Map.Entry<String, Object> colCodeValuePair : command.getUpdatedFields().entrySet()) {
            val colCode = colCodeValuePair.getKey();
            val colNumber = requireNonNull(colNumberByCode.get(colCode),
                    () -> "columnNumber mapping is not specified for column " +
@@ -261,9 +272,16 @@ public class GoogleSheetsClient {
             case Number d -> extVal.setNumberValue(d.doubleValue());
             case Boolean b -> extVal.setBoolValue(b);
             case String s -> extVal.setStringValue(s);
+            case LocalDate ld -> extVal.setStringValue(DATE_FORMATTER.format(ld));
             default -> extVal.setStringValue(value.toString());
         }
-        return new CellData().setUserEnteredValue(extVal);
+
+        val cellData = new CellData().setUserEnteredValue(extVal);
+
+        if (value instanceof LocalDate) {
+            cellData.setUserEnteredFormat(DATE_CELL_FORMAT);
+        }
+        return cellData;
     }
 
     @SneakyThrows
@@ -277,5 +295,11 @@ public class GoogleSheetsClient {
             }
         }
         return requireNonNull(sheetIdByCode.get(sheetCode), () -> "Sheet not found by " + sheetCode);
+    }
+
+    private static CellFormat getDateStrCellFormat() {
+        val cellFormat = new CellFormat();
+        cellFormat.setHorizontalAlignment("RIGHT");
+        return cellFormat;
     }
 }

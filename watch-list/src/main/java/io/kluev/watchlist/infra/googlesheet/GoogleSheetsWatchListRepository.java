@@ -43,7 +43,8 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
     }
 
     private String calculateToWatchInsertRange() {
-        val headerRange = properties.getMoviesToWatch().getHeaderRange();
+        val toWatchProps = properties.getMoviesToWatch();
+        val headerRange = toWatchProps.getHeaderRange();
         return headerRange.getSheetName() + "!A2:A2";
     }
 
@@ -307,7 +308,6 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
         log.debug("Updated data: {}", rawResponse.getUpdatedData());
     }
 
-    // TODO make private
     @SneakyThrows
     private Integer getSheetIdByName(@NotNull String sheetName) {
         if (sheetIdByName.isEmpty()) {

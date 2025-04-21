@@ -20,5 +20,5 @@ public final class CutInsertWithUpdateRowCommand extends GoogleSheetCommand {
     private final String sheetCodeInsertInto;
     private final RowNumber insertRowNumber;
 
-    private final Map<String, String> updatedFields;
+    private final Map<String, Object> updatedFields;
 }

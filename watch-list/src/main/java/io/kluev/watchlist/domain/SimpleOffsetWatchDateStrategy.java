@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
  * according to the {@link #offsetHours} property.
  */
 @RequiredArgsConstructor
-public class SimpleOffsetWatchDateStrategy implements WatchDateStrategy{
+public class SimpleOffsetWatchDateStrategy implements WatchDateStrategy {
 
     private final int offsetHours;
 

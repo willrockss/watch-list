@@ -6,10 +6,12 @@ import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadFinishedE
 import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadStartedEvent;
 import io.kluev.watchlist.app.downloadcontent.event.ContentItemEnqueuedEvent;
 import io.kluev.watchlist.domain.MovieItem;
+import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.infra.config.beans.GoogleSheetServiceConfig;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -39,7 +41,7 @@ import java.time.LocalDate;
         }
 )
 @Import(GoogleSheetServiceConfig.class)
-class GoogleSheetsWatchListRepositoryPlaygroundIT {
+class WatchListRepositoryPlaygroundIT {
 
     @Autowired
     private Sheets service;
@@ -48,58 +50,58 @@ class GoogleSheetsWatchListRepositoryPlaygroundIT {
     @Autowired
     private GoogleSheetProperties properties;
 
+    private MovieRepository movieRepository;
+
+    @BeforeEach
+    public void init() {
+        movieRepository = new GoogleSheetsWatchListRepository(service, properties);
+    }
+
     @SneakyThrows
     @Test
     public void should_add_movie_to_watch() {
-        var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
         val movieItem = MovieItem.create("Терминатор 2", 2015, "123");
-        googleSheetsWatchListRepository.enlist(movieItem);
+        movieRepository.enlist(movieItem);
         // No exceptions are expected at this point
     }
 
     @SneakyThrows
     @Test
     public void should_mark_movie_as_watched() {
-        var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
-        googleSheetsWatchListRepository.markWatched("123", LocalDate.now());
+        movieRepository.markWatched("123", LocalDate.now());
     }
 
 
     @SneakyThrows
     @Test
     public void should_update_status() {
-        var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
-        googleSheetsWatchListRepository.markAsEnqueued(new ContentItemEnqueuedEvent(new ContentItemIdentity("7510")));
+        movieRepository.markAsEnqueued(new ContentItemEnqueuedEvent(new ContentItemIdentity("7510")));
     }
 
     @SneakyThrows
     @Test
     public void should_update_status_and_content_path() {
-        var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
-        googleSheetsWatchListRepository.markAsStarted(new ContentItemDownloadStartedEvent(new ContentItemIdentity("7510"), "/content/path"));
+        movieRepository.markAsStarted(new ContentItemDownloadStartedEvent(new ContentItemIdentity("7510"), "/content/path"));
     }
 
     @SneakyThrows
     @Test
     public void should_update_status_ready() {
-        var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
-        googleSheetsWatchListRepository.markAsFinished(new ContentItemDownloadFinishedEvent(new ContentItemIdentity("7510")));
+        movieRepository.markAsFinished(new ContentItemDownloadFinishedEvent(new ContentItemIdentity("7510")));
     }
 
     @SneakyThrows
     @Test
     public void should_get_movie_list() {
-        var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
-        val result = googleSheetsWatchListRepository.getMoviesToWatch();
+        val result = movieRepository.getMoviesToWatch();
         System.out.println(result);
     }
 
     @SneakyThrows
     @Test
     public void should_add_watched_movie() {
-        var googleSheetsWatchListRepository = new GoogleSheetsWatchListRepository(service, properties);
         val movieItem = MovieItem.create("Терминатор 2", 2015, "123");
-        googleSheetsWatchListRepository.enlistWatched(movieItem, LocalDate.now());
+        movieRepository.enlistWatched(movieItem, LocalDate.now());
         // No exceptions are expected at this point
     }
 

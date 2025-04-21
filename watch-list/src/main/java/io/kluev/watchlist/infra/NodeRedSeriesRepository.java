@@ -108,7 +108,7 @@ public class NodeRedSeriesRepository implements SeriesRepository {
 
     private Series createFromRaw(NodeRedWatchListResponse nodeResp) {
         val id = new NodeRedSeriesId(seriesIdGenerator.generateId(nodeResp.name(), nodeResp.seasonNumber()), nodeResp.rowNumber());
-        val series = new Series(id, generateFullTitle(nodeResp), Path.of(nodeResp.path()), nodeResp.watchedEpisodeNumber());
+        val series = new Series(id, generateFullTitle(nodeResp), Path.of(nodeResp.path()), nodeResp.seasonNumber(), nodeResp.watchedEpisodeNumber());
 
         val episodesFromCache = episodesCacheByPath.computeIfAbsent(series.getPath().toString(), it -> loadEpisodes(series.getPath()));
         series.getEpisodes().addAll(episodesFromCache);

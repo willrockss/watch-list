@@ -2,9 +2,9 @@ package io.kluev.watchlist.domain;
 
 import io.kluev.watchlist.domain.event.EpisodeWatched;
 import io.kluev.watchlist.domain.event.Event;
+import io.kluev.watchlist.domain.event.SeasonWatched;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
@@ -13,14 +13,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+// TODO Rename to SeriesSeason
 @Getter
 @Slf4j
-@NoArgsConstructor
 @AllArgsConstructor
 public class Series {
     private SeriesId id;
     private String title;
     private Path path;
+    // TODO make SeasonNumber ValueObject
+    private final Integer seasonNumber;
     private final List<Episode> episodes = new ArrayList<>();
     private final List<Event> events = new ArrayList<>();
     private int lastWatchedEpisodeNumber;
@@ -45,6 +47,14 @@ public class Series {
         }
         lastWatchedEpisodeNumber = episode.getNumber();
         events.add(new EpisodeWatched(episode));
+
+        if (isFullyWatched()) {
+            events.add(new SeasonWatched(this, seasonNumber));
+        }
         return true;
+    }
+
+    public boolean isFullyWatched() {
+        return lastWatchedEpisodeNumber >= episodes.size();
     }
 }
