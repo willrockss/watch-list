@@ -80,7 +80,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: metrics,loggers,prometheus,info,shutdown
+        include: metrics,loggers,prometheus,info,shutdown,threaddump
 endpoints:
   shutdown:
     enabled: true
