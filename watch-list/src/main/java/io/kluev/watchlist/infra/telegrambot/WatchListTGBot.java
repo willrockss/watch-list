@@ -17,6 +17,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.LinkPreviewOptions;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -24,6 +25,7 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.time.Instant;
@@ -91,6 +93,8 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
         val initialMessage = update.getCallbackQuery().getMessage();
         Integer messageId = initialMessage.getMessageId();
         String chatId = String.valueOf(initialMessage.getChatId());
+
+        answerCallbackQuery(update.getCallbackQuery().getId());
 
         eventPublisher.publishEvent(new ChatMessageResponse(
                 chatId,
@@ -203,6 +207,22 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
         }
 
         telegramClient.execute(respMsg);
+    }
+
+    private void answerCallbackQuery(String callbackQueryId) {
+        // vvv
+        val answerCallbackQuery = AnswerCallbackQuery
+                .builder()
+                .callbackQueryId(callbackQueryId)
+                .text("Обрабатывается...")
+                .build();
+
+        // Send the response
+        try {
+            telegramClient.execute(answerCallbackQuery);
+        } catch (TelegramApiException e) {
+            log.error("Unable to send AnswerCallBack for callbackQueryId {} due to {}", callbackQueryId, e.toString());
+        }
     }
 
     @Override
