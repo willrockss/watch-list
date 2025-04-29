@@ -20,6 +20,7 @@ import java.util.Optional;
 public class Series {
     private SeriesId id;
     private String title;
+    private String fullTitle;
     private Path path;
     // TODO make SeasonNumber ValueObject
     private final Integer seasonNumber;

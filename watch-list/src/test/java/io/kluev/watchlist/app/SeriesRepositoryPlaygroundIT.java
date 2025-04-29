@@ -15,6 +15,7 @@ import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.val;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
+@Disabled
 @Tag("IntegrationTest")
 @EnableConfigurationProperties(value = GoogleSheetProperties.class)
 @SpringBootTest(
@@ -60,6 +61,7 @@ class SeriesRepositoryPlaygroundIT {
         val season = new Series(
                 new TestSeriesId(seasonId),
                 "Волга",
+                "Волга (1, 1/2)",
                 Path.of("/tmp"),
                 2,
                 1

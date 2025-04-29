@@ -82,7 +82,7 @@ public class NodeRedSeriesRepository implements SeriesRepository {
             switch (event) {
                 // TODO make sure this is a last watched episode (in case of multiple EpisodeWatched events)
                 case EpisodeWatched episodeWatched -> req.put("watchedEpisodeNumber", episodeWatched.episode().getNumber());
-                default -> throw new IllegalStateException("Unexpected event: " + event);
+                default -> log.warn("Event {} will be ignored", event);
             }
         }
 
@@ -108,7 +108,7 @@ public class NodeRedSeriesRepository implements SeriesRepository {
 
     private Series createFromRaw(NodeRedWatchListResponse nodeResp) {
         val id = new NodeRedSeriesId(seriesIdGenerator.generateId(nodeResp.name(), nodeResp.seasonNumber()), nodeResp.rowNumber());
-        val series = new Series(id, generateFullTitle(nodeResp), Path.of(nodeResp.path()), nodeResp.seasonNumber(), nodeResp.watchedEpisodeNumber());
+        val series = new Series(id, nodeResp.name(), generateFullTitle(nodeResp), Path.of(nodeResp.path()), nodeResp.seasonNumber(), nodeResp.watchedEpisodeNumber());
 
         val episodesFromCache = episodesCacheByPath.computeIfAbsent(series.getPath().toString(), it -> loadEpisodes(series.getPath()));
         series.getEpisodes().addAll(episodesFromCache);

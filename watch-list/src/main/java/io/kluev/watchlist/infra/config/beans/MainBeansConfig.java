@@ -21,6 +21,7 @@ import io.kluev.watchlist.domain.SeriesIdGenerator;
 import io.kluev.watchlist.app.SeriesRepository;
 import io.kluev.watchlist.domain.SimpleOffsetWatchDateStrategy;
 import io.kluev.watchlist.domain.WatchDateStrategy;
+import io.kluev.watchlist.infra.CompositeSeriesRepository;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
@@ -33,7 +34,9 @@ import io.kluev.watchlist.infra.config.props.SearchContentProperties;
 import io.kluev.watchlist.infra.config.props.TelegramBotProperties;
 import io.kluev.watchlist.infra.config.props.VideoServerProperties;
 import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
+import io.kluev.watchlist.infra.googlesheet.GoogleSheetsSeriesRepository;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
+import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
 import io.kluev.watchlist.infra.qbit.QBitClientImpl;
@@ -111,8 +114,32 @@ public class MainBeansConfig {
     }
 
     @Bean
+    public GoogleSheetsClient googleSheetsClient(
+            Sheets service,
+            GoogleSheetProperties props
+    ) {
+        return new GoogleSheetsClient(service, props);
+    }
+
+    @Bean
+    public GoogleSheetsSeriesRepository googleSheetsSeriesRepository(
+            GoogleSheetsClient googleSheetsClient,
+            WatchDateStrategy watchDateStrategy
+    ) {
+        return new GoogleSheetsSeriesRepository(googleSheetsClient, watchDateStrategy);
+    }
+
+    @Bean
+    public SeriesRepository seriesRepository(
+            NodeRedSeriesRepository nodeRedSeriesRepository,
+            GoogleSheetsSeriesRepository googleSheetsSeriesRepository
+    ) {
+        return new CompositeSeriesRepository(nodeRedSeriesRepository, googleSheetsSeriesRepository);
+    }
+
+    @Bean
     public GetWatchListHandler getWatchListHandler(
-            NodeRedSeriesRepository seriesRepository,
+            SeriesRepository seriesRepository,
             MovieRepository movieRepository,
             VideoServerProperties videoServerProperties,
             ExecutorService virtualThreadExecutorService
