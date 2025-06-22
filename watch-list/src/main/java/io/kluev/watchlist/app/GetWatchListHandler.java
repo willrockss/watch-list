@@ -9,8 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.util.UriUtils;
 
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -64,7 +64,7 @@ public class GetWatchListHandler {
         }
         val requestPart = videoServerProperties.getVideoPathTemplate().formatted(
                 id,
-                URLEncoder.encode(path, StandardCharsets.UTF_8),
+                UriUtils.encode(path, StandardCharsets.UTF_8),
                 VideoType.MOVIE.name()
         );
         return videoServerProperties.getBaseUrl() + requestPart;

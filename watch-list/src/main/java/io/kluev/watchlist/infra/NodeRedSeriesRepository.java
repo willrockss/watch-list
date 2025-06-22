@@ -19,8 +19,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriUtils;
 
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -172,7 +172,7 @@ public class NodeRedSeriesRepository implements SeriesRepository {
         }
         val requestPart = videoServerProperties.getVideoPathTemplate().formatted(
                 id,
-                URLEncoder.encode(path, StandardCharsets.UTF_8),
+                UriUtils.encode(path, StandardCharsets.UTF_8),
                 VideoType.EPISODE.name()
         );
         return videoServerProperties.getBaseUrl() + requestPart;
