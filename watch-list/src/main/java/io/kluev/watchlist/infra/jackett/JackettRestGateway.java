@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
 
@@ -38,7 +39,7 @@ public class JackettRestGateway implements JackettGateway {
     private final RestClient restClient;
 
     @Override
-    public List<DownloadableContentInfo> query(@NonNull String query) {
+    public List<DownloadableContentInfo> query(@NonNull String query, @NonNull Predicate<DownloadableContentInfo> filter) {
         Assert.notNull(query, "Query must not be null!");
 
         val rawResp = restClient
@@ -48,7 +49,10 @@ public class JackettRestGateway implements JackettGateway {
                 .body(String.class);
         try {
             val response = MAPPER.readValue(rawResp, Rss.class);
-            return map(response);
+            return map(response)
+                    .stream()
+                    .filter(filter)
+                    .toList();
         } catch (Exception e) {
             throw new IllegalArgumentException("Unable to parse response: " + rawResp, e);
         }

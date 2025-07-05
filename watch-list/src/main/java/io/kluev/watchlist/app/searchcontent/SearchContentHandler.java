@@ -30,8 +30,10 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 @Slf4j
 @SuppressWarnings("unused")
@@ -54,11 +56,16 @@ public class SearchContentHandler {
         val saga = SearchContentSaga.create(event.movie());
         sagaById.put(saga.getSagaId(), saga);
 
-        val found = findDownloadableContext(event.movie());
+        val year = event.movie().getYear();
+        val possibleYear = Set.of(String.valueOf(year), String.valueOf(year - 1), String.valueOf(year + 1));
+
+        val found = findDownloadableContext(event.movie(), it -> {
+            val title = it.getTitle();
+            return !title.contains("DVD9") && possibleYear.stream().anyMatch(title::contains);
+        });
         val top10HighQuality = found
                 .stream()
                 // TODO Add proper filter, sorter based on strategy
-                .filter(it -> !it.getTitle().contains("DVD9"))
                 .distinct()
                 .sorted(Comparator.comparing(DownloadableContentInfo::getSize).reversed())
                 .limit(10)
@@ -68,20 +75,20 @@ public class SearchContentHandler {
         chatGateway.sendSelectContentRequest(saga.getSagaId(), top10HighQuality);
     }
 
-    private @NonNull List<DownloadableContentInfo> findDownloadableContext(MovieItem item) {
-        var foundByFullTitle = jackettGateway.query(item.getFullTitle());
+    private @NonNull List<DownloadableContentInfo> findDownloadableContext(MovieItem item, @NonNull Predicate<DownloadableContentInfo> filter) {
+        var foundByFullTitle = jackettGateway.query(item.getFullTitle(), filter);
         if (isResultConsideredOk(foundByFullTitle)) {
             return foundByFullTitle;
         }
 
         List<DownloadableContentInfo> foundByForeignTitle = List.of();
         if (item.hasForeignTitle()) {
-            foundByForeignTitle = jackettGateway.query("%s %s".formatted(item.getTitle(), item.getForeignTitle()));
+            foundByForeignTitle = jackettGateway.query("%s %s".formatted(item.getTitle(), item.getForeignTitle()), filter);
             if (isResultConsideredOk(foundByForeignTitle)) {
                 return combine(foundByFullTitle, foundByForeignTitle);
             }
         }
-        return combine(foundByFullTitle, foundByForeignTitle, jackettGateway.query(item.getTitle()));
+        return combine(foundByFullTitle, foundByForeignTitle, jackettGateway.query(item.getTitle(), filter));
     }
 
     // TODO Use Specification instead
