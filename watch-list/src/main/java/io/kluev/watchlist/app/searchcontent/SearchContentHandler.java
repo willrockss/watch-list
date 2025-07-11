@@ -123,7 +123,7 @@ public class SearchContentHandler {
 
         val selectedContent = findSelectedDownloadableContentInfoOrNull(saga, resp);
         val torrFileContent = jackettGateway.download(selectedContent);
-        val savedFilename = save(torrFileContent);
+        val savedFilename = save(torrFileContent, saga);
         chatGateway.sendMessage(rawResponse.chatId(), "`file://%s` был успешно скачан", savedFilename);
         eventPublisher.publishEvent(new ContentSelectedForDownload(saga.getMovieItem(), savedFilename));
     }
@@ -142,8 +142,12 @@ public class SearchContentHandler {
     }
 
     @SneakyThrows
-    private String save(FileContent torrFileContent) {
-        val file = Path.of(properties.getTorrFolder(), torrFileContent.filename()).toFile();
+    private String save(FileContent torrFileContent, SearchContentSaga saga) {
+        String filename = switch (properties.getTorrFilenameStrategy()) {
+            case EXTERNAL_ID -> saga.getMovieItem().getExternalId() + ".torrent";
+            case ESCAPED -> torrFileContent.filename();
+        };
+        val file = Path.of(properties.getTorrFolder(), filename).toFile();
 
         FileUtils.writeByteArrayToFile(file, torrFileContent.bytes());
         log.info("{} was created", file.getCanonicalFile());

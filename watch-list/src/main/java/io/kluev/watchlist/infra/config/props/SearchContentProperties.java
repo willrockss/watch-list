@@ -9,4 +9,10 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "search-content")
 public class SearchContentProperties {
     private String torrFolder;
+    private TorrFilenameStrategy torrFilenameStrategy = TorrFilenameStrategy.EXTERNAL_ID;
+
+    public enum TorrFilenameStrategy {
+        ESCAPED,
+        EXTERNAL_ID
+    }
 }
