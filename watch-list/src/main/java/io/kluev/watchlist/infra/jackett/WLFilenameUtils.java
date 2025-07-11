@@ -14,7 +14,7 @@ public abstract class WLFilenameUtils {
      */
     public static String escapeFilename(String initialFilename) {
         val escapedFull = initialFilename
-                .replaceAll("[^.\\d\\p{L}\\p{M}()\\[\\]{}:]", "_")
+                .replaceAll("[^.\\d\\p{L}\\p{M}()\\[\\]{}]", "_")
                 .replaceAll("_+", "_");
 
         val ext = getExtWithDot(escapedFull);

@@ -23,16 +23,16 @@ class WLFilenameUtilsTest {
                 Arguments.of("на русском.txt", "на_русском.txt"),
                 Arguments.of("with/slash.txt", "with_slash.txt"),
                 Arguments.of("with\\backslash.txt", "with_backslash.txt"),
-                Arguments.of("with:colon.txt", "with:colon.txt"),
+                Arguments.of("with:colon.txt", "with_colon.txt"),
                 Arguments.of("with,comma.txt", "with_comma.txt"),
                 Arguments.of("with multi   spaces.txt", "with_multi_spaces.txt"),
                 Arguments.of(
                         "Терминатор 2: Судный день / Terminator 2: Judgment Day (Джеймс Кэмерон / James Cameron) [1991, фантастика, боевик, триллер, AC3, NTSC] [EXTENDED / REMASTERED] VO (Данис Нурмухаметов / версия 2016).txt",
-                        "Терминатор_2:_Судный_день_Terminator_2:_Judgment_Day_(Джеймс_Кэмерон_James_Cameron)_[1991_фантас.txt"
+                        "Терминатор_2_Судный_день_Terminator_2_Judgment_Day_(Джеймс_Кэмерон_James_Cameron)_[1991_фантасти.txt"
                 ),
                 Arguments.of(
                         "Терминатор 2: Судный день / Terminator 2: Judgment Day (Джеймс Кэмерон / James Cameron) [1991, фантастика, боевик, триллер, AC3, NTSC] [EXTENDED / REMASTERED] VO (Данис Нурмухаметов / версия 2016)",
-                        "Терминатор_2:_Судный_день_Terminator_2:_Judgment_Day_(Джеймс_Кэмерон_James_Cameron)_[1991_фантастика"
+                        "Терминатор_2_Судный_день_Terminator_2_Judgment_Day_(Джеймс_Кэмерон_James_Cameron)_[1991_фантастика_б"
                 )
         );
     }
