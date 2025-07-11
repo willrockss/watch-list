@@ -1,8 +1,9 @@
 <configuration>
+    <property name="LOG_DIR" value="${LOG_DIR:-./logs}"/>
     <appender name="file-json" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>./logs/watch.list.log.json</file>
+        <file>${LOG_DIR}/watch.list.log.json</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>./logs/%d{yyyy-MM-dd}-watch.list.log.json</fileNamePattern>
+            <fileNamePattern>${LOG_DIR}/%d{yyyy-MM-dd}-watch.list.log.json</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
@@ -25,9 +26,9 @@
         </encoder>
     </appender>
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>./logs/watch.list.log</file>
+        <file>${LOG_DIR}/watch.list.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>./logs/%d{yyyy-MM-dd}-watch.list.log</fileNamePattern>
+            <fileNamePattern>${LOG_DIR}/%d{yyyy-MM-dd}-watch.list.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
