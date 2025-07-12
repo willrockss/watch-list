@@ -123,7 +123,7 @@ public class QBitClientImpl implements QBitClient {
         val body = new LinkedMultiValueMap<String, String>();
         body.add("hashes", torr.infoHash());
         restClient.post()
-                .uri(properties.getUrl() + "/api/v2/torrents/resume")
+                .uri(properties.getUrl() + "/api/v2/torrents/start")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(body)
                 .retrieve()
