@@ -142,10 +142,12 @@ function sendProgress(progressRequest) {
     // TODO use ZeroMQ instead of REST
     const progressReqBody = JSON.stringify(progressRequest);
 
-    // TODO take URL from environment or parameter `progressCallback`
+    // TODO take URL from parameter `progressCallback`
+    const wlHost = process.env.WATCH_LIST_HOST || 'localhost';
+    const wlPort = process.env.WATCH_LIST_PORT ? parseInt(process.env.VIDEO_SERVER_PORT, 10) : 8060;
     const progressReq = http.request({
-        host: 'localhost',
-        port: 8060,
+        host: wlHost,
+        port: wlPort,
         path: '/v2/progress',
         method: 'POST',
         headers: {
