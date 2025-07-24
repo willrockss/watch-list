@@ -13,6 +13,15 @@ java {
 
 springBoot {
 	buildInfo()
+
+	bootBuildImage {
+		imageName = "${project.group}/${project.name}"
+		docker {
+			def baseImageName = "${project.group}/${project.name}"
+			tags.add("${baseImageName}:${project.version}")
+			tags.add("${baseImageName}:latest")
+		}
+	}
 }
 
 repositories {
