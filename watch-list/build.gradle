@@ -15,6 +15,14 @@ bootRun {
 
 springBoot {
     buildInfo()
+
+    bootBuildImage {
+        docker {
+            def baseImageName = "${project.group}/${project.name}"
+            tags.add("${baseImageName}:${project.version}")
+            tags.add("${baseImageName}:latest")
+        }
+    }
 }
 
 repositories {
@@ -75,3 +83,9 @@ tasks.named("test").configure {
         excludeTags("IntegrationTest")
     }
 }
+
+//bootBuildImage {
+//    imageName = "watch-list"
+//    println '@@@>>> imageName: ' + imageName
+//    tags = ["${project.version}".toString(), "latest"]
+//}
