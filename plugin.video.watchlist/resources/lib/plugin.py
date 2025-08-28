@@ -44,6 +44,9 @@ def list_videos():
     xbmcplugin.setResolvedUrl(HANDLE, True, last_item)
 
 def print_result(videoElements):
+    if not videoElements:  # Checks for None or empty list
+        return None
+
     for video in videoElements:
         # Create element
         title = video["title"]

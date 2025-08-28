@@ -5,7 +5,7 @@
 			<group id="1" label="32002">
                 <setting id="watch_list_base_url" type="string" label="32004" help="">
                     <level>0</level>
-                    <default>http://192.168.0.2:8060</default>
+                    <default>http://192.168.2.20:8060</default>
                     <constraints>
                         <allowempty>false</allowempty>
                     </constraints>
