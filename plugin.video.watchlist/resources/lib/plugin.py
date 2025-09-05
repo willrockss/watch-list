@@ -22,14 +22,23 @@ def fetch():
         url = watch_list_base_url + "/v2/watch-list"
         response = requests.get(url, timeout=10)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        
+        # Ensure we always return a dictionary with expected keys
+        if isinstance(data, dict):
+            return data
+        else:
+            xbmc.log(f"Unexpected response format: {data}", xbmc.LOGERROR)
+            return {"series": [], "movies": []}
+            
     except Exception as e:
         xbmc.log(f"Ошибка: {str(e)}", xbmc.LOGERROR)
-        return []
+        return {"series": [], "movies": []}  # Return dict instead of list
 
 def list_videos():
     """Отображает список фильмов в Kodi"""
     response = fetch()
+    xbmc.log(f"fetch response: {str(response)}", xbmc.LOGDEBUG)
     episodes = response["series"]
     movies = response["movies"]
 
