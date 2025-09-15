@@ -20,8 +20,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class KinopoiskClient implements ExternalMovieDatabase {
+
+    public static final Set<String> MOVIES_TYPES = Set.of("MOVIE", "VIDEO");
+
     private final String apiKey;
     private final HttpClient httpClient;
 
@@ -59,7 +63,7 @@ public class KinopoiskClient implements ExternalMovieDatabase {
     public List<ExternalMovieDto> find(String query) {
         return findRaw(query)
                 .stream()
-                .filter(it -> it.getType().equals("FILM"))
+                .filter(it -> MOVIES_TYPES.contains(it.getType()))
                 .map(this::mapDto)
                 .peek(it -> cache.put(it.externalId(), it))
                 .toList();
