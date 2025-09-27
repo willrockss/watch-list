@@ -24,7 +24,7 @@ import java.util.Set;
 
 public class KinopoiskClient implements ExternalMovieDatabase {
 
-    public static final Set<String> MOVIES_TYPES = Set.of("MOVIE", "VIDEO");
+    public static final Set<String> MOVIES_TYPES = Set.of("MOVIE", "VIDEO", "FILM");
 
     private final String apiKey;
     private final HttpClient httpClient;
