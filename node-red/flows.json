@@ -26,7 +26,7 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "ssap://system.launcher/launch",
-        "payload": "{\"id\":\"com.webos.app.photovideo\",\"params\":{\"payload\":[{\"fullPath\":\"http://192.168.2.20:8080/Barbie.2023.1080p.WEBRip.x264-Delia_EniaHD.mkv\",\"dlnaInfo\":{\"flagVal\":4096,\"cleartextSize\":\"-1\",\"contentLength\":\"-1\",\"opVal\":1,\"protocolInfo\":\"http-get:*:video/x-matroska:DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000\",\"duration\":0},\"mediaType\":\"VIDEO\",\"deviceType\":\"DMR\"}]}}",
+        "payload": "{\"id\":\"com.webos.app.photovideo\",\"params\":{\"payload\":[{\"fullPath\":\"http://192.168.0.2:8000/video/123?path=/home/alex/Videos/vsshort.avi\",\"dlnaInfo\":{\"flagVal\":4096,\"cleartextSize\":\"-1\",\"contentLength\":\"-1\",\"opVal\":1,\"protocolInfo\":\"http-get:*:video/x-matroska:DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000\",\"duration\":0},\"mediaType\":\"VIDEO\",\"deviceType\":\"DMR\"}]}}",
         "payloadType": "json",
         "x": 675,
         "y": 180,
@@ -140,7 +140,7 @@
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
-        "initialize": "// Code added here will be run once\n// whenever the node is started.\nconst modeEnvValue = env.get('MODE');\nconsole.log(\"MODE:\", modeEnvValue);\nconst envModeProp = modeEnvValue || 'TEST';\nconsole.log(\"Calculated mode:\", envModeProp);\n\nif (envModeProp == 'TEST') {\n    global.set('MODE', 'TEST');\n    node.status({ fill: \"red\", shape: \"ring\", text: \"TEST\" })\n} else {\n    global.set('MODE', 'PROD');\n    node.status({ fill: \"green\", shape: \"dot\", text: \"PROD\" });\n}\n",
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\nconst modeEnvValue = env.get('MODE');\nconsole.log(\"MODE:\", modeEnvValue);\nconst envModeProp = modeEnvValue || 'TEST';\nconsole.log(\"Calculated mode:\", envModeProp);\n\n\nconst currHost = env.get('CURR_HOST');\nconsole.log(\"CURR_HOST: \", currHost);\n\nif (envModeProp == 'TEST') {\n    global.set('MODE', 'TEST');\n    node.status({ fill: \"red\", shape: \"ring\", text: \"TEST\" })\n} else {\n    global.set('MODE', 'PROD');\n    node.status({ fill: \"green\", shape: \"dot\", text: \"PROD\" });\n}\n",
         "finalize": "",
         "libs": [],
         "x": 280,
@@ -561,7 +561,7 @@
         "type": "function",
         "z": "1c100426f1edcec5",
         "name": "prepare get row request",
-        "func": "var params = msg.req.params;\nif (params.length == 0 || !params[0]) {\n    msg.cells = 'Сериалы!A1:J11';\n} else {\n    var rowN = params[0];\n    msg.cells = 'Сериалы!A' + rowN + ':J' + rowN;\n}\nreturn msg;",
+        "func": "var params = msg?.req?.params || [];\nif (params.length == 0 || !params[0]) {\n    msg.cells = 'Сериалы!A1:J11';\n} else {\n    var rowN = params[0];\n    msg.cells = 'Сериалы!A' + rowN + ':J' + rowN;\n}\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -754,6 +754,123 @@
         "wires": [
             [
                 "4686ed98659d3989"
+            ]
+        ]
+    },
+    {
+        "id": "1eae131b058a8836",
+        "type": "inject",
+        "z": "1c100426f1edcec5",
+        "name": "Click",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 210,
+        "y": 520,
+        "wires": [
+            [
+                "1ea3dc373e529dd6"
+            ]
+        ]
+    },
+    {
+        "id": "3b74192a7377f0fa",
+        "type": "switch",
+        "z": "1c100426f1edcec5",
+        "name": "player_type_route",
+        "property": "PLAYER_TYPE",
+        "propertyType": "env",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "KODI",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 650,
+        "y": 1280,
+        "wires": [
+            [
+                "8af628879bfeb7e9"
+            ],
+            [
+                "990d4d970fb330eb"
+            ]
+        ]
+    },
+    {
+        "id": "a40e96dcd0303f77",
+        "type": "http request",
+        "z": "1c100426f1edcec5",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://192.168.2.10:8089/jsonrpc",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "basic",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "other",
+                "valueValue": "application/json"
+            }
+        ],
+        "x": 1290,
+        "y": 1200,
+        "wires": [
+            [
+                "8277be544389d344"
+            ]
+        ]
+    },
+    {
+        "id": "8277be544389d344",
+        "type": "debug",
+        "z": "1c100426f1edcec5",
+        "name": "debug 15",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1500,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "8af628879bfeb7e9",
+        "type": "function",
+        "z": "1c100426f1edcec5",
+        "name": "prepare KODI JSONRPC Notification command",
+        "func": "\nmsg.payload = {\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"GUI.ShowNotification\",\n  \"params\": {\n    \"title\": \"Watch List Notification\",\n    \"message\": msg.payload,\n    \"image\": \"info\",\n    \"displaytime\": 5000\n  }\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1000,
+        "y": 1200,
+        "wires": [
+            [
+                "a40e96dcd0303f77"
             ]
         ]
     },
