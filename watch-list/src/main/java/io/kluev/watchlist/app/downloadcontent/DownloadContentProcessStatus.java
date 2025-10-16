@@ -1,5 +1,6 @@
 package io.kluev.watchlist.app.downloadcontent;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 public enum DownloadContentProcessStatus {
@@ -9,6 +10,6 @@ public enum DownloadContentProcessStatus {
     FINISHED,
     ERROR;
 
-    public static final Set<DownloadContentProcessStatus> FINAL_STATUSES = Set.of(FINISHED, ERROR);
+    public static final Set<DownloadContentProcessStatus> FINAL_STATUSES = EnumSet.of(FINISHED, ERROR);
 
 }

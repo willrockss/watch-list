@@ -111,10 +111,15 @@ public class DownloadProcessCoordinator {
         }
 
         nextCacheUpdateAfterTimestampMillis = System.currentTimeMillis() + CACHE_TTL_MILLIS;
+        val wasEmpty = activeProcessesCache.isEmpty();
+
         activeProcessesCache.clear();
         activeProcessesCache.addAll(downloadContentProcessDao.getActive());
         activeProcessesCache.sort(Comparator.comparing(DownloadContentProcess::getCreatedAt));
-        log.info("Cache is updated. Current {}", activeProcessesCache);
+
+        if (!wasEmpty && !activeProcessesCache.isEmpty()) {
+            log.info("Cache is reloaded. Current {}", activeProcessesCache);
+        }
     }
 
     private void markCacheExpired() {
