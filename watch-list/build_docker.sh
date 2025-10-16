@@ -1,0 +1,1 @@
+docker build -t io.kluev/watch-list:latest .
