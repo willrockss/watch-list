@@ -66,11 +66,12 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
     }
 
     @Override
-    public List<MovieItem> getMoviesToWatch() {
+    public List<MovieItem> getMoviesReadyToWatch() {
         val toWatchMoviesRows = findToWatchMoviesRows();
         return toWatchMoviesRows.stream()
                 .map(this::mapToMovieItemOrNull)
                 .filter(Objects::nonNull)
+                .filter(MovieItem::isReady)
                 .toList();
     }
 

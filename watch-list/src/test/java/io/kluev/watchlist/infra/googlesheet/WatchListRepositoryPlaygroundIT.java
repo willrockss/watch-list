@@ -93,7 +93,7 @@ class WatchListRepositoryPlaygroundIT {
     @SneakyThrows
     @Test
     public void should_get_movie_list() {
-        val result = movieRepository.getMoviesToWatch();
+        val result = movieRepository.getMoviesReadyToWatch();
         System.out.println(result);
     }
 

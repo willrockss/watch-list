@@ -63,4 +63,9 @@ public class MovieItem {
         }
         return "%s (%d)".formatted(title, year);
     }
+
+    public boolean isReady() {
+        // Create proper status model
+        return "READY".equals(this.status);
+    }
 }

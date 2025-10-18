@@ -43,7 +43,7 @@ public class GetWatchListHandler {
 
     @SneakyThrows
     private Future<List<MovieItem>> getMoviesFuture() {
-        return executor.submit(movieRepository::getMoviesToWatch);
+        return executor.submit(movieRepository::getMoviesReadyToWatch);
 
     }
 
