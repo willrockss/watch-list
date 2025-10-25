@@ -9,12 +9,13 @@ import sys
 import urllib.parse
 import requests
 
+import monitor
+
 # Constants
 ADDON = xbmcaddon.Addon()
 HANDLE = int(sys.argv[1])
 
 def fetch():
-    """Получает список фильмов через HTTP GET"""
     try:
         watch_list_base_url = ADDON.getSettingString("watch_list_base_url")
         # TODO add url checks
@@ -32,11 +33,10 @@ def fetch():
             return {"series": [], "movies": []}
             
     except Exception as e:
-        xbmc.log(f"Ошибка: {str(e)}", xbmc.LOGERROR)
+        xbmc.log(f"Error during fetching watch list: {str(e)}", xbmc.LOGERROR)
         return {"series": [], "movies": []}  # Return dict instead of list
 
 def list_videos():
-    """Отображает список фильмов в Kodi"""
     response = fetch()
     xbmc.log(f"fetch response: {str(response)}", xbmc.LOGDEBUG)
     episodes = response["series"]
@@ -45,49 +45,53 @@ def list_videos():
     if (is_empty(episodes, movies)):
         xbmc.log("Watch list is empty", level=xbmc.LOGINFO)
         return
+    
+    monitor.PlayerMonitor().start()
 
-    last_item = print_result(episodes)
-    last_item = get_second_if_present(last_item, print_result(movies))
+    last_item = print_result(episodes, 'EPISODE')
+    last_item = get_second_if_present(last_item, print_result(movies, 'MOVIE'))
      
     xbmcplugin.endOfDirectory(HANDLE)
     xbmcplugin.setResolvedUrl(HANDLE, True, last_item)
 
-def print_result(videoElements):
+def print_result(videoElements, videoType):
     if not videoElements:  # Checks for None or empty list
         return None
 
     for video in videoElements:
         # Create element
+        id = video["id"]
         title = video["title"]
-        li = xbmcgui.ListItem(label=title)
+        localPath = urllib.parse.quote(video["localPath"])
         streamUrl = urllib.parse.quote(video["contentStreamUrl"])
-        li.setInfo("video", {"plot": streamUrl})
+        
+        li = xbmcgui.ListItem(label=title, path=streamUrl)
         li.setArt({"poster": video.get("poster_url", "")})
         li.setProperty('IsPlayable', 'true')
         xbmc.log(f"loaded item {title} with url {streamUrl}", level=xbmc.LOGINFO)
         # Create URL to play video
-        url = f"plugin://{ADDON.getAddonInfo('id')}/?video_url={streamUrl}"
-        is_folder = False
-        
+        url = f"plugin://{ADDON.getAddonInfo('id')}/?video_url={streamUrl}&video_id={id}&video_type={videoType}&local_path={localPath}"
+
         # Add video element into list
-        xbmcplugin.addDirectoryItem(HANDLE, url, li, is_folder)
+        xbmcplugin.addDirectoryItem(HANDLE, url, li)
     return li
 
 
-def play_movie(video_url):
-    # Decode URL first to handle any double-encoding
-    decoded_url = video_url
+def play_movie(video_url, video_id, video_type, local_path):
+    xbmc.log(f"@@@>>> play_movie video_url={video_url} video_id={video_id} video_type={video_type} local_path={local_path}", level=xbmc.LOGINFO)
 
-    xbmc.log(f"going to play {decoded_url}", level=xbmc.LOGINFO)
-    
     # Create playable item
-    li = xbmcgui.ListItem(path=decoded_url)
+    li = xbmcgui.ListItem(path=video_url + '&playerCapabilities=progressTracker') # TODO add check if single query param
+    li.setProperty('videoId', video_id)
+    li.setProperty('videoType', video_type)
+    li.setProperty('localPath', local_path)
+
     
     # Set content type headers if needed
-    if "m4v" in decoded_url:
+    if "m4v" in video_url:
         li.setMimeType('video/mp4')
         li.setContentLookup(False)
-    
+
     # Pass to player
     xbmcplugin.setResolvedUrl(HANDLE, True, li)
 
@@ -103,7 +107,7 @@ def router(paramstring):
         list_videos()
     elif streamUrl != "":
         xbmc.log(f"@@@>>> Going to play {streamUrl}", level=xbmc.LOGINFO)
-        play_movie(params["video_url"])
+        play_movie(params["video_url"], params["video_id"], params["video_type"], params["local_path"])
     else:
         xbmc.log(f"@@@>>> streamUrl is not specified. Do nothing", level=xbmc.LOGINFO)
 
