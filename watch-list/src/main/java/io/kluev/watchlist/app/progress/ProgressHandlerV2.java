@@ -16,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.Map;
 
+import static org.apache.commons.lang3.BooleanUtils.isFalse;
+
 @Slf4j
 @RequiredArgsConstructor
 public class ProgressHandlerV2 {
@@ -41,28 +43,32 @@ public class ProgressHandlerV2 {
             val lock = lockService.acquireLock(request.videoId());
             if (lock == null) {
                 log.debug("Unable to acquire to acquire lock to update progress for {}", request.videoId());
-                return new ProgressResponse("Episode update already in progress");
+                return ProgressResponse.error("Episode update already in progress");
             }
             try {
-                String error = null;
-                switch (request.videoType()) {
-                    case VideoType.EPISODE -> error = updateWatchedEpisode(request);
-                    case VideoType.MOVIE -> error = updateWatchedMovie(request);
-                }
+                String error = switch (request.videoType()) {
+                    case VideoType.EPISODE -> updateWatchedEpisode(request);
+                    case VideoType.MOVIE -> updateWatchedMovie(request);
+                };
+
                 if (error != null) {
-                    return new ProgressResponse(error);
+                    return ProgressResponse.error(error);
                 }
 
-                error = sendNotification(request);
-                if (error != null) {
-                    return new ProgressResponse(error);
+                // Send notification until explicitly set to false
+                if (!isFalse(request.sendNotification())) {
+                    error = sendNotification(request);
+                    if (error != null) {
+                        return ProgressResponse.error(error);
+                    }
                 }
                 log.info("Video {} should be marked as watched. Used lock: {}", request.videoId(), lock);
+                return ProgressResponse.watched();
             } finally {
                 lock.unlock();
             }
         }
-        return new ProgressResponse();
+        return ProgressResponse.ok();
     }
 
     private VideoItemWatchedSpecification getWatchedSpecification(ProgressRequestV2 req) {
