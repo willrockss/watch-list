@@ -5,6 +5,7 @@ import requests
 
 import xbmc
 import xbmcaddon
+import xbmcgui
 
 # Constants
 ADDON = xbmcaddon.Addon()
@@ -17,6 +18,7 @@ class PlayerMonitor(threading.Thread):
         self.last_time = 0
 
     def run(self):
+        xbmc.log("Player monitor started", level=xbmc.LOGINFO)
         while not self._stop_event.is_set():
             if self.player.isPlaying():
                 self.send_progress()
@@ -27,6 +29,10 @@ class PlayerMonitor(threading.Thread):
 
     def stop(self):
         self._stop_event.set()
+
+    def show_notification(self,heading, message, icon='info', time=5000):
+        dialog = xbmcgui.Dialog()
+        dialog.notification(heading, message, icon, time)
 
 
     def send_progress(self):
@@ -54,7 +60,7 @@ class PlayerMonitor(threading.Thread):
             watch_list_base_url = ADDON.getSettingString("watch_list_base_url")
             # TODO add url checks
             xbmc.log(f"Base URL: {watch_list_base_url}", level=xbmc.LOGINFO)
-            url = watch_list_base_url + "/v2/progress"
+            url = watch_list_base_url + "/v3/progress"
             response = requests.post(
                 url,
                 json={'videoId': video_id, 'videoType': video_type, 'videoPath': local_path, 'progress': progress},
@@ -62,6 +68,12 @@ class PlayerMonitor(threading.Thread):
                 timeout=10
             )
             xbmc.log(f"Progress sent: {response.text}", level=xbmc.LOGINFO)
+
+            if response.status_code == 200:
+                responseBody = response.json()
+                if (responseBody.get('isMarkedAsWatched') == True):
+                    xbmc.log(f"Video {video_id} marked as watched", level=xbmc.LOGINFO)
+                    self.show_notification('Watched', 'Video ' + local_path + ' marked as watched')
 
         except Exception as e:
             xbmc.log(f"Error during sending progress: {str(e)}", xbmc.LOGERROR)
