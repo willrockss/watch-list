@@ -40,6 +40,8 @@ const requestListener = async function (req, res) {
     const params = parseParams(req);
     console.log('params', params, 'url', req.url);
 
+    var skipProgressTracking = shouldSkipProgressTracking(params);
+
     var file = params.path;
 
     var fileName = file.substring(file.lastIndexOf('/') + 1);
@@ -129,14 +131,24 @@ const requestListener = async function (req, res) {
         start : start,
         end : end
     }).on("open", function() {
-        stream
-            .pipe(throttle)
-            .pipe(progressStream)
-            .pipe(res);
+        if (shouldSkipProgressTracking) {
+            console.log('Skip progress tracking');
+            stream.pipe(res);
+        } else {
+            stream
+                .pipe(throttle)
+                .pipe(progressStream)
+                .pipe(res);
+        }
     }).on("error", function(err) {
         res.end(err);
     });
 };
+
+function shouldSkipProgressTracking(params) {
+    // TODO parse capabilities as an array
+    return params.playerCapabilities === 'progressTracker';
+}
 
 function sendProgress(progressRequest) {
     // TODO use ZeroMQ instead of REST
