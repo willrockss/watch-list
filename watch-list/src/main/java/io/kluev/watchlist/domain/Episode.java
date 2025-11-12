@@ -21,4 +21,9 @@ public class Episode implements Comparable<Episode> {
     public int compareTo(@NonNull Episode episode) {
         return BY_NUMBER_COMPARATOR.compare(this, episode);
     }
+
+    public boolean canHaveSameFilename(@NonNull String filenameOrFullPath) {
+        return filenameOrFullPath.contains(filename) && filename.contains(filenameOrFullPath);
+    }
+
 }

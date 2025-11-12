@@ -5,17 +5,18 @@ import io.kluev.watchlist.domain.event.Event;
 import io.kluev.watchlist.domain.event.SeasonWatched;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 // TODO Rename to SeriesSeason
 @Getter
 @Slf4j
+@ToString
 @AllArgsConstructor
 public class Series {
     private SeriesId id;
@@ -28,14 +29,10 @@ public class Series {
     private final List<Event> events = new ArrayList<>();
     private int lastWatchedEpisodeNumber;
 
-    public Optional<Episode> getNextToWatchEpisode() {
-        return episodes.stream().sorted().filter(it -> it.getNumber() > lastWatchedEpisodeNumber).findFirst();
-    }
-
     public boolean markEpisodeWatched(String episodeFilename) {
         val episode = episodes
                 .stream()
-                .filter(it -> it.getFilename().equals(episodeFilename))
+                .filter(it -> it.canHaveSameFilename(episodeFilename))
                 .findFirst()
                 .orElse(null);
         if (episode == null) {
@@ -54,6 +51,7 @@ public class Series {
         }
         return true;
     }
+
 
     public boolean isFullyWatched() {
         return lastWatchedEpisodeNumber >= episodes.size();
