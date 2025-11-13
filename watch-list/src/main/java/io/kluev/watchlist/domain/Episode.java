@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.ToString;
 
 import java.util.Comparator;
 
 @Getter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class Episode implements Comparable<Episode> {
@@ -23,7 +25,7 @@ public class Episode implements Comparable<Episode> {
     }
 
     public boolean canHaveSameFilename(@NonNull String filenameOrFullPath) {
-        return filenameOrFullPath.contains(filename) && filename.contains(filenameOrFullPath);
+        return filenameOrFullPath.contains(filename) || filename.contains(filenameOrFullPath);
     }
 
 }
