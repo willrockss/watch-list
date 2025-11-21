@@ -26,6 +26,7 @@ public class Series {
     // TODO make SeasonNumber ValueObject
     private final Integer seasonNumber;
     private final List<Episode> episodes = new ArrayList<>();
+    @ToString.Exclude
     private final List<Event> events = new ArrayList<>();
     private int lastWatchedEpisodeNumber;
 
