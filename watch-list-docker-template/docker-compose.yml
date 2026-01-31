@@ -1,0 +1,101 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: pg
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=watch_list
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+      
+  video-server:
+    image: video-server:latest
+    container_name: video-server
+    environment:
+      CURR_HOST: 192.168.0.2 # Put your own localhost IP address
+      WATCH_LIST_HOST: watch-list
+    ports:
+      - "8000:8000"
+    volumes:
+      - ~/Videos:/downloads # Put a preferrable folder for Videos. Use same mount point as for qbitt
+    restart: unless-stopped
+
+  watch-list:
+    image: io.kluev/watch-list:latest
+    container_name: watch-list
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pg:5432/watch-list
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/config/
+      LOG_DIR: /logs/watch-list
+      BPL_JVM_HEAD_ROOM: 10 
+      BPL_JVM_THREAD_COUNT: 50
+      JAVA_TOOL_OPTIONS: -Xmx512m -Xms256m  # Explicit min/max heap  
+    ports:
+      - "8060:8060"
+    volumes:
+      - ./watch-list-config:/config
+      - ./logs/watch-list:/logs/watch-list
+      - ./tmp:/var/watch-list-files
+      - ~/Videos:/downloads # Put a preferrable folder for Videos. Use same mount point as for qbitt
+    deploy:
+      resources:
+        limits:
+          memory: 1200m  # Set container memory to 1.2GB        
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  watch-list-presenter:
+    image: io.kluev/watch-list-presenter:latest
+    mem_limit: 612m  
+    container_name: watch-list-presenter
+    environment:
+      WATCH_LIST_BACKEND_URL: http://watch-list:8060
+      SPRING_PROFILES_ACTIVE: prod
+      LOG_DIR: /logs/watch-list-presenter
+      JAVA_TOOL_OPTIONS: -Xmx512m -Xms256m  # Explicit min/max heap  
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs/watch-list-presenter:/logs/watch-list-presenter
+    depends_on:
+      - watch-list
+    restart: unless-stopped
+
+  node-red:
+    image: nodered/node-red:3.1-debian
+    container_name: node-red
+    hostname: node-red
+    ports:
+      - "1880:1880"  # Node-RED web UI port
+    volumes:
+      - ./node-red-data:/data  # Mount host directory to container's /data
+    environment:
+      TZ: "Europe/Moscow"
+      CURR_HOST: 192.168.0.2 # Put your own localhost IP address
+      NODE_RED_ENABLE_PROJECTS: "true" 
+      MODE: PROD
+    restart: unless-stopped
+
+  qbittorrent:
+    image: qbittorrentofficial/qbittorrent-nox
+    container_name: qbit
+    hostname: qbit
+    environment:
+      WEBUI_CSRF_PROTECTION: false
+      WEBUI_SECURITY_ENABLED: false
+    ports:
+      - "8585:8080"      # WebUI port
+      - "6881:6881"      # Torrent port
+      - "6881:6881/udp"
+    volumes:
+      - ./qbit-config:/config  # Mount config directory
+      - ~/Videos:/downloads # Put a preferrable folder for Videos
+    restart: unless-stopped

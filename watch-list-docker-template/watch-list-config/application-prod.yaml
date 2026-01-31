@@ -1,0 +1,48 @@
+server:
+  port: 8060
+
+spring:
+  application:
+    name: watch-list
+  datasource:
+    url: jdbc:postgresql://pg:5432/watch-list
+    username: postgres
+    password: 123456 # Use strong password
+  sql:
+    init.mode: always
+
+integration:
+  node-red:
+    url: http://node-red:1880
+    play-video-url: /play
+
+
+  video-server:
+    base-url: http://192.168.0.2:8000 # Use proper IP Address to be accessible from TV
+
+  google:
+    credentials-file: # Put Google API Key near this application-prod.yaml file and configure it like /config/movietracker-1663573330198-55dd73280f46.json
+    spreadsheet:
+      spreadsheetId: # Use your SpreadsheetId like 12_aakNC9DtOpr5Lax48IniZZZLJby2dUNen-R-vfEVw
+
+  kinopoisk:
+    api.key: # Use Kinopoik API key
+
+  telegram-bot:
+    enabled: true
+    api.key: # Use your Telegram BOT API key 
+    allowed-users: # Use you telegram login (and your family logins if required separated by commma like my_tg_login,my_wife_login)
+    admins: # Use you telegram login (and your family logins if required)
+    sessionStoreType: PG
+
+  jackett:
+    api-key: # Open Jackett WebUI, copy api-key and put it here
+    base-url: # Your Jackett service (will add in docker-compose.yaml later)
+
+  qbit:
+    url: http://qbit:8080
+
+search-content:
+  torr-folder: /var/watch-list-files
+
+
