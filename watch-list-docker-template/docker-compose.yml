@@ -27,6 +27,7 @@ services:
   watch-list:
     image: io.kluev/watch-list:latest
     container_name: watch-list
+    restart: unless-stopped
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://pg:5432/watch-list
       SPRING_DATASOURCE_USERNAME: postgres
@@ -50,7 +51,40 @@ services:
           memory: 1200m  # Set container memory to 1.2GB        
     depends_on:
       - postgres
-    restart: unless-stopped
+      - restate
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://watch-list:8060/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  restate-register:
+    image: curlimages/curl:latest
+    depends_on:
+      restate:
+        condition: service_healthy
+      watch-list:
+        condition: service_started
+    entrypoint:
+      - "/bin/sh"
+      - "-c"
+      - |
+          echo 'Waiting for Restate Admin API...'
+          until curl -s http://restate:9070/health; do sleep 1; done
+
+          echo 'Registering watch-list service...'
+          echo '-----------------------'
+          echo '-----------------------'
+
+          curl -X POST http://restate:9070/deployments \
+              -H 'Content-Type: application/json' \
+              -d '{"uri": "http://watch-list:9080"}'
+
+          echo
+          echo '-----------------------'
+          echo '-----------------------'
+          echo 'Registration successful for watch-list!'
 
   watch-list-presenter:
     image: io.kluev/watch-list-presenter:latest
@@ -99,3 +133,28 @@ services:
       - ./qbit-config:/config  # Mount config directory
       - ~/Videos:/downloads # Put a preferrable folder for Videos
     restart: unless-stopped
+
+  restate:
+    image: docker.restate.dev/restatedev/restate:1.6.2
+    container_name: restate
+    restart: unless-stopped
+    ports:
+      - "8080:8080"   # Ingress API (вызов сервисов)
+      - "9070:9070"   # Admin API + UI
+      - "5122:5122"   # Внутренняя коммуникация узлов
+    volumes:
+      - ./restate-data:/restate-data
+    environment:
+      - RESTATE_NODE_NAME=restate-local
+      - RESTATE_LOG_FILTER=restate=info
+      # Для доступа к сервисам на хосте (например, ваш worker на localhost:9080)
+      - EXTRA_HOSTS=host.docker.internal:host-gateway
+      - RESTATE_INGRESS__ADVERTISED_ADDRESS=http://192.168.0.2:8080 # Put your own localhost IP address
+      - RESTATE_OBSERVABILITY__PUBLIC_ENDPOINT=http://192.168.0.2:8080 # Put your own localhost IP address
+    command: --node-name restate-local
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9070/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s

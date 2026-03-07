@@ -11,10 +11,12 @@ spring:
   sql:
     init.mode: always
 
-integration:
-  restate:
-    url: http://localhost:8080
+restate:
+  client:
+    base-uri: http://localhost:8080
 
+
+integration:
   node-red:
     url: http://${CURR_HOST:localhost}:1880
     play-video-url: /play
@@ -80,10 +82,11 @@ management:
   endpoint:
     shutdown.enabled: true
     info.enabled: true
+    health.probes.enabled: true
   endpoints:
     web:
       exposure:
-        include: metrics,loggers,prometheus,info,shutdown,threaddump
+        include: metrics,loggers,prometheus,info,shutdown,threaddump,health
 endpoints:
   shutdown:
     enabled: true
