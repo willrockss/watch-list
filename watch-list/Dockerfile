@@ -3,6 +3,7 @@ FROM gradle:8.6-jdk21-alpine AS builder
 WORKDIR /app
 COPY build.gradle .
 COPY settings.gradle .
+COPY gradle.properties .
 COPY src ./src
 RUN gradle clean build -x test --no-daemon
 
