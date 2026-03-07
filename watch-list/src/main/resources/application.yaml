@@ -12,6 +12,9 @@ spring:
     init.mode: always
 
 integration:
+  restate:
+    url: http://localhost:8080
+
   node-red:
     url: http://${CURR_HOST:localhost}:1880
     play-video-url: /play

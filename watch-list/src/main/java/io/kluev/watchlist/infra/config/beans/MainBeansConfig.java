@@ -1,6 +1,7 @@
 package io.kluev.watchlist.infra.config.beans;
 
 import com.google.api.services.sheets.v4.Sheets;
+import dev.restate.client.Client;
 import io.kluev.watchlist.app.ChatGateway;
 import io.kluev.watchlist.app.EnlistMovieHandler;
 import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
@@ -203,7 +204,8 @@ public class MainBeansConfig {
             EnlistMovieHandler enlistMovieHandler,
             EnlistWatchedMovieHandler enlistWatchedMovieHandler,
             TelegramSessionStore telegramSessionStore,
-            ApplicationEventPublisher eventPublisher
+            ApplicationEventPublisher eventPublisher,
+            Client restateClient
     ) {
         return new WatchListTGBot(
                 apiKey,
@@ -213,7 +215,8 @@ public class MainBeansConfig {
                 enlistMovieHandler,
                 enlistWatchedMovieHandler,
                 telegramSessionStore,
-                eventPublisher
+                eventPublisher,
+                restateClient
         );
     }
 

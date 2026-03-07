@@ -1,11 +1,14 @@
 package io.kluev.watchlist.infra.telegrambot;
 
+import dev.restate.client.Client;
 import io.kluev.watchlist.app.ChatMessage;
 import io.kluev.watchlist.app.ChatMessageResponse;
 import io.kluev.watchlist.app.EnlistMovieHandler;
 import io.kluev.watchlist.app.EnlistMovieRequest;
 import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.EnlistWatchedMovieRequest;
+import io.kluev.watchlist.app.searchmovie.SearchMovieRequest;
+import io.kluev.watchlist.app.searchmovie.SearchMovieWorkflowClient;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +46,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
     private final EnlistWatchedMovieHandler enlistWatchedMovieHandler;
     private final TelegramSessionStore telegramSessionStore;
     private final ApplicationEventPublisher eventPublisher;
+    private final Client restateClient;
 
     private static final LinkPreviewOptions SMALL_PREVIEW =
             LinkPreviewOptions
@@ -101,7 +105,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
                 callData
         ));
 
-        // Move to Search saga
+        // TODO Move to SearchMovieWorkflow
         if (callData.startsWith("add_movie_watched_")) {
             var msgBuilder = SendMessage
                     .builder()
@@ -178,7 +182,13 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
 
         eventPublisher.publishEvent(new ChatMessage(msg.getFrom().getUserName(), chatId, msg.getText()));
 
-        var foundMovies = externalMovieDatabase.find(msg.getText());
+        var wfClient = SearchMovieWorkflowClient.fromClient(restateClient, "TG-%s-%s".formatted(chatId, msg.getMessageId()));
+
+        // TODO Move to SearchMovieWorkflow
+        var foundMovies = wfClient.submit(new SearchMovieRequest(msg.getText()))
+                .attach()
+                .response()
+                .foundMovies();
 
         SendMessage respMsg;
         if (foundMovies.isEmpty()) {

@@ -1,5 +1,8 @@
 package io.kluev.watchlist.infra;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record ExternalMovieDto(
         Integer year,
         String name,

@@ -8,6 +8,7 @@ import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@ConditionalOnProperty(value = "toggles.download-coordinator.enabled", matchIfMissing = true)
 @RequiredArgsConstructor
 public class DownloadProcessCoordinator {
     public static final long CACHE_TTL_MILLIS = TimeUnit.MINUTES.toMillis(5);
