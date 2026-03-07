@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 @Disabled
 @EnableConfigurationProperties(TelegramBotProperties.class)
 @Tag("IntegrationTest")
@@ -84,6 +85,37 @@ class TelegramChatGatewayPlaygroundIT {
     public void send_message() {
         Mockito.when(telegramSessionStore.findChatIdsByUsernames(Mockito.any())).thenReturn(List.of("521320812"));
         chatGateway.sendMessage("521320812", "`File: %s` is ready", "[{some file with chars to escape}].txt");
+    }
+
+    @Test
+    public void send_message_v2() {
+        Mockito.when(telegramSessionStore.findChatIdsByUsernames(Mockito.any())).thenReturn(List.of("521320812"));
+        chatGateway.sendMessage(ChatGateway.MessageArgs.builder()
+                .chatId("521320812")
+                        .messageTemplate("Test %s template with %s")
+                        .templateArgs(List.of("v2 send message", "SpringBootTest"))
+                        .buttons(List.of(
+                                List.of(
+                                        ChatGateway.CommandButton.builder()
+                                                .caption("OK Button")
+                                                .action("cb_ok")
+                                                .build(),
+                                        ChatGateway.CommandButton.builder()
+                                                .caption("Cancel Button")
+                                                .action("cb_cancel")
+                                                .build()
+                                ),
+                                List.of(ChatGateway.CommandButton.builder()
+                                        .caption("Line 2 Button")
+                                        .action("cb_b2")
+                                        .build()),
+                                List.of(ChatGateway.CommandButton.builder()
+                                        .caption("Line 3 Button")
+                                        .action("cb_b3")
+                                        .build())
+                        ))
+                .build()
+        );
     }
 
     @TestConfiguration

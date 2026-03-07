@@ -6,11 +6,13 @@ import io.kluev.watchlist.infra.config.props.TelegramBotProperties;
 import jakarta.annotation.Nullable;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.val;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.LinkPreviewOptions;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -27,6 +29,12 @@ import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 
 @RequiredArgsConstructor
 public class TelegramChatGateway implements ChatGateway {
+    public static final LinkPreviewOptions SMALL_PREVIEW =
+            LinkPreviewOptions
+                    .builder()
+                    .preferSmallMedia(true)
+                    .build();
+
     private final TelegramClient telegramClient;
     private final TelegramSessionStore telegramSessionStore;
     private final TelegramBotProperties telegramBotProperties;
@@ -117,8 +125,7 @@ public class TelegramChatGateway implements ChatGateway {
 
     @Override
     public void sendMessage(@NonNull String chatId, @NonNull String notificationTemplate, @Nullable String... args) {
-        Assert.notNull(chatId, "chatId must not be null");
-        Assert.notNull(notificationTemplate, "notificationTemplate must not be null");
+        // TODO call sendMessage(@NonNull MessageArgs args)
         try {
             SendMessage sm = new SendMessage(chatId, prepareMessageText(notificationTemplate, args));
             sm.setParseMode("MarkdownV2");
@@ -129,7 +136,35 @@ public class TelegramChatGateway implements ChatGateway {
         }
     }
 
-    private String prepareMessageText(String template, String... args) {
+    @SneakyThrows
+    @Override
+    public void sendMessage(@NonNull MessageArgs args) {
+        SendMessage sm = new SendMessage(
+                args.chatId(),
+                prepareMessageText(args.messageTemplate(), args.templateArgs().toArray(String[]::new))
+        );
+        sm.setParseMode("MarkdownV2");
+        sm.setLinkPreviewOptions(SMALL_PREVIEW);
+        if (!args.buttons().isEmpty()) {
+            var kbBuilder = InlineKeyboardMarkup.builder();
+            for (List<CommandButton> buttonRow : args.buttons()) {
+                var buttonsInRow = buttonRow.stream()
+                        .map(it -> InlineKeyboardButton
+                                .builder()
+                                .text(it.caption())
+                                .callbackData(it.action())
+                                .build())
+                        .toList();
+                kbBuilder.keyboardRow(new InlineKeyboardRow(buttonsInRow));
+            }
+            sm.setReplyMarkup(kbBuilder.build());
+        }
+
+        telegramClient.execute(sm);
+
+    }
+
+    private String prepareMessageText(String template, String[] args) {
         if (ArrayUtils.isEmpty(args)) {
             return template;
         }

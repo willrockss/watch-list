@@ -1,6 +1,7 @@
 package io.kluev.watchlist.infra.telegrambot;
 
 import dev.restate.client.Client;
+import io.kluev.watchlist.app.ChatGateway;
 import io.kluev.watchlist.app.ChatMessage;
 import io.kluev.watchlist.app.ChatMessageResponse;
 import io.kluev.watchlist.app.EnlistMovieHandler;
@@ -22,17 +23,14 @@ import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.LinkPreviewOptions;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -47,12 +45,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
     private final TelegramSessionStore telegramSessionStore;
     private final ApplicationEventPublisher eventPublisher;
     private final Client restateClient;
-
-    private static final LinkPreviewOptions SMALL_PREVIEW =
-            LinkPreviewOptions
-                    .builder()
-                    .preferSmallMedia(true)
-                    .build();
+    private final ChatGateway chatGateway;
 
     @SneakyThrows
     @Override
@@ -119,6 +112,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
 
                 var watchAtInstant = Instant.ofEpochSecond(update.getCallbackQuery().getMessage().getDate());
                 // TODO take timezone from User configuration
+                // TODO use LocalDate.not() instead
                 var watchAt = watchAtInstant.atZone(ZoneId.systemDefault()).toLocalDate();
                 var enlistRequest = EnlistWatchedMovieRequest
                         .builder()
@@ -180,7 +174,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
 
         var chatId = msg.getChatId().toString();
 
-        eventPublisher.publishEvent(new ChatMessage(msg.getFrom().getUserName(), chatId, msg.getText()));
+        eventPublisher.publishEvent(new ChatMessage(msg.getMessageId().toString(), msg.getFrom().getUserName(), chatId, msg.getText()));
 
         var wfClient = SearchMovieWorkflowClient.fromClient(restateClient, "TG-%s-%s".formatted(chatId, msg.getMessageId()));
 
@@ -190,37 +184,30 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
                 .response()
                 .foundMovies();
 
-        SendMessage respMsg;
         if (foundMovies.isEmpty()) {
-            respMsg = new SendMessage(chatId, "По запросу '%s' ничего не найдено".formatted(msg.getText()));
+            chatGateway.sendMessage(chatId, "По запросу '%s' ничего не найдено", msg.getText());
         } else {
             val firstFoundMovie = foundMovies.stream().findFirst().orElseThrow();
-            respMsg = new SendMessage(chatId, "%s\n%s".formatted(firstFoundMovie.getFullName(), firstFoundMovie.previewImageUrl()));
-            respMsg.setLinkPreviewOptions(SMALL_PREVIEW);
-            respMsg.setReplyMarkup(
-                    InlineKeyboardMarkup
-                            .builder()
-                            .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton
-                                    .builder()
-                                    .text("Добавить в список")
-                                    .callbackData("add_movie_" + firstFoundMovie.externalId())
-                                    .build())
-                            )
-                            .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton
-                                    .builder()
-                                    .text("Добавить просмотренным")
-                                    .callbackData("add_movie_watched_" + firstFoundMovie.externalId())
-                                    .build())
-                            )
-                            .build()
-            );
+            chatGateway.sendMessage(ChatGateway.MessageArgs.builder()
+                            .chatId(chatId)
+                            .messageTemplate("%s\n%s")
+                            .templateArgs(List.of(firstFoundMovie.getFullName(), firstFoundMovie.previewImageUrl()))
+                            .buttons(List.of(
+                                    List.of(ChatGateway.CommandButton.builder()
+                                            .caption("Добавить в список")
+                                            .action("add_movie_" + firstFoundMovie.externalId())
+                                            .build()
+                                    ),
+                                    List.of(ChatGateway.CommandButton.builder()
+                                            .caption("Добавить просмотренным")
+                                            .action("add_movie_watched_" + firstFoundMovie.externalId())
+                                            .build()
+                            )))
+                    .build());
         }
-
-        telegramClient.execute(respMsg);
     }
 
     private void answerCallbackQuery(String callbackQueryId) {
-        // vvv
         val answerCallbackQuery = AnswerCallbackQuery
                 .builder()
                 .callbackQueryId(callbackQueryId)

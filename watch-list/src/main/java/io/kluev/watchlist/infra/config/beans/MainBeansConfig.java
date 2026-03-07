@@ -205,7 +205,8 @@ public class MainBeansConfig {
             EnlistWatchedMovieHandler enlistWatchedMovieHandler,
             TelegramSessionStore telegramSessionStore,
             ApplicationEventPublisher eventPublisher,
-            Client restateClient
+            Client restateClient,
+            ChatGateway chatGateway
     ) {
         return new WatchListTGBot(
                 apiKey,
@@ -216,7 +217,8 @@ public class MainBeansConfig {
                 enlistWatchedMovieHandler,
                 telegramSessionStore,
                 eventPublisher,
-                restateClient
+                restateClient,
+                chatGateway
         );
     }
 

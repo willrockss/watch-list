@@ -15,6 +15,6 @@ class NodeRedSeriesIdTest {
         String result = id.toString();
 
         // then
-        Assertions.assertThat(result).isEqualTo("NodeRedSeriesId{волга_1}");
+        Assertions.assertThat(result).isEqualTo("NodeRedSeriesId(value=волга_1, sheetRowNumber=15)");
     }
 }
