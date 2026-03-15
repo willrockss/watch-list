@@ -1,6 +1,6 @@
 package io.kluev.watchlist.app.searchcontent;
 
-import io.kluev.watchlist.app.ChatMessageResponse;
+import io.kluev.watchlist.app.chat.ChatMessageResponse;
 
 import java.util.UUID;
 import java.util.regex.Matcher;

@@ -1,6 +1,6 @@
 package io.kluev.watchlist.app.searchcontent;
 
-import io.kluev.watchlist.app.ChatMessageResponse;
+import io.kluev.watchlist.app.chat.ChatMessageResponse;
 import lombok.val;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +13,12 @@ class SearchContentSagaResponseTest {
     @Test
     void should_parse_successfully() {
         // given
-        val rawResp = new ChatMessageResponse("testChatId", "searchContentSaga_2eab2ae0-7701-40e7-ab43-e250758a4cd0_s_2");
+        val rawResp = new ChatMessageResponse(
+                "testMsgId",
+                "testChatId",
+                "searchContentSaga_2eab2ae0-7701-40e7-ab43-e250758a4cd0_s_2",
+                "test-user"
+        );
 
         // when
         val resp = SearchContentSagaResponse.parseOrNull(rawResp);

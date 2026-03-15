@@ -1,6 +1,6 @@
 package io.kluev.watchlist.app.searchcontent;
 
-import io.kluev.watchlist.app.ChatMessageResponse;
+import io.kluev.watchlist.app.chat.ChatMessageResponse;
 import io.kluev.watchlist.domain.MovieItem;
 import io.kluev.watchlist.domain.event.MovieEnlisted;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;

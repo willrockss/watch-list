@@ -1,7 +1,7 @@
 package io.kluev.watchlist.infra.telegrambot;
 
-import io.kluev.watchlist.app.ChatGateway;
 import io.kluev.watchlist.app.DownloadableContentInfo;
+import io.kluev.watchlist.app.chat.ChatGateway;
 import io.kluev.watchlist.infra.config.props.TelegramBotProperties;
 import jakarta.annotation.Nullable;
 import lombok.NonNull;
@@ -10,6 +10,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.util.Assert;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.LinkPreviewOptions;
@@ -26,9 +27,12 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 @RequiredArgsConstructor
 public class TelegramChatGateway implements ChatGateway {
+    private static final String[] EMPTY_ARGS = new String[0];
+
     public static final LinkPreviewOptions SMALL_PREVIEW =
             LinkPreviewOptions
                     .builder()
@@ -91,7 +95,8 @@ public class TelegramChatGateway implements ChatGateway {
                 .replace("[", "\\[")
                 .replace("]", "\\]")
                 .replace("{", "\\{")
-                .replace("}", "\\}");
+                .replace("}", "\\}")
+                .replace("#", "\\#");
     }
 
     private ReplyKeyboard generateKeyboard(UUID sagaId, List<DownloadableContentInfo> found) {
@@ -141,14 +146,18 @@ public class TelegramChatGateway implements ChatGateway {
     public void sendMessage(@NonNull MessageArgs args) {
         SendMessage sm = new SendMessage(
                 args.chatId(),
-                prepareMessageText(args.messageTemplate(), args.templateArgs().toArray(String[]::new))
+                prepareMessageText(args.messageTemplate(), args.templateArgs() == null ? EMPTY_ARGS : args.templateArgs().toArray(String[]::new))
         );
         sm.setParseMode("MarkdownV2");
         sm.setLinkPreviewOptions(SMALL_PREVIEW);
-        if (!args.buttons().isEmpty()) {
+        if (args.replyMessageId() != null && NumberUtils.isDigits(args.replyMessageId())) {
+            sm.setReplyToMessageId(Integer.valueOf(args.replyMessageId()));
+        }
+        if (!isEmpty(args.buttons())) {
             var kbBuilder = InlineKeyboardMarkup.builder();
             for (List<CommandButton> buttonRow : args.buttons()) {
                 var buttonsInRow = buttonRow.stream()
+                        .filter(it-> it.condition() == null || it.condition().get())
                         .map(it -> InlineKeyboardButton
                                 .builder()
                                 .text(it.caption())

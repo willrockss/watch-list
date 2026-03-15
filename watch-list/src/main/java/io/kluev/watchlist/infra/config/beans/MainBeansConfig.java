@@ -1,25 +1,24 @@
 package io.kluev.watchlist.infra.config.beans;
 
 import com.google.api.services.sheets.v4.Sheets;
-import dev.restate.client.Client;
-import io.kluev.watchlist.app.ChatGateway;
 import io.kluev.watchlist.app.EnlistMovieHandler;
 import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.GetWatchListHandler;
 import io.kluev.watchlist.app.JackettGateway;
 import io.kluev.watchlist.app.LockService;
 import io.kluev.watchlist.app.PlayHandler;
+import io.kluev.watchlist.app.SeriesRepository;
 import io.kluev.watchlist.app.VideoType;
-import io.kluev.watchlist.app.progress.EpisodeWatchedSpecification;
-import io.kluev.watchlist.app.progress.VideoItemWatchedSpecification;
-import io.kluev.watchlist.app.progress.VideoWatchedSpecification;
-import io.kluev.watchlist.app.progress.ProgressHandlerV2;
+import io.kluev.watchlist.app.chat.ChatGateway;
 import io.kluev.watchlist.app.downloadcontent.DownloadProcessCoordinator;
 import io.kluev.watchlist.app.downloadcontent.QBitClient;
+import io.kluev.watchlist.app.progress.EpisodeWatchedSpecification;
+import io.kluev.watchlist.app.progress.ProgressHandlerV2;
+import io.kluev.watchlist.app.progress.VideoItemWatchedSpecification;
+import io.kluev.watchlist.app.progress.VideoWatchedSpecification;
 import io.kluev.watchlist.app.searchcontent.SearchContentHandler;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.SeriesIdGenerator;
-import io.kluev.watchlist.app.SeriesRepository;
 import io.kluev.watchlist.domain.SimpleOffsetWatchDateStrategy;
 import io.kluev.watchlist.domain.WatchDateStrategy;
 import io.kluev.watchlist.infra.CompositeSeriesRepository;
@@ -200,25 +199,15 @@ public class MainBeansConfig {
             @Value("${integration.telegram-bot.api.key}") String apiKey,
             @Value("${integration.telegram-bot.allowed-users}") Set<String> allowedUsers,
             TelegramClient telegramClient,
-            ExternalMovieDatabase externalMovieDatabase,
-            EnlistMovieHandler enlistMovieHandler,
-            EnlistWatchedMovieHandler enlistWatchedMovieHandler,
             TelegramSessionStore telegramSessionStore,
-            ApplicationEventPublisher eventPublisher,
-            Client restateClient,
-            ChatGateway chatGateway
+            ApplicationEventPublisher eventPublisher
     ) {
         return new WatchListTGBot(
                 apiKey,
                 allowedUsers,
                 telegramClient,
-                externalMovieDatabase,
-                enlistMovieHandler,
-                enlistWatchedMovieHandler,
                 telegramSessionStore,
-                eventPublisher,
-                restateClient,
-                chatGateway
+                eventPublisher
         );
     }
 

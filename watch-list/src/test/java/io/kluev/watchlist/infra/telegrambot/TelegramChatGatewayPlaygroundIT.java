@@ -1,6 +1,6 @@
 package io.kluev.watchlist.infra.telegrambot;
 
-import io.kluev.watchlist.app.ChatGateway;
+import io.kluev.watchlist.app.chat.ChatGateway;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.infra.config.props.TelegramBotProperties;
 import lombok.val;
@@ -93,7 +93,7 @@ class TelegramChatGatewayPlaygroundIT {
         chatGateway.sendMessage(ChatGateway.MessageArgs.builder()
                 .chatId("521320812")
                         .messageTemplate("Test %s template with %s")
-                        .templateArgs(List.of("v2 send message", "SpringBootTest"))
+                        .templateArgs(List.of("v2 send text", "SpringBootTest"))
                         .buttons(List.of(
                                 List.of(
                                         ChatGateway.CommandButton.builder()

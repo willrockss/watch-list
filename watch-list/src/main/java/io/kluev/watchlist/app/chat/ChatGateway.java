@@ -1,10 +1,13 @@
-package io.kluev.watchlist.app;
+package io.kluev.watchlist.app.chat;
 
+import io.kluev.watchlist.app.DownloadableContentInfo;
 import lombok.Builder;
 import lombok.NonNull;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public interface ChatGateway {
     void sendSelectContentRequest(UUID sagaId, List<DownloadableContentInfo> found);
@@ -17,13 +20,15 @@ public interface ChatGateway {
     record MessageArgs(
             @NonNull String chatId,
             @NonNull String messageTemplate,
-            @NonNull List<String> templateArgs,
-            @NonNull List<List<CommandButton>> buttons
+            @Nullable List<String> templateArgs,
+            @Nullable List<List<CommandButton>> buttons,
+            @Nullable String replyMessageId
     ) {}
 
     @Builder
     record CommandButton(
             @NonNull String caption,
-            @NonNull String action
+            @NonNull String action,
+            @Nullable Supplier<Boolean> condition
     ) {}
 }

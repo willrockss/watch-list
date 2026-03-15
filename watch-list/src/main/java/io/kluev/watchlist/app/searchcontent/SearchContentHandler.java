@@ -1,7 +1,7 @@
 package io.kluev.watchlist.app.searchcontent;
 
-import io.kluev.watchlist.app.ChatGateway;
-import io.kluev.watchlist.app.ChatMessageResponse;
+import io.kluev.watchlist.app.chat.ChatGateway;
+import io.kluev.watchlist.app.chat.ChatMessageResponse;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.app.FileContent;
 import io.kluev.watchlist.app.JackettGateway;
