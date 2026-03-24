@@ -22,11 +22,11 @@ public class SearchMovieWorkflowInitiator {
         val chatId = msg.chatId();
         val msgId = msg.id();
 
-        val wfId = "TG-%s-%s".formatted(chatId, msgId);
+        val wfId = "%s-%s-%s".formatted(msg.source(), chatId, msgId);
         val wfClient = SearchMovieWorkflowClient.fromClient(restateClient, wfId);
 
         val searchRequest = new SearchMovieRequest(chatId, msgId, msg.text());
         val invId = wfClient.submit(searchRequest).invocationId();
-        log.atInfo().addKeyValue("invocationId", invId).log("SearchWorkflow was successfully started.");
+        log.info("SearchWorkflow(invocationId={}) was successfully started.", invId);
     }
 }

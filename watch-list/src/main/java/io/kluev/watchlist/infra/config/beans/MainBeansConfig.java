@@ -25,6 +25,7 @@ import io.kluev.watchlist.infra.CompositeSeriesRepository;
 import io.kluev.watchlist.infra.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
+import io.kluev.watchlist.infra.chat.ChatSessionStore;
 import io.kluev.watchlist.infra.config.management.PidInfoContributor;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
@@ -33,6 +34,7 @@ import io.kluev.watchlist.infra.config.props.QBitClientProperties;
 import io.kluev.watchlist.infra.config.props.SearchContentProperties;
 import io.kluev.watchlist.infra.config.props.TelegramBotProperties;
 import io.kluev.watchlist.infra.config.props.VideoServerProperties;
+import io.kluev.watchlist.infra.config.props.VkontakteBotProperties;
 import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsSeriesRepository;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
@@ -45,6 +47,8 @@ import io.kluev.watchlist.infra.telegrambot.PgTelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.TelegramChatGateway;
 import io.kluev.watchlist.infra.telegrambot.TelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
+import io.kluev.watchlist.infra.vkbot.VkChatGateway;
+import io.kluev.watchlist.infra.vkbot.WatchListVkBot;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
@@ -211,6 +215,27 @@ public class MainBeansConfig {
         );
     }
 
+    @ConditionalOnProperty(value = "integration.chats.vkontakte.enabled", havingValue = "true")
+    @Bean
+    public VkChatGateway vkChatGateway(
+            VkontakteBotProperties props,
+            ChatSessionStore chatSessionStore
+    ) {
+        return new VkChatGateway(props, chatSessionStore);
+    }
+
+    @ConditionalOnProperty(value = "integration.chats.vkontakte.enabled", havingValue = "true")
+    @Bean
+    public WatchListVkBot watchListVkBot(
+            @Value("${integration.chats.vkontakte.group-id}") Long groupId,
+            @Value("${integration.chats.vkontakte.group-token}") String groupToken,
+            ChatSessionStore chatSessionStore,
+            ApplicationEventPublisher eventPublisher
+
+    ) {
+        return new WatchListVkBot(groupId, groupToken, chatSessionStore, eventPublisher);
+    }
+
     @Bean
     public EnlistMovieHandler enlistMovieHandler(MovieRepository movieRepository, ApplicationEventPublisher publisher) {
         return new EnlistMovieHandler(movieRepository, publisher);
@@ -226,8 +251,9 @@ public class MainBeansConfig {
         return new JackettRestGateway(properties, restClient);
     }
 
+    @ConditionalOnProperty(value = "integration.telegram-bot.enabled", havingValue = "true", matchIfMissing = true)
     @Bean
-    public ChatGateway chatGateway(
+    public TelegramChatGateway telegramChatGateway(
             TelegramClient telegramClient,
             TelegramSessionStore telegramSessionStore,
             TelegramBotProperties telegramBotProperties

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.NonNull;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -12,7 +13,13 @@ import java.util.function.Supplier;
 public interface ChatGateway {
     void sendSelectContentRequest(UUID sagaId, List<DownloadableContentInfo> found);
 
-    void sendMessage(String chatId, String notificationTemplate, String... args);
+    default void sendMessage(String chatId, String notificationTemplate, String... args) {
+        sendMessage(MessageArgs.builder()
+                .chatId(chatId)
+                .messageTemplate(notificationTemplate)
+                .templateArgs(Arrays.asList(args))
+                .build());
+    }
 
     void sendMessage(MessageArgs args);
 

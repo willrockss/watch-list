@@ -31,7 +31,7 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-@RestateWorkflow
+@RestateWorkflow // TODO Rewrite to VirtualObject
 public class SearchMovieWorkflow {
 
     private final ExternalMovieDatabase externalMovieDatabase;
@@ -89,7 +89,13 @@ public class SearchMovieWorkflow {
                                     .build())
                     ))
                     .build();
-            ctx.run(() -> chatGateway.sendMessage(searchResultMessage));
+            ctx.run(() -> {
+                try {
+                    chatGateway.sendMessage(searchResultMessage);
+                } catch (Exception e) { // TODO add proper Retry Policy
+                    throw new TerminalException("Unable to send a message due to " + e.getMessage());
+                }
+            });
 
             Integer callbackCounter = ctx.get(CALLBACK_COUNTER).orElse(0);
             CallbackCommand callbackCommand = ctx.promise(getCurrentCallbackKey(callbackCounter)).future().await();
@@ -102,7 +108,14 @@ public class SearchMovieWorkflow {
             String action = parts[0];
             int actionMovieIndex = Integer.parseInt(parts[1]);
             switch (action) {
-                case "next" -> ctx.set(CURRENT_INDEX, actionMovieIndex);
+                case "next" -> {
+                    if (index >= actionMovieIndex) {
+                        log.warn("Invalid next command. Going to put next index to {}, but current is {}", actionMovieIndex, index);
+                        ctx.set(CALLBACK_COUNTER, callbackCounter + 1);
+                    } else {
+                        ctx.set(CURRENT_INDEX, actionMovieIndex);
+                    }
+                }
                 case "add" -> {
                     ctx.run(() -> addToWatchList(req.messageId(), foundMovies.get(actionMovieIndex), callbackCommand.response()));
                     cleanUp();

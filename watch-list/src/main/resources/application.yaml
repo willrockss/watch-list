@@ -69,6 +69,13 @@ integration:
     admins: <comma separated list of usernames of admins>
     sessionStoreType: PG
 
+  chats:
+    vkontakte:
+      enabled: false
+      group-id: <your group ID number>
+      group-token: <your group token>
+      admins: <comma separated list of usernames of admins>
+
   jackett:
     apiKey: <your Jackett API key>
     baseUrl: http://localhost:9117

@@ -2,6 +2,7 @@ package io.kluev.watchlist.infra.telegrambot;
 
 import io.kluev.watchlist.app.chat.ChatMessage;
 import io.kluev.watchlist.app.chat.ChatMessageResponse;
+import io.kluev.watchlist.infra.chat.Sources;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -97,7 +98,15 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
 
         var chatId = msg.getChatId().toString();
 
-        eventPublisher.publishEvent(new ChatMessage(msg.getMessageId().toString(), msg.getFrom().getUserName(), chatId, msg.getText()));
+        eventPublisher.publishEvent(
+                ChatMessage.builder()
+                        .source(Sources.TG_SOURCE)
+                        .id(msg.getMessageId().toString())
+                        .username(msg.getFrom().getUserName())
+                        .chatId(chatId)
+                        .text(msg.getText())
+                        .build()
+        );
     }
 
     private void answerCallbackQuery(String callbackQueryId) {
