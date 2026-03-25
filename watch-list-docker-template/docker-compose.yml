@@ -65,26 +65,101 @@ services:
       restate:
         condition: service_healthy
       watch-list:
-        condition: service_started
+        condition: service_healthy
     entrypoint:
       - "/bin/sh"
       - "-c"
       - |
-          echo 'Waiting for Restate Admin API...'
-          until curl -s http://restate:9070/health; do sleep 1; done
+        #!/bin/sh
 
-          echo 'Registering watch-list service...'
-          echo '-----------------------'
+        # Function to register a service with retry logic
+        register_service() {
+          local service_url=$$1
+          local attempt=1
+          local max_attempts=3
+
+          echo "Registering service: $$service_url"
           echo '-----------------------'
 
-          curl -X POST http://restate:9070/deployments \
-              -H 'Content-Type: application/json' \
-              -d '{"uri": "http://watch-list:9080"}'
+          while [ $$attempt -le $$max_attempts ]; do
+            echo "Attempt $$attempt/$$max_attempts..."
 
-          echo
-          echo '-----------------------'
-          echo '-----------------------'
-          echo 'Registration successful for watch-list!'
+            # Execute registration request with timeout and error handling
+            response=$$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST http://restate:9070/deployments \
+                -H 'Content-Type: application/json' \
+                --connect-timeout 10 \
+                --max-time 30 \
+                -d "{\"uri\": \"$$service_url\", \"force\": true}" || echo "CURL_ERROR")
+
+            # Check if curl command failed (network error or timeout)
+            if echo "$$response" | grep -q "CURL_ERROR"; then
+              echo "ERROR: curl command failed (network error or timeout)" >&2
+              [ $$attempt -eq $$max_attempts ] && exit 1
+              sleep 5
+              attempt=$$((attempt + 1))
+              continue
+            fi
+
+            # Extract HTTP code using pattern matching
+            http_code=$$(echo "$$response" | grep "HTTP_CODE:" | cut -d: -f2)
+            echo "HttpCode: $$http_code"
+
+            # Clean the response body by removing metadata lines and empty lines
+            body=$$(echo "$$response" | sed '/HTTP_CODE:/d' | sed '/^\s*$/d')
+
+            # Validate that HTTP code is not empty
+            if [ -z "$$http_code" ]; then
+              echo "ERROR: No HTTP code received in response" >&2
+              echo "Full response: $$response" >&2
+              [ $$attempt -eq $$max_attempts ] && exit 1
+              sleep 5
+              attempt=$$((attempt + 1))
+              continue
+            fi
+
+            # Ensure HTTP code is exactly 3 digits (standard HTTP format)
+            if ! [[ "$$http_code" =~ ^[0-9]{3}$ ]]; then
+              echo "ERROR: Invalid HTTP code format: '$$http_code'" >&2
+              echo "Full response: $$response" >&2
+              [ $$attempt -eq $$max_attempts ] && exit 1
+              sleep 5
+              attempt=$$((attempt + 1))
+              continue
+            fi
+
+            # Check HTTP status — fail if code is 400 or higher
+            if [ $$http_code -ge 400 ]; then
+              echo "ERROR: Registration failed with HTTP $$http_code" >&2
+              echo "Response body: $$body" >&2
+              [ $$attempt -eq $$max_attempts ] && exit 1
+              sleep 5
+              attempt=$$((attempt + 1))
+              continue
+            fi
+
+            # Successful registration — log success and return
+            echo "Service registered successfully: $$service_url"
+            echo "Response body: $$body"
+            return 0
+          done
+
+          # If all attempts fail, exit with error
+          echo "ERROR: Failed to register service after $$max_attempts attempts" >&2
+          exit 1
+        }
+
+        echo 'Registering watch-list service...'
+        echo '-----------------------'
+        echo '-----------------------'
+
+        # Call the function to register the watch-list service
+        register_service "http://watch-list:9080"
+
+        echo
+        echo '-----------------------'
+        echo '-----------------------'
+        echo 'Registration successful for watch-list!'
+
 
   watch-list-presenter:
     image: io.kluev/watch-list-presenter:latest
