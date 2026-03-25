@@ -42,6 +42,7 @@ import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
 import io.kluev.watchlist.infra.qbit.QBitClientImpl;
+import io.kluev.watchlist.infra.telegrambot.LazyTelegramBotInitializer;
 import io.kluev.watchlist.infra.telegrambot.NoopTelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.PgTelegramSessionStore;
 import io.kluev.watchlist.infra.telegrambot.TelegramChatGateway;
@@ -62,6 +63,9 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
+import org.telegram.telegrambots.longpolling.TelegramBotsLongPollingApplication;
+import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
+import org.telegram.telegrambots.longpolling.starter.TelegramBotInitializer;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.time.Clock;
@@ -199,6 +203,15 @@ public class MainBeansConfig {
 
     @ConditionalOnProperty(value = "integration.telegram-bot.enabled", havingValue = "true", matchIfMissing = true)
     @Bean
+    public TelegramBotInitializer lazyTelegramBotInitializer(
+            TelegramBotsLongPollingApplication tgApp,
+            List<SpringLongPollingBot> longPollingBots
+    ) {
+        return new LazyTelegramBotInitializer(tgApp, longPollingBots);
+    }
+
+    @ConditionalOnProperty(value = "integration.telegram-bot.enabled", havingValue = "true", matchIfMissing = true)
+    @Bean
     public WatchListTGBot watchListTGBot(
             @Value("${integration.telegram-bot.api.key}") String apiKey,
             @Value("${integration.telegram-bot.allowed-users}") Set<String> allowedUsers,
@@ -217,7 +230,7 @@ public class MainBeansConfig {
 
     @ConditionalOnProperty(value = "integration.chats.vkontakte.enabled", havingValue = "true")
     @Bean
-    public VkChatGateway vkChatGateway(
+    public ChatGateway vkChatGateway(
             VkontakteBotProperties props,
             ChatSessionStore chatSessionStore
     ) {
@@ -251,9 +264,9 @@ public class MainBeansConfig {
         return new JackettRestGateway(properties, restClient);
     }
 
-    @ConditionalOnProperty(value = "integration.telegram-bot.enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(value = "integration.telegram-bot.enabled", matchIfMissing = true)
     @Bean
-    public TelegramChatGateway telegramChatGateway(
+    public ChatGateway telegramChatGateway(
             TelegramClient telegramClient,
             TelegramSessionStore telegramSessionStore,
             TelegramBotProperties telegramBotProperties
