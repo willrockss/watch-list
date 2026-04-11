@@ -7,6 +7,7 @@ build/
 application-local.yml
 logs/
 node_modules/
+bin/
 
 ## IntelliJ IDEA
 .idea
