@@ -1,5 +1,6 @@
 package io.kluev.watchlist.app;
 
+import io.kluev.watchlist.app.addmovie.EnlistMovieVirtualObject;
 import io.kluev.watchlist.domain.MovieItem;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.event.MovieEnlisted;
@@ -9,7 +10,11 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+/**
+ * Replaced by {@link EnlistMovieVirtualObject}
+ */
 @RequiredArgsConstructor
+@Deprecated
 public class EnlistMovieHandler {
 
     private final MovieRepository movieRepository;

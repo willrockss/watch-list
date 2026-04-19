@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -129,7 +130,7 @@ public class VkChatGateway implements ChatGateway {
             addKeyboard(msgBuilder, args);
         }
 
-        if (args.replyMessageId() != null) {
+        if (StringUtils.isNumeric(args.replyMessageId())) {
             msgBuilder.replyTo(Integer.valueOf(args.replyMessageId()));
         }
         // Need to parse manually because of outdated SDK

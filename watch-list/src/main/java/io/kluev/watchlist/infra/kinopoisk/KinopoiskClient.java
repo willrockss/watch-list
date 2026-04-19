@@ -2,8 +2,7 @@ package io.kluev.watchlist.infra.kinopoisk;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.kluev.watchlist.infra.ExternalMovieDatabase;
-import io.kluev.watchlist.infra.ExternalMovieDto;
+import io.kluev.watchlist.app.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.kinopoisk.dto.Film;
 import io.kluev.watchlist.infra.kinopoisk.dto.FilmSearchResult;
 import io.kluev.watchlist.infra.kinopoisk.dto.GetFilmResult;

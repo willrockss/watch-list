@@ -2,6 +2,8 @@ package io.kluev.watchlist.app.searchmovie;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.restate.client.Client;
+import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.SharedWorkflowContext;
 import dev.restate.sdk.WorkflowContext;
 import dev.restate.sdk.annotation.Shared;
@@ -11,16 +13,15 @@ import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.common.TerminalException;
 import dev.restate.sdk.springboot.RestateWorkflow;
 import dev.restate.serde.TypeRef;
-import io.kluev.watchlist.app.EnlistMovieHandler;
 import io.kluev.watchlist.app.EnlistMovieRequest;
 import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.EnlistWatchedMovieRequest;
 import io.kluev.watchlist.app.KeyValueStorage;
+import io.kluev.watchlist.app.addmovie.EnlistMovieVirtualObjectClient;
 import io.kluev.watchlist.app.chat.CallbackCommand;
 import io.kluev.watchlist.app.chat.ChatGateway;
 import io.kluev.watchlist.app.chat.ChatMessageResponse;
-import io.kluev.watchlist.infra.ExternalMovieDatabase;
-import io.kluev.watchlist.infra.ExternalMovieDto;
+import io.kluev.watchlist.app.ExternalMovieDatabase;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -36,11 +37,11 @@ public class SearchMovieWorkflow {
 
     private final ExternalMovieDatabase externalMovieDatabase;
     private final ChatGateway chatGateway;
-    private final EnlistMovieHandler enlistMovieHandler;
     private final EnlistWatchedMovieHandler enlistWatchedMovieHandler;
     private final KeyValueStorage keyValueStorage;
+    private final Client restateClient;
 
-    private static final TypeRef<List<ExternalMovieDto>> LIST_RES_REF = new TypeRef<>(){};
+    private static final TypeRef<List<ExternalMovieDatabase.ExternalMovieDto>> LIST_RES_REF = new TypeRef<>(){};
     private static final StateKey<Integer> CURRENT_INDEX =
             StateKey.of("current_index", Integer.class);
     private static final StateKey<Integer> CALLBACK_COUNTER =
@@ -117,7 +118,7 @@ public class SearchMovieWorkflow {
                     }
                 }
                 case "add" -> {
-                    ctx.run(() -> addToWatchList(req.messageId(), foundMovies.get(actionMovieIndex), callbackCommand.response()));
+                    ctx.run(() -> addToWatchList(ctx, req.messageId(), foundMovies.get(actionMovieIndex), callbackCommand.response()));
                     cleanUp();
                     return;
                 }
@@ -155,35 +156,32 @@ public class SearchMovieWorkflow {
         return DurablePromiseKey.of(promiseName, CallbackCommand.class);
     }
 
-    // TODO move to another Workflow
-    private void addToWatchList(String initialMessageId, ExternalMovieDto movieDto, ChatMessageResponse responseMsg) {
-        try {
-            val enlistRequest = EnlistMovieRequest
-                    .builder()
-                    .title(movieDto.name())
-                    .foreignTitle(movieDto.enName())
-                    .year(movieDto.year())
-                    .externalId(movieDto.externalId())
-                    .username(responseMsg.username())
-                    .build();
+    private void addToWatchList(ObjectContext ctx, String initialMessageId, ExternalMovieDatabase.ExternalMovieDto movieDto, ChatMessageResponse responseMsg) {
+        val enlistClient = EnlistMovieVirtualObjectClient.fromClient(restateClient, movieDto.externalId());
 
-            val response = enlistMovieHandler.handle(enlistRequest);
+        val enlistRequest = EnlistMovieRequest
+                .builder()
+                .title(movieDto.name())
+                .foreignTitle(movieDto.enName())
+                .year(movieDto.year())
+                .externalId(movieDto.externalId())
+                .username(responseMsg.username())
+                .build();
 
-            // TODO send to all users
-            chatGateway.sendMessage(ChatGateway.MessageArgs.builder()
-                    .chatId(responseMsg.chatId())
-                    .replyMessageId(initialMessageId)
-                    .messageTemplate("Фильм %s добавлен в список")
-                    .templateArgs(List.of(response.fullTitle()))
-                    .build());
-        } catch (Exception e) {
-            log.error(e.toString(), e);
-            throw new TerminalException("Unable to add due to " + e);
-        }
+        val resp = enlistClient.addToWatchList(enlistRequest);
+
+        ctx.run(() ->
+                // TODO send to all users
+                chatGateway.sendMessage(ChatGateway.MessageArgs.builder()
+                        .chatId(responseMsg.chatId())
+                        .replyMessageId(initialMessageId)
+                        .messageTemplate("Фильм %s добавлен в список")
+                        .templateArgs(List.of(resp.fullTitle()))
+                        .build()));
     }
 
     // TODO move to another Workflow
-    private void addAsWatched(String initialMessageId, ExternalMovieDto movieDto, ChatMessageResponse responseMsg) {
+    private void addAsWatched(String initialMessageId, ExternalMovieDatabase.ExternalMovieDto movieDto, ChatMessageResponse responseMsg) {
         try {
             var enlistRequest = EnlistWatchedMovieRequest
                     .builder()
@@ -212,7 +210,7 @@ public class SearchMovieWorkflow {
 
     // TODO Move to Test
     @SneakyThrows
-    private static List<ExternalMovieDto> mockResult() {
+    private static List<ExternalMovieDatabase.ExternalMovieDto> mockResult() {
         return new ObjectMapper().readValue("""
                 [
                   {

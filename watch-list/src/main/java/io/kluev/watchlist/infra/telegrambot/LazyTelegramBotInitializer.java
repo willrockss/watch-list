@@ -34,7 +34,7 @@ public class LazyTelegramBotInitializer extends TelegramBotInitializer {
                     if (isAlreadyInitializedException(e)) {
                         initialized.set(true);
                     } else {
-                        log.warn("Unable to initialize TG bot due to {}. Retry", e, e);
+                        log.warn("Unable to initialize TG bot due to {}. Retry", e.toString());
                         try {
                             Thread.sleep(5000);
                         } catch (InterruptedException ex) {

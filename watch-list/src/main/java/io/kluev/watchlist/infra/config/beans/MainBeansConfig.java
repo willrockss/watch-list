@@ -1,7 +1,6 @@
 package io.kluev.watchlist.infra.config.beans;
 
 import com.google.api.services.sheets.v4.Sheets;
-import io.kluev.watchlist.app.EnlistMovieHandler;
 import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.GetWatchListHandler;
 import io.kluev.watchlist.app.JackettGateway;
@@ -22,7 +21,7 @@ import io.kluev.watchlist.domain.SeriesIdGenerator;
 import io.kluev.watchlist.domain.SimpleOffsetWatchDateStrategy;
 import io.kluev.watchlist.domain.WatchDateStrategy;
 import io.kluev.watchlist.infra.CompositeSeriesRepository;
-import io.kluev.watchlist.infra.ExternalMovieDatabase;
+import io.kluev.watchlist.app.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
 import io.kluev.watchlist.infra.chat.ChatSessionStore;
@@ -247,11 +246,6 @@ public class MainBeansConfig {
 
     ) {
         return new WatchListVkBot(groupId, groupToken, chatSessionStore, eventPublisher);
-    }
-
-    @Bean
-    public EnlistMovieHandler enlistMovieHandler(MovieRepository movieRepository, ApplicationEventPublisher publisher) {
-        return new EnlistMovieHandler(movieRepository, publisher);
     }
 
     @Bean
