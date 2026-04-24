@@ -16,6 +16,7 @@ import dev.restate.serde.TypeRef;
 import io.kluev.watchlist.app.EnlistMovieRequest;
 import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.EnlistWatchedMovieRequest;
+import io.kluev.watchlist.app.EnlistWatchedMovieResponse;
 import io.kluev.watchlist.app.KeyValueStorage;
 import io.kluev.watchlist.app.addmovie.EnlistMovieVirtualObjectClient;
 import io.kluev.watchlist.app.chat.CallbackCommand;
@@ -39,7 +40,6 @@ public class SearchMovieWorkflow {
     private final ChatGateway chatGateway;
     private final EnlistWatchedMovieHandler enlistWatchedMovieHandler;
     private final KeyValueStorage keyValueStorage;
-    private final Client restateClient;
 
     private static final TypeRef<List<ExternalMovieDatabase.ExternalMovieDto>> LIST_RES_REF = new TypeRef<>(){};
     private static final StateKey<Integer> CURRENT_INDEX =
@@ -118,12 +118,12 @@ public class SearchMovieWorkflow {
                     }
                 }
                 case "add" -> {
-                    ctx.run(() -> addToWatchList(ctx, req.messageId(), foundMovies.get(actionMovieIndex), callbackCommand.response()));
+                    addToWatchList(ctx, req.messageId(), foundMovies.get(actionMovieIndex), callbackCommand.response());
                     cleanUp();
                     return;
                 }
                 case "watched" -> {
-                    ctx.run(() -> addAsWatched(req.messageId(), foundMovies.get(actionMovieIndex), callbackCommand.response()));
+                    addAsWatched(ctx, req.messageId(), foundMovies.get(actionMovieIndex), callbackCommand.response());
                     cleanUp();
                     return;
                 }
@@ -157,7 +157,7 @@ public class SearchMovieWorkflow {
     }
 
     private void addToWatchList(ObjectContext ctx, String initialMessageId, ExternalMovieDatabase.ExternalMovieDto movieDto, ChatMessageResponse responseMsg) {
-        val enlistClient = EnlistMovieVirtualObjectClient.fromClient(restateClient, movieDto.externalId());
+        val enlistClient = EnlistMovieVirtualObjectClient.fromContext(ctx, movieDto.externalId());
 
         val enlistRequest = EnlistMovieRequest
                 .builder()
@@ -168,7 +168,8 @@ public class SearchMovieWorkflow {
                 .username(responseMsg.username())
                 .build();
 
-        val resp = enlistClient.addToWatchList(enlistRequest);
+        val resp = enlistClient.addToWatchList(enlistRequest)
+                .await();
 
         ctx.run(() ->
                 // TODO send to all users
@@ -181,7 +182,7 @@ public class SearchMovieWorkflow {
     }
 
     // TODO move to another Workflow
-    private void addAsWatched(String initialMessageId, ExternalMovieDatabase.ExternalMovieDto movieDto, ChatMessageResponse responseMsg) {
+    private void addAsWatched(ObjectContext ctx, String initialMessageId, ExternalMovieDatabase.ExternalMovieDto movieDto, ChatMessageResponse responseMsg) {
         try {
             var enlistRequest = EnlistWatchedMovieRequest
                     .builder()
@@ -193,15 +194,19 @@ public class SearchMovieWorkflow {
                     .username(responseMsg.username())
                     .build();
 
-            var response = enlistWatchedMovieHandler.handle(enlistRequest);
+            var response = ctx.run(
+                    EnlistWatchedMovieResponse.class,
+                    () -> enlistWatchedMovieHandler.handle(enlistRequest)
+            );
 
             // TODO send to all users
-            chatGateway.sendMessage(ChatGateway.MessageArgs.builder()
-                    .chatId(responseMsg.chatId())
-                    .replyMessageId(initialMessageId)
-                    .messageTemplate("Фильм %s добавлен как просмотренный")
-                    .templateArgs(List.of(response.fullTitle()))
-                    .build());
+            ctx.run(() ->
+                    chatGateway.sendMessage(ChatGateway.MessageArgs.builder()
+                            .chatId(responseMsg.chatId())
+                            .replyMessageId(initialMessageId)
+                            .messageTemplate("Фильм %s добавлен как просмотренный")
+                            .templateArgs(List.of(response.fullTitle()))
+                            .build()));
         } catch (Exception e) {
             log.error(e.toString(), e);
             throw new TerminalException("Unable to add as watched due to " + e);
