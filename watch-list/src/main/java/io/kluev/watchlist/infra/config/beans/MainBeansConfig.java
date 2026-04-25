@@ -1,6 +1,7 @@
 package io.kluev.watchlist.infra.config.beans;
 
 import com.google.api.services.sheets.v4.Sheets;
+import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.GetWatchListHandler;
 import io.kluev.watchlist.app.JackettGateway;
@@ -25,6 +26,7 @@ import io.kluev.watchlist.app.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.NodeRedSeriesRepository;
 import io.kluev.watchlist.infra.SimpleLockService;
 import io.kluev.watchlist.infra.chat.ChatSessionStore;
+import io.kluev.watchlist.infra.chat.StubChatGateway;
 import io.kluev.watchlist.infra.config.management.PidInfoContributor;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
@@ -53,6 +55,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -71,6 +74,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -248,6 +252,12 @@ public class MainBeansConfig {
         return new WatchListVkBot(groupId, groupToken, chatSessionStore, eventPublisher);
     }
 
+    @ConditionalOnMissingBean(ChatGateway.class)
+    @Bean
+    public ChatGateway stubChatGateway() {
+        return new StubChatGateway();
+    }
+
     @Bean
     public EnlistWatchedMovieHandler enlistWatchedMovieHandler(MovieRepository movieRepository) {
         return new EnlistWatchedMovieHandler(movieRepository);
@@ -283,6 +293,7 @@ public class MainBeansConfig {
         return new DownloadContentProcessDao(jdbcClient);
     }
 
+    @ConditionalOnProperty(value = "toggles.download-coordinator.enabled", matchIfMissing = true)
     @Bean
     public DownloadProcessCoordinator downloadProcessCoordinator(
             DownloadContentProcessDao downloadContentProcessDao,
