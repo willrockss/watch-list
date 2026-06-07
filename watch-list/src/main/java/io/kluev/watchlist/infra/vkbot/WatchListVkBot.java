@@ -43,15 +43,6 @@ public class WatchListVkBot {
         Thread.startVirtualThread(this::run);
     }
 
-    // TODO Remove
-    @SneakyThrows
-    public static void main(String[] args) {
-        Long groupId = 203728225L;
-        String groupKey = "f1fc6ae81a88cab8c23bddf68e1c68e94920d91e3a983c78d98d43f2c92ec3a024f0d4534d49740f7bba4"; // Group Token
-        WatchListVkBot bot = new WatchListVkBot(groupId, groupKey, null, (o) -> {});
-        bot.run();
-    }
-
     // TODO refactor
     @SneakyThrows
     private void run() {
