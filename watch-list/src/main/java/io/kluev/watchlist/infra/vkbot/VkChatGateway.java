@@ -11,6 +11,8 @@ import com.vk.api.sdk.objects.messages.KeyboardButton;
 import com.vk.api.sdk.objects.messages.KeyboardButtonActionCallback;
 import com.vk.api.sdk.objects.messages.KeyboardButtonActionCallbackType;
 import com.vk.api.sdk.objects.messages.KeyboardButtonColor;
+import com.vk.api.sdk.objects.photos.responses.MessageUploadResponse;
+import com.vk.api.sdk.objects.photos.responses.SaveMessagesPhotoResponse;
 import com.vk.api.sdk.queries.messages.MessagesSendQueryWithUserIds;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.app.chat.ChatGateway;
@@ -25,12 +27,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 
+import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Slf4j
@@ -126,6 +131,10 @@ public class VkChatGateway implements ChatGateway {
                 .message(message)
                 .dontParseLinks(false);
 
+        if (args.image() != null) {
+            attachImage(msgBuilder, args.image());
+        }
+
         if (!isEmpty(args.buttons())) {
             addKeyboard(msgBuilder, args);
         }
@@ -174,5 +183,29 @@ public class VkChatGateway implements ChatGateway {
                     .setButtons(buttons);
             msgBuilder.keyboard(keyboard);
         }
+    }
+
+    @SneakyThrows
+    private void attachImage(MessagesSendQueryWithUserIds msgBuilder, URI imageUri) {
+        val uploadServer = vk.photos()
+                .getMessagesUploadServer(groupActor)
+                .execute();
+        val imageUrl = imageUri.toString();
+        val md5 = md5Hex(imageUrl);
+        val tempFile = new File(System.getProperty("java.io.tmpdir"), md5 + ".jpg");
+        if (!tempFile.exists()) {
+            FileUtils.copyURLToFile(imageUri.toURL(), tempFile);
+        }
+
+        MessageUploadResponse uploadResponse = vk.upload()
+                .photoMessage(uploadServer.getUploadUrl().toString(), tempFile)
+                .execute();
+        List<SaveMessagesPhotoResponse> savedPhotos = vk.photos()
+                .saveMessagesPhoto(groupActor, uploadResponse.getPhoto())
+                .server(uploadResponse.getServer())
+                .hash(uploadResponse.getHash())
+                .execute();
+        SaveMessagesPhotoResponse photo = savedPhotos.getFirst();
+        msgBuilder.attachment("photo" + photo.getOwnerId() + "_" + photo.getId());
     }
 }

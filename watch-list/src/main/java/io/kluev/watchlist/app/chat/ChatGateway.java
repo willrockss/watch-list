@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.NonNull;
 
 import javax.annotation.Nullable;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +30,8 @@ public interface ChatGateway {
             @NonNull String messageTemplate,
             @Nullable List<String> templateArgs,
             @Nullable List<List<CommandButton>> buttons,
-            @Nullable String replyMessageId
+            @Nullable String replyMessageId,
+            @Nullable URI image
     ) {}
 
     @Builder

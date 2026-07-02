@@ -23,6 +23,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.core.type.TypeReference;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -94,6 +95,7 @@ class TelegramChatGatewayPlaygroundIT {
                 .chatId("521320812")
                         .messageTemplate("Test %s template with %s")
                         .templateArgs(List.of("v2 send text", "SpringBootTest"))
+                        .image(URI.create("https://kinopoiskapiunofficial.tech/images/posters/kp_small/444.jpg"))
                         .buttons(List.of(
                                 List.of(
                                         ChatGateway.CommandButton.builder()

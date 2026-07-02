@@ -70,10 +70,16 @@ dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.10.1')
     testImplementation('org.springframework.boot:spring-boot-testcontainers')
     testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.10.1')
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher')
+
+    // Обязательно укажите processor path явно
+    tasks.withType(JavaCompile) {
+        options.annotationProcessorPath = configurations.annotationProcessor
+    }
 }
 
 tasks.register("integrationTest", Test) {
-    group("verification")
+    group = "verification"
     useJUnitPlatform {
         includeTags("IntegrationTest")
     }

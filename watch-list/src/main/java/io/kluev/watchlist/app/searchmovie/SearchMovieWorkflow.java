@@ -2,7 +2,6 @@ package io.kluev.watchlist.app.searchmovie;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.restate.client.Client;
 import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.SharedWorkflowContext;
 import dev.restate.sdk.WorkflowContext;
@@ -18,16 +17,17 @@ import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.EnlistWatchedMovieRequest;
 import io.kluev.watchlist.app.EnlistWatchedMovieResponse;
 import io.kluev.watchlist.app.KeyValueStorage;
-import io.kluev.watchlist.app.addmovie.EnlistMovieVirtualObjectClient;
 import io.kluev.watchlist.app.chat.CallbackCommand;
 import io.kluev.watchlist.app.chat.ChatGateway;
 import io.kluev.watchlist.app.chat.ChatMessageResponse;
 import io.kluev.watchlist.app.ExternalMovieDatabase;
+import io.kluev.watchlist.app.searchmovie.generated.EnlistMovieVirtualObjectClient;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -72,6 +72,7 @@ public class SearchMovieWorkflow {
                     .chatId(req.chatId())
                     .messageTemplate("%s\n%s")
                     .templateArgs(List.of(currentMovie.getFullName(), currentMovie.previewImageUrl()))
+                    .image(URI.create(currentMovie.previewImageUrl()))
                     .buttons(List.of(
                             List.of(ChatGateway.CommandButton.builder()
                                     .caption("Добавить в список")

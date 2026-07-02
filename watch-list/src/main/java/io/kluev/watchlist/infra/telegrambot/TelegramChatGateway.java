@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.util.Assert;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -22,7 +21,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,7 +29,6 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 
 @RequiredArgsConstructor
 public class TelegramChatGateway implements ChatGateway {
-    private static final String[] EMPTY_ARGS = new String[0];
 
     public static final LinkPreviewOptions SMALL_PREVIEW =
             LinkPreviewOptions
@@ -130,15 +127,12 @@ public class TelegramChatGateway implements ChatGateway {
 
     @Override
     public void sendMessage(@NonNull String chatId, @NonNull String notificationTemplate, @Nullable String... args) {
-        // TODO call sendMessage(@NonNull MessageArgs args)
-        try {
-            SendMessage sm = new SendMessage(chatId, prepareMessageText(notificationTemplate, args));
-            sm.setParseMode("MarkdownV2");
-
-            telegramClient.execute(sm);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
+        val msgArgs = MessageArgs.builder()
+                .chatId(chatId)
+                .messageTemplate(notificationTemplate)
+                .templateArgs(args == null ? null : List.of(args))
+                .build();
+        sendMessage(msgArgs);
     }
 
     @SneakyThrows
@@ -146,7 +140,7 @@ public class TelegramChatGateway implements ChatGateway {
     public void sendMessage(@NonNull MessageArgs args) {
         SendMessage sm = new SendMessage(
                 args.chatId(),
-                prepareMessageText(args.messageTemplate(), args.templateArgs() == null ? EMPTY_ARGS : args.templateArgs().toArray(String[]::new))
+                prepareMessageText(args)
         );
         sm.setParseMode("MarkdownV2");
         sm.setLinkPreviewOptions(SMALL_PREVIEW);
@@ -173,15 +167,24 @@ public class TelegramChatGateway implements ChatGateway {
 
     }
 
-    private String prepareMessageText(String template, String[] args) {
-        if (ArrayUtils.isEmpty(args)) {
-            return template;
+    private String prepareMessageText(MessageArgs args) {
+        String template = args.messageTemplate();
+        if (args.templateArgs() == null) {
+            return appendImageIfNeeded(args, template);
         }
 
-        val escapedArgs = Arrays
-                .stream(args)
+        val escapedArgs = args.templateArgs()
+                .stream()
                 .map(this::escapeMarkdown)
                 .toArray();
-        return template.formatted(escapedArgs);
+        return appendImageIfNeeded(args, template.formatted(escapedArgs));
+    }
+
+    private String appendImageIfNeeded(MessageArgs args, String messageText) {
+        if (args.image() == null) {
+            return messageText;
+        }
+
+        return messageText + "\n" + escapeMarkdown(args.image().toString());
     }
 }
