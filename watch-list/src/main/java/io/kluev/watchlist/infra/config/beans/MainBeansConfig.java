@@ -1,7 +1,6 @@
 package io.kluev.watchlist.infra.config.beans;
 
 import com.google.api.services.sheets.v4.Sheets;
-import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.GetWatchListHandler;
 import io.kluev.watchlist.app.JackettGateway;
@@ -53,6 +52,10 @@ import io.kluev.watchlist.infra.vkbot.VkChatGateway;
 import io.kluev.watchlist.infra.vkbot.WatchListVkBot;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.val;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.util.Timeout;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -74,7 +77,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -102,6 +104,22 @@ public class MainBeansConfig {
                 .build();
     }
 
+
+    @Bean
+    public RestClient slowEndpointRestClient() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ofMinutes(2))
+                .setResponseTimeout(Timeout.ofMinutes(2))
+                .setConnectionRequestTimeout(Timeout.ofMinutes(2))
+                .build();
+
+        HttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
+        return RestClient.builder()
+                .requestFactory(new HttpComponentsClientHttpRequestFactory(httpClient))
+                .build();
+    }
     /**
      * This client has small timeout to quickly check remote service availability
      */
@@ -264,8 +282,8 @@ public class MainBeansConfig {
     }
 
     @Bean
-    public JackettGateway jackettRestGateway(JackettProperties properties, RestClient restClient) {
-        return new JackettRestGateway(properties, restClient);
+    public JackettGateway jackettRestGateway(JackettProperties properties, RestClient slowEndpointRestClient) {
+        return new JackettRestGateway(properties, slowEndpointRestClient);
     }
 
     @ConditionalOnProperty(value = "integration.telegram-bot.enabled", matchIfMissing = true)
