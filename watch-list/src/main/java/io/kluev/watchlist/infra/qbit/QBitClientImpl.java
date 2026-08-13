@@ -55,7 +55,9 @@ public class QBitClientImpl implements QBitClient {
 
         RequestBody body = new MultipartBody.Builder()
                 .addFormDataPart("tags", String.format(ID_TAG_TEMPLATE, contentItemIdentity.value()))
-                .addFormDataPart("paused", Boolean.TRUE.toString())
+                .addFormDataPart("paused", Boolean.TRUE.toString()) // deprecated
+                .addFormDataPart("stopped", Boolean.TRUE.toString())
+                .addFormDataPart("autoTMM", Boolean.FALSE.toString())
                 .addFormDataPart("torrents", torrFilePath, RequestBody.create(
                         new File(torrFilePath),
                         okhttp3.MediaType.parse("application/x-bittorrent"))
