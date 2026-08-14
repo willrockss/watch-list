@@ -123,9 +123,9 @@ public class DownloadProcessCoordinator {
             log.warn("Unable to query free disk space: {}. Fail-safe: do not start download", e.toString());
             return true;
         }
-        if (freeSpace.toBytes() < downloadProperties.getMinFreeDiskBytes().toBytes()) {
+        if (freeSpace.toBytes() < downloadProperties.getMinFreeDiskSpace().toBytes()) {
             log.warn("Only {} free disk space remains while {} is required. Skip starting download",
-                    freeSpace, downloadProperties.getMinFreeDiskBytes());
+                    freeSpace, downloadProperties.getMinFreeDiskSpace());
             return true;
         }
         return false;

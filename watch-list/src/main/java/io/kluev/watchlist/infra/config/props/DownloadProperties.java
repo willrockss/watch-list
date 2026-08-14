@@ -9,5 +9,5 @@ import org.springframework.util.unit.DataSize;
 @Component
 @ConfigurationProperties(prefix = "download")
 public class DownloadProperties {
-    private DataSize minFreeDiskBytes = DataSize.ofGigabytes(40);
+    private DataSize minFreeDiskSpace = DataSize.ofGigabytes(50);
 }
