@@ -92,6 +92,9 @@ integration:
   qbit:
     url: http://localhost:8080
 
+download:
+  min-free-disk-bytes: 40GB
+
 search-content:
   torrFolder: /home/${USER}/Downloads/torr
 

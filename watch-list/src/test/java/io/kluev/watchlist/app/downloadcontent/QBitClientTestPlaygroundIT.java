@@ -71,6 +71,13 @@ class QBitClientTestPlaygroundIT {
         Assertions.assertThat(isAvailable).isTrue();
     }
 
+    @Test
+    public void test_free_space_on_disk() {
+        val freeSpace = qBitClient.getFreeSpaceOnDisk();
+        Assertions.assertThat(freeSpace).isNotNull();
+        Assertions.assertThat(freeSpace.toBytes()).isPositive();
+    }
+
     @TestConfiguration
     public static class TestConfig {
         @Bean

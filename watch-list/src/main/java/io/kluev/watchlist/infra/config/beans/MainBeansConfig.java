@@ -27,6 +27,7 @@ import io.kluev.watchlist.infra.SimpleLockService;
 import io.kluev.watchlist.infra.chat.ChatSessionStore;
 import io.kluev.watchlist.infra.chat.StubChatGateway;
 import io.kluev.watchlist.infra.config.management.PidInfoContributor;
+import io.kluev.watchlist.infra.config.props.DownloadProperties;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
@@ -53,8 +54,10 @@ import io.kluev.watchlist.infra.vkbot.WatchListVkBot;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.val;
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.core5.util.Timeout;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
@@ -106,17 +109,26 @@ public class MainBeansConfig {
 
 
     @Bean
-    public RestClient slowEndpointRestClient() {
-        RequestConfig requestConfig = RequestConfig.custom()
+    public RestClient slowEndpointRestClient(RestClient.Builder builder) {
+        val connectionConfig = ConnectionConfig.custom()
                 .setConnectTimeout(Timeout.ofMinutes(2))
-                .setResponseTimeout(Timeout.ofMinutes(2))
+                .setSocketTimeout(Timeout.ofMinutes(2))
+                .build();
+
+        val connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+                .setDefaultConnectionConfig(connectionConfig)
+                .build();
+
+        val requestConfig = RequestConfig.custom()
                 .setConnectionRequestTimeout(Timeout.ofMinutes(2))
                 .build();
 
         HttpClient httpClient = HttpClients.custom()
+                .setConnectionManager(connectionManager)
                 .setDefaultRequestConfig(requestConfig)
                 .build();
-        return RestClient.builder()
+
+        return builder
                 .requestFactory(new HttpComponentsClientHttpRequestFactory(httpClient))
                 .build();
     }
@@ -316,9 +328,10 @@ public class MainBeansConfig {
     public DownloadProcessCoordinator downloadProcessCoordinator(
             DownloadContentProcessDao downloadContentProcessDao,
             QBitClient qBitClient,
+            DownloadProperties downloadProperties,
             ApplicationEventPublisher eventPublisher
     ) {
-        return new DownloadProcessCoordinator(downloadContentProcessDao, qBitClient, eventPublisher);
+        return new DownloadProcessCoordinator(downloadContentProcessDao, qBitClient, downloadProperties, eventPublisher);
     }
 
     @Bean

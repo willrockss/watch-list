@@ -4,6 +4,7 @@ import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadFinishedE
 import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadStartedEvent;
 import io.kluev.watchlist.app.downloadcontent.event.ContentItemEnqueuedEvent;
 import io.kluev.watchlist.app.event.ContentSelectedForDownload;
+import io.kluev.watchlist.infra.config.props.DownloadProperties;
 import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.util.unit.DataSize;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -25,10 +27,12 @@ public class DownloadProcessCoordinator {
 
     private final DownloadContentProcessDao downloadContentProcessDao;
     private final QBitClient qBitClient;
+    private final DownloadProperties downloadProperties;
     private final ApplicationEventPublisher eventPublisher;
 
     private final List<DownloadContentProcess> activeProcessesCache = new ArrayList<>();
-    private long nextCacheUpdateAfterTimestampMillis = 0L;
+    private volatile boolean insufficientDiskSpace = false;
+    private volatile long nextCacheUpdateAfterTimestampMillis = 0L;
 
     @Async
     @EventListener(ContentSelectedForDownload.class)
@@ -67,6 +71,10 @@ public class DownloadProcessCoordinator {
         val status = process.getStatus();
         switch (status) {
             case INITIAL -> {
+                if (insufficientDiskSpace) {
+                    log.info("Not enough disk space to start {}. Keep it initial and retry later", process);
+                    return;
+                }
                 log.info("Enqueue and starting download process {}", process);
                 process.enqueuePaused(qBitClient);
                 process.start(qBitClient);
@@ -76,6 +84,10 @@ public class DownloadProcessCoordinator {
                 ));
             }
             case PAUSED -> {
+                if (insufficientDiskSpace) {
+                    log.info("Not enough disk space to start {}. Keep it paused and retry later", process);
+                    return;
+                }
                 log.info("Start download process {}", process);
                 process.start(qBitClient);
                 downloadContentProcessDao.save(process);
@@ -103,6 +115,22 @@ public class DownloadProcessCoordinator {
         });
     }
 
+    private boolean isInsufficientDiskSpace() {
+        final DataSize freeSpace;
+        try {
+            freeSpace = qBitClient.getFreeSpaceOnDisk();
+        } catch (RuntimeException e) {
+            log.warn("Unable to query free disk space: {}. Fail-safe: do not start download", e.toString());
+            return true;
+        }
+        if (freeSpace.toBytes() < downloadProperties.getMinFreeDiskBytes().toBytes()) {
+            log.warn("Only {} free disk space remains while {} is required. Skip starting download",
+                    freeSpace, downloadProperties.getMinFreeDiskBytes());
+            return true;
+        }
+        return false;
+    }
+
     private void refreshProcessesCacheIfRequired() {
         val needToReloadCache = nextCacheUpdateAfterTimestampMillis < System.currentTimeMillis();
         if (!needToReloadCache) {
@@ -116,6 +144,8 @@ public class DownloadProcessCoordinator {
         activeProcessesCache.clear();
         activeProcessesCache.addAll(downloadContentProcessDao.getActive());
         activeProcessesCache.sort(Comparator.comparing(DownloadContentProcess::getCreatedAt));
+
+        insufficientDiskSpace = isInsufficientDiskSpace();
 
         if (!wasEmpty && !activeProcessesCache.isEmpty()) {
             log.info("Cache is reloaded. Current {}", activeProcessesCache);

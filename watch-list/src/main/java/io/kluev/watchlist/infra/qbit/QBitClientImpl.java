@@ -20,6 +20,7 @@ import okhttp3.Response;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.client.RestClient;
 
 import java.io.File;
@@ -146,8 +147,20 @@ public class QBitClientImpl implements QBitClient {
         }
     }
 
+    @Override
+    public DataSize getFreeSpaceOnDisk() {
+        val resp = restClient.get()
+                .uri(properties.getUrl() + "/api/v2/sync/maindata")
+                .retrieve()
+                .body(SyncMainDataDto.class);
+        Assert.notNull(resp, "response should not be null!");
+        val serverState = resp.serverState;
+        Assert.notNull(serverState, "serverState should not be null!");
+        return DataSize.ofBytes(serverState.freeSpaceOnDisk);
+    }
+
     private EnqueuedTorr toEnqueuedTorr(TorrDto torrDto) {
-        return new EnqueuedTorr(torrDto.hash, torrDto.contentPath, torrDto.getCompletionOn());
+        return new EnqueuedTorr(torrDto.hash, torrDto.contentPath, torrDto.getCompletionOn(), torrDto.size);
     }
 
     private static class ResponseDto extends ArrayList<TorrDto> {}
@@ -161,5 +174,21 @@ public class QBitClientImpl implements QBitClient {
         String contentPath;
         @JsonProperty("completion_on")
         int completionOn;
+        @JsonProperty("size")
+        long size;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Data
+    private static class SyncMainDataDto {
+        @JsonProperty("server_state")
+        ServerStateDto serverState;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Data
+    private static class ServerStateDto {
+        @JsonProperty("free_space_on_disk")
+        long freeSpaceOnDisk;
     }
 }
