@@ -59,7 +59,7 @@ public class SearchContentHandler {
         val year = event.movie().getYear();
         val possibleYear = Set.of(String.valueOf(year), String.valueOf(year - 1), String.valueOf(year + 1));
 
-        val found = findDownloadableContext(event.movie(), it -> {
+        val found = findDownloadableContent(event.movie(), it -> {
             val title = it.getTitle();
             return !title.contains("DVD9") && possibleYear.stream().anyMatch(title::contains);
         });
@@ -75,7 +75,7 @@ public class SearchContentHandler {
         chatGateway.sendSelectContentRequest(saga.getSagaId(), top10HighQuality);
     }
 
-    private @NonNull List<DownloadableContentInfo> findDownloadableContext(MovieItem item, @NonNull Predicate<DownloadableContentInfo> filter) {
+    private @NonNull List<DownloadableContentInfo> findDownloadableContent(MovieItem item, @NonNull Predicate<DownloadableContentInfo> filter) {
         var foundByFullTitle = jackettGateway.query(item.getFullTitle(), filter);
         if (isResultConsideredOk(foundByFullTitle)) {
             return foundByFullTitle;

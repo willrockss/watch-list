@@ -11,6 +11,16 @@ spring:
   sql:
     init.mode: always
 
+  temporal:
+    connection:
+      target: localhost:7233
+    namespace: default
+    workers-auto-discovery:
+      enabled: true
+      workflow-packages: io.kluev.watchlist.app.searchmovie.temporal
+
+workflow-engine: RESTATE
+
 restate:
   client:
     base-uri: http://localhost:8080
@@ -62,8 +72,8 @@ integration:
   kinopoisk:
     apiKey: <your Kinopoisk API Key>
 
-  telegramBot:
-    enabled: true
+  telegram-bot:
+    enabled: false
     apiKey: <your bot API key>
     allowedUsers: <comma separated list of usernames of allowed users>
     admins: <comma separated list of usernames of admins>

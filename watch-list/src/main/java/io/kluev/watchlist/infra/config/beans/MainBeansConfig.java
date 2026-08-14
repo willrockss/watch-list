@@ -286,7 +286,7 @@ public class MainBeansConfig {
         return new JackettRestGateway(properties, slowEndpointRestClient);
     }
 
-    @ConditionalOnProperty(value = "integration.telegram-bot.enabled", matchIfMissing = true)
+    @ConditionalOnProperty(value = "integration.telegram-bot.enabled")
     @Bean
     public ChatGateway telegramChatGateway(
             TelegramClient telegramClient,

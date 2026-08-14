@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ import java.util.Set;
 @SuppressWarnings("unused")
 @Component
 @NoArgsConstructor
+@ConditionalOnProperty(name = "integration.chats.vkontakte.enabled", havingValue = "true")
 @ConfigurationProperties(prefix = "integration.chats.vkontakte")
 public class VkontakteBotProperties {
 

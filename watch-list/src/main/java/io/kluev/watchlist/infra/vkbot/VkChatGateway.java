@@ -164,7 +164,7 @@ public class VkChatGateway implements ChatGateway {
         List<List<KeyboardButton>> buttons = new ArrayList<>();
         for (List<CommandButton> buttonRow : args.buttons()) {
             var buttonsInRow = buttonRow.stream()
-                    .filter(it -> it.condition() == null || it.condition().get())
+                    .filter(it -> it.condition() == null || it.condition())
                     .map(it -> new KeyboardButton()
                             .setColor(KeyboardButtonColor.POSITIVE)
                             .setAction(new KeyboardButtonActionCallback()

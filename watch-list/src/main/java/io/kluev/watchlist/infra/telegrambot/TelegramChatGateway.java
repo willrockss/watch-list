@@ -151,7 +151,7 @@ public class TelegramChatGateway implements ChatGateway {
             var kbBuilder = InlineKeyboardMarkup.builder();
             for (List<CommandButton> buttonRow : args.buttons()) {
                 var buttonsInRow = buttonRow.stream()
-                        .filter(it-> it.condition() == null || it.condition().get())
+                        .filter(it-> it.condition() == null || it.condition())
                         .map(it -> InlineKeyboardButton
                                 .builder()
                                 .text(it.caption())

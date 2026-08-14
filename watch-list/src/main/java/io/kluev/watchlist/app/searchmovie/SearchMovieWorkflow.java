@@ -87,7 +87,7 @@ public class SearchMovieWorkflow {
                             List.of(ChatGateway.CommandButton.builder()
                                     .caption("Ещё (%s/%s)".formatted((index + 2), foundMovies.size()))
                                     .action(getShortenedLink(ctx, "next_" + (index + 1)))
-                                    .condition(() -> (index < foundMovies.size() - 1))
+                                    .condition(index < foundMovies.size() - 1)
                                     .build())
                     ))
                     .build();

@@ -9,7 +9,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 public interface ChatGateway {
     void sendSelectContentRequest(UUID sagaId, List<DownloadableContentInfo> found);
@@ -38,6 +37,6 @@ public interface ChatGateway {
     record CommandButton(
             @NonNull String caption,
             @NonNull String action,
-            @Nullable Supplier<Boolean> condition
+            @Nullable Boolean condition
     ) {}
 }

@@ -10,12 +10,14 @@ import io.kluev.watchlist.app.chat.ChatMessageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
+@ConditionalOnProperty(name = "workflow-engine", havingValue = "RESTATE")
 @Slf4j
 @RequiredArgsConstructor
 @Component

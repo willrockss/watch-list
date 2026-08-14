@@ -5,6 +5,7 @@ import io.kluev.watchlist.app.chat.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 @Component
+@ConditionalOnProperty(name = "workflow-engine", havingValue = "RESTATE")
 public class SearchMovieWorkflowInitiator {
 
     private final Client restateClient;
