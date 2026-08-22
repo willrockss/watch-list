@@ -13,6 +13,8 @@ import java.util.UUID;
 public interface ChatGateway {
     void sendSelectContentRequest(UUID sagaId, List<DownloadableContentInfo> found);
 
+    void sendSelectContentRequest(String workflowButtonPrefix, List<DownloadableContentInfo> found);
+
     default void sendMessage(String chatId, String notificationTemplate, String... args) {
         sendMessage(MessageArgs.builder()
                 .chatId(chatId)

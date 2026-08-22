@@ -58,11 +58,20 @@ public class VkChatGateway implements ChatGateway {
 
     @Override
     public void sendSelectContentRequest(UUID sagaId, List<DownloadableContentInfo> found) {
+        sendToAdmins("searchContentSaga_" + sagaId + "_s_", found);
+    }
+
+    @Override
+    public void sendSelectContentRequest(String workflowButtonPrefix, List<DownloadableContentInfo> found) {
+        sendToAdmins(workflowButtonPrefix, found);
+    }
+
+    private void sendToAdmins(String buttonPrefix, List<DownloadableContentInfo> found) {
         val chatIds = getAdminsChatsIds();
         Assert.state(!ObjectUtils.isEmpty(chatIds), "No active admins session present!");
 
         for (String chatId : chatIds) {
-            sendSelectContentRequest(chatId, sagaId, found);
+            sendSelectContentRequest(chatId, buttonPrefix, found);
         }
     }
 
@@ -70,15 +79,15 @@ public class VkChatGateway implements ChatGateway {
         return chatSessionStore.findChatIdsByRawUserIds(props.getAdmins());
     }
 
-    private void sendSelectContentRequest(String adminChatId, UUID sagaId, List<DownloadableContentInfo> found) {
+    private void sendSelectContentRequest(String adminChatId, String buttonPrefix, List<DownloadableContentInfo> found) {
         sendMessage(MessageArgs.builder()
                 .chatId(adminChatId)
                 .messageTemplate(generateText(found))
-                .buttons(generateKeyboard(sagaId, found))
+                .buttons(generateKeyboard(buttonPrefix, found))
                 .build());
     }
 
-    private List<List<CommandButton>> generateKeyboard(UUID sagaId, List<DownloadableContentInfo> found) {
+    private List<List<CommandButton>> generateKeyboard(String buttonPrefix, List<DownloadableContentInfo> found) {
         val result = new ArrayList<List<CommandButton>>();
 
         val size = found.size();
@@ -89,7 +98,7 @@ public class VkChatGateway implements ChatGateway {
                     CommandButton
                             .builder()
                             .caption(String.valueOf(i + 1))
-                            .action("searchContentSaga_" + sagaId + "_s_" + (i + 1))
+                            .action(buttonPrefix + (i + 1))
                             .build()
             );
 
@@ -98,7 +107,7 @@ public class VkChatGateway implements ChatGateway {
                         CommandButton
                                 .builder()
                                 .caption(String.valueOf(i + 2))
-                                .action("searchContentSaga_" + sagaId + "_s_" + (i + 2))
+                                .action(buttonPrefix + (i + 2))
                                 .build()
                 );
             }

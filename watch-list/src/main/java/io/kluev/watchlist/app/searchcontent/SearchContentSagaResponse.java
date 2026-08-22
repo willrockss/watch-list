@@ -23,7 +23,7 @@ public record SearchContentSagaResponse(
 
         String sagaId = m.group(1);
         String index = m.group(2);
-        System.out.println("sagaId: " + sagaId);
+        System.out.println("wfId: " + sagaId);
         System.out.println("index: " + index);
 
         return new SearchContentSagaResponse(UUID.fromString(sagaId), index);

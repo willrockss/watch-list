@@ -17,7 +17,9 @@ spring:
     namespace: default
     workers-auto-discovery:
       enabled: true
-      workflow-packages: io.kluev.watchlist.app.searchmovie.temporal
+      workflow-packages:
+        - io.kluev.watchlist.app.searchmovie.temporal
+        - io.kluev.watchlist.app.searchcontent.temporal
 
 workflow-engine: RESTATE
 

@@ -24,7 +24,7 @@ public class EnlistMovieHandler {
         val movie = createMovieItemByRequest(request);
         movieRepository.enlist(movie);
         publisher.publishEvent(new MovieEnlisted(movie, request.username()));
-        return new EnlistMovieResponse(movie.getFullTitle());
+        return new EnlistMovieResponse(movie);
     }
 
     private MovieItem createMovieItemByRequest(EnlistMovieRequest request) {

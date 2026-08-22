@@ -42,11 +42,20 @@ public class TelegramChatGateway implements ChatGateway {
 
     @Override
     public void sendSelectContentRequest(UUID sagaId, List<DownloadableContentInfo> found) {
+        sendToAdmins("searchContentSaga_" + sagaId + "_s_", found);
+    }
+
+    @Override
+    public void sendSelectContentRequest(String workflowButtonPrefix, List<DownloadableContentInfo> found) {
+        sendToAdmins(workflowButtonPrefix, found);
+    }
+
+    private void sendToAdmins(String buttonPrefix, List<DownloadableContentInfo> found) {
         val chatIds = getAdminsChatsIds();
         Assert.state(!isEmpty(chatIds), "No active admins session present!");
 
         for (String chatId : chatIds) {
-            sendSelectContentRequest(chatId, sagaId, found);
+            sendSelectContentRequest(chatId, buttonPrefix, found);
         }
     }
 
@@ -54,9 +63,9 @@ public class TelegramChatGateway implements ChatGateway {
         return telegramSessionStore.findChatIdsByUsernames(telegramBotProperties.getAdmins());
     }
 
-    private void sendSelectContentRequest(String adminChatId, UUID sagaId, List<DownloadableContentInfo> found) {
+    private void sendSelectContentRequest(String adminChatId, String buttonPrefix, List<DownloadableContentInfo> found) {
         SendMessage msg = new SendMessage(adminChatId, generateText(found));
-        msg.setReplyMarkup(generateKeyboard(sagaId, found));
+        msg.setReplyMarkup(generateKeyboard(buttonPrefix, found));
         msg.setParseMode("MarkdownV2");
         try {
             telegramClient.execute(msg);
@@ -96,7 +105,7 @@ public class TelegramChatGateway implements ChatGateway {
                 .replace("#", "\\#");
     }
 
-    private ReplyKeyboard generateKeyboard(UUID sagaId, List<DownloadableContentInfo> found) {
+    private ReplyKeyboard generateKeyboard(String buttonPrefix, List<DownloadableContentInfo> found) {
         val keyboardBuilder = InlineKeyboardMarkup.builder();
 
         val size = found.size();
@@ -107,7 +116,7 @@ public class TelegramChatGateway implements ChatGateway {
                     InlineKeyboardButton
                             .builder()
                             .text(String.valueOf(i + 1))
-                            .callbackData("searchContentSaga_" + sagaId + "_s_" + (i + 1))
+                            .callbackData(buttonPrefix + (i + 1))
                             .build()
             );
 
@@ -116,7 +125,7 @@ public class TelegramChatGateway implements ChatGateway {
                         InlineKeyboardButton
                                 .builder()
                                 .text(String.valueOf(i + 2))
-                                .callbackData("searchContentSaga_" + sagaId + "_s_" + (i + 2))
+                                .callbackData(buttonPrefix + (i + 2))
                                 .build()
                 );
             }

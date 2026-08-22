@@ -22,6 +22,11 @@ public class StubChatGateway implements ChatGateway {
     }
 
     @Override
+    public void sendSelectContentRequest(String workflowButtonPrefix, List<DownloadableContentInfo> found) {
+        log.info("sendSelectContentRequest {} {} will be ignored.", workflowButtonPrefix, found);
+    }
+
+    @Override
     public void sendMessage(MessageArgs args) {
         log.info("sendMessage {} {} will be ignored.", args.chatId(), args);
     }

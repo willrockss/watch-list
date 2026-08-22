@@ -178,7 +178,7 @@ public class SearchMovieWorkflow {
                         .chatId(responseMsg.chatId())
                         .replyMessageId(initialMessageId)
                         .messageTemplate("Фильм %s добавлен в список")
-                        .templateArgs(List.of(resp.fullTitle()))
+                        .templateArgs(List.of(resp.movieItem().getFullTitle()))
                         .build()));
     }
 

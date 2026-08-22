@@ -1,5 +1,6 @@
 package io.kluev.watchlist.app.searchmovie.temporal;
 
+import io.kluev.watchlist.domain.MovieItem;
 import io.temporal.activity.ActivityInterface;
 import io.kluev.watchlist.app.EnlistMovieRequest;
 import io.kluev.watchlist.app.EnlistMovieResponse;
@@ -20,6 +21,8 @@ public interface SearchMovieActivities {
     void sendSimpleChatMessage(String chatId, String messageTemplate, Object... args);
 
     EnlistMovieResponse addToWatchList(EnlistMovieRequest request);
+
+    void startContentSearch(MovieItem movie, EnlistMovieRequest request);
 
     EnlistWatchedMovieResponse enlistWatchedMovie(EnlistWatchedMovieRequest request);
 }

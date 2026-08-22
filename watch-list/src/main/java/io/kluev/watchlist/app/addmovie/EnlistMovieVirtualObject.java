@@ -30,7 +30,7 @@ public class EnlistMovieVirtualObject {
         });
         // TODO move to another workflow
         ctx.run(() -> searchContentHandler.handle(new MovieEnlisted(movie, req.username())));
-        return new EnlistMovieResponse(movie.getFullTitle());
+        return new EnlistMovieResponse(movie);
     }
 
     private MovieItem createMovieItemByRequest(EnlistMovieRequest request) {

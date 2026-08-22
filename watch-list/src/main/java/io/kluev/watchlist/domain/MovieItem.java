@@ -1,6 +1,9 @@
 package io.kluev.watchlist.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.extern.jackson.Jacksonized;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +14,8 @@ import org.jetbrains.annotations.NotNull;
 
 @ToString
 @Builder
+@Jacksonized
+@JsonIgnoreProperties(ignoreUnknown = true)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class MovieItem {
     @Getter
@@ -64,6 +69,7 @@ public class MovieItem {
         return "%s (%d)".formatted(title, year);
     }
 
+    @JsonIgnore
     public boolean isReady() {
         // Create proper status model
         return "READY".equals(this.status);

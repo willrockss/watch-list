@@ -9,6 +9,7 @@ import io.kluev.watchlist.app.ExternalMovieDatabase;
 import io.kluev.watchlist.app.chat.CallbackCommand;
 import io.kluev.watchlist.app.chat.ChatGateway;
 import io.kluev.watchlist.app.chat.ChatMessageResponse;
+import io.kluev.watchlist.app.common.temporal.TemporalQueues;
 import io.kluev.watchlist.app.searchmovie.SearchMovieRequest;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
@@ -29,13 +30,13 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 @Slf4j
-@WorkflowImpl(taskQueues = "watch-list-workflow-worker")
+@WorkflowImpl(taskQueues = TemporalQueues.DEFAULT_WORKFLOW_QUEUE)
 public class SearchMovieWorkflowImpl implements SearchMovieWorkflow {
 
     private final SearchMovieActivities activities = Workflow.newActivityStub(
             SearchMovieActivities.class,
             ActivityOptions.newBuilder()
-                    .setTaskQueue("watch-list-activity-worker")
+                    .setTaskQueue(TemporalQueues.DEFAULT_ACTIVITY_QUEUE)
                     .setStartToCloseTimeout(Duration.ofMinutes(1))
                     .setRetryOptions(
                             RetryOptions.newBuilder()
@@ -157,8 +158,10 @@ public class SearchMovieWorkflowImpl implements SearchMovieWorkflow {
                 .chatId(responseMsg.chatId())
                 .replyMessageId(initialMessageId)
                 .messageTemplate("Фильм %s добавлен в список")
-                .templateArgs(List.of(resp.fullTitle()))
+                .templateArgs(List.of(resp.movieItem().getFullTitle()))
                 .build());
+
+        activities.startContentSearch(resp.movieItem(), enlistRequest);
     }
 
     private void addAsWatched(String initialMessageId,
