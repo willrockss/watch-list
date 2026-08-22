@@ -262,3 +262,24 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+
+  temporal:
+    image: temporalio/temporal:latest
+    container_name: temporal
+    command:
+      - server
+      - start-dev
+      - --ip
+      - 0.0.0.0
+      - --db-filename
+      - /data/temporal.db
+      - --ui-ip
+      - 0.0.0.0
+      - --metrics-port
+      - "9091"
+    ports:
+      - "7233:7233"   # gRPC
+      - "8233:8233"   # Web UI (встроен)
+      - "9091:9091"
+    volumes:
+      - ./temporal-sqlite-data:/data
