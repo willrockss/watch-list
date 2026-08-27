@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @RequiredArgsConstructor
 public class DownloadProcessCoordinator {
-    public static final long CACHE_TTL_MILLIS = TimeUnit.MINUTES.toMillis(5);
+    public static final long CACHE_TTL_MILLIS = TimeUnit.MINUTES.toMillis(15);
 
     private final DownloadContentProcessDao downloadContentProcessDao;
     private final QBitClient qBitClient;
@@ -32,6 +32,7 @@ public class DownloadProcessCoordinator {
 
     private final List<DownloadContentProcess> activeProcessesCache = new ArrayList<>();
     private volatile boolean insufficientDiskSpace = false;
+    private volatile boolean insufficientDiskSpaceLogPrinted = false;
     private volatile long nextCacheUpdateAfterTimestampMillis = 0L;
 
     @Async
@@ -49,7 +50,7 @@ public class DownloadProcessCoordinator {
         log.info("Created download process {} for {}", process, event.movieItem());
     }
 
-    @Scheduled(fixedDelay = 15_000)
+    @Scheduled(fixedDelay = 60_000)
     public void tick() {
         log.debug("tick");
 
@@ -72,7 +73,9 @@ public class DownloadProcessCoordinator {
         switch (status) {
             case INITIAL -> {
                 if (insufficientDiskSpace) {
-                    log.info("Not enough disk space to start {}. Keep it initial and retry later", process);
+                    if (insufficientDiskSpaceLogPrinted) {
+                        log.info("Not enough disk space to start {}. Keep it initial and retry later", process);
+                    }
                     return;
                 }
                 log.info("Enqueue and starting download process {}", process);
@@ -85,7 +88,9 @@ public class DownloadProcessCoordinator {
             }
             case PAUSED -> {
                 if (insufficientDiskSpace) {
-                    log.info("Not enough disk space to start {}. Keep it paused and retry later", process);
+                    if (insufficientDiskSpaceLogPrinted) {
+                        log.info("Not enough disk space to start {}. Keep it initial and retry later", process);
+                    }
                     return;
                 }
                 log.info("Start download process {}", process);
@@ -146,6 +151,7 @@ public class DownloadProcessCoordinator {
         activeProcessesCache.sort(Comparator.comparing(DownloadContentProcess::getCreatedAt));
 
         insufficientDiskSpace = isInsufficientDiskSpace();
+        insufficientDiskSpaceLogPrinted = false;
 
         if (!wasEmpty && !activeProcessesCache.isEmpty()) {
             log.info("Cache is reloaded. Current {}", activeProcessesCache);
