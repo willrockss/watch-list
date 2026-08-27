@@ -95,7 +95,8 @@ integration:
     url: http://localhost:8080
 
 download:
-  min-free-disk-bytes: 40GB
+  min-free-disk-space: 40GB
+  max-ready-to-watch: 4
 
 search-content:
   torrFolder: /home/${USER}/Downloads/torr

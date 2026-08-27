@@ -10,4 +10,5 @@ import org.springframework.util.unit.DataSize;
 @ConfigurationProperties(prefix = "download")
 public class DownloadProperties {
     private DataSize minFreeDiskSpace = DataSize.ofGigabytes(50);
+    private int maxReadyToWatch = 4;
 }

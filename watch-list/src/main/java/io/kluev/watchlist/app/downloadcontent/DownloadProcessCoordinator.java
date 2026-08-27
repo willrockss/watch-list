@@ -4,6 +4,7 @@ import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadFinishedE
 import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadStartedEvent;
 import io.kluev.watchlist.app.downloadcontent.event.ContentItemEnqueuedEvent;
 import io.kluev.watchlist.app.event.ContentSelectedForDownload;
+import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.infra.config.props.DownloadProperties;
 import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +30,13 @@ public class DownloadProcessCoordinator {
     private final QBitClient qBitClient;
     private final DownloadProperties downloadProperties;
     private final ApplicationEventPublisher eventPublisher;
+    private final MovieRepository movieRepository;
 
     private final List<DownloadContentProcess> activeProcessesCache = new ArrayList<>();
     private volatile boolean insufficientDiskSpace = false;
     private volatile boolean insufficientDiskSpaceLogPrinted = false;
+    private volatile int readyToWatchMoviesCount = 0;
+    private volatile boolean readyToWatchLogPrinted = false;
     private volatile long nextCacheUpdateAfterTimestampMillis = 0L;
 
     @Async
@@ -66,15 +70,26 @@ public class DownloadProcessCoordinator {
             return;
         }
 
-        enqueueNewAsPaused();
+        if (!hasEnoughReadyToWatchMovies()) {
+            enqueueNewAsPaused();
+        }
 
         val process = activeProcessesCache.getFirst();
         val status = process.getStatus();
         switch (status) {
             case INITIAL -> {
                 if (insufficientDiskSpace) {
-                    if (insufficientDiskSpaceLogPrinted) {
+                    if (!insufficientDiskSpaceLogPrinted) {
                         log.info("Not enough disk space to start {}. Keep it initial and retry later", process);
+                        insufficientDiskSpaceLogPrinted = true;
+                    }
+                    return;
+                }
+                if (hasEnoughReadyToWatchMovies()) {
+                    if (!readyToWatchLogPrinted) {
+                        log.info("There are {} ready to watch movies. Do not start new download {}. Retry later",
+                                readyToWatchMoviesCount, process);
+                        readyToWatchLogPrinted = true;
                     }
                     return;
                 }
@@ -88,8 +103,17 @@ public class DownloadProcessCoordinator {
             }
             case PAUSED -> {
                 if (insufficientDiskSpace) {
-                    if (insufficientDiskSpaceLogPrinted) {
+                    if (!insufficientDiskSpaceLogPrinted) {
                         log.info("Not enough disk space to start {}. Keep it initial and retry later", process);
+                        insufficientDiskSpaceLogPrinted = true;
+                    }
+                    return;
+                }
+                if (hasEnoughReadyToWatchMovies()) {
+                    if (!readyToWatchLogPrinted) {
+                        log.info("There are {} ready to watch movies. Do not start download {}. Retry later",
+                                readyToWatchMoviesCount, process);
+                        readyToWatchLogPrinted = true;
                     }
                     return;
                 }
@@ -118,6 +142,10 @@ public class DownloadProcessCoordinator {
             downloadContentProcessDao.save(it);
             eventPublisher.publishEvent(new ContentItemEnqueuedEvent(it.getContentItemIdentity()));
         });
+    }
+
+    private boolean hasEnoughReadyToWatchMovies() {
+        return readyToWatchMoviesCount >= downloadProperties.getMaxReadyToWatch();
     }
 
     private boolean isInsufficientDiskSpace() {
@@ -152,6 +180,8 @@ public class DownloadProcessCoordinator {
 
         insufficientDiskSpace = isInsufficientDiskSpace();
         insufficientDiskSpaceLogPrinted = false;
+        readyToWatchMoviesCount = movieRepository.getMoviesReadyToWatch().size();
+        readyToWatchLogPrinted = false;
 
         if (!wasEmpty && !activeProcessesCache.isEmpty()) {
             log.info("Cache is reloaded. Current {}", activeProcessesCache);
