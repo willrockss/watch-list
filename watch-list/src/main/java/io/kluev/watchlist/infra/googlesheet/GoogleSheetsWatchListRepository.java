@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.event.EventListener;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
@@ -28,17 +29,20 @@ import java.util.stream.IntStream;
 @Slf4j
 public class GoogleSheetsWatchListRepository implements MovieRepository {
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final String TO_WATCH_READ_RANGE = "'Посмотреть'!A2:N22"; // TODO read from properties
 
     private final Sheets service;
     private final GoogleSheetProperties properties;
+    private final RetryTemplate retryTemplate;
 
     private final String toWatchInsertRange;
 
     private final Map<String, Integer> sheetIdByName = new HashMap<>();
 
-    public GoogleSheetsWatchListRepository(Sheets service, GoogleSheetProperties properties) {
+    public GoogleSheetsWatchListRepository(Sheets service, GoogleSheetProperties properties, RetryTemplate retryTemplate) {
         this.service = service;
         this.properties = properties;
+        this.retryTemplate = retryTemplate;
         this.toWatchInsertRange = calculateToWatchInsertRange();
     }
 
@@ -67,7 +71,12 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     @Override
     public List<MovieItem> getMoviesReadyToWatch() {
-        val toWatchMoviesRows = findToWatchMoviesRows();
+        final List<List<Object>> toWatchMoviesRows;
+        try {
+            toWatchMoviesRows = findToWatchMoviesRows();
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to fetch rows from " + properties.getSpreadsheetId() + " range " + TO_WATCH_READ_RANGE, e);
+        }
         return toWatchMoviesRows.stream()
                 .map(this::mapToMovieItemOrNull)
                 .filter(Objects::nonNull)
@@ -75,24 +84,12 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                 .toList();
     }
 
-    private @NotNull List<List<Object>> findToWatchMoviesRows() {
-        val range = "'Посмотреть'!A2:N22"; // TODO read from properties
-        try {
-            val result = service.spreadsheets().values().get(properties.getSpreadsheetId(), range).execute();
+    private @NotNull List<List<Object>> findToWatchMoviesRows() throws IOException {
+        return retryTemplate.execute(context -> {
+            val result = service.spreadsheets().values().get(properties.getSpreadsheetId(), TO_WATCH_READ_RANGE).execute();
             val values = result.getValues();
-            if (values == null) {
-                return List.of();
-            }
-            return values;
-        } catch (IOException e) {
-            log.error(
-                    "Unable to fetch first 20 rows from {}, range {}. Error: {}",
-                    properties.getSpreadsheetId(),
-                    range,
-                    e.toString()
-            );
-        }
-        return List.of();
+            return values == null ? List.of() : values;
+        });
     }
 
     private @Nullable MovieItem mapToMovieItemOrNull(List<Object> row) {

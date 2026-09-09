@@ -67,6 +67,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
@@ -78,7 +81,9 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -204,11 +209,22 @@ public class MainBeansConfig {
     }
 
     @Bean
+    public RetryTemplate retryTemplate() {
+        val template = new RetryTemplate();
+        val backOff = new FixedBackOffPolicy();
+        backOff.setBackOffPeriod(200);
+        template.setBackOffPolicy(backOff);
+        template.setRetryPolicy(new SimpleRetryPolicy(3, Map.of(IOException.class, true)));
+        return template;
+    }
+
+    @Bean
     public MovieRepository googleSheetsWatchListRepository(
             Sheets sheetsService,
-            GoogleSheetProperties properties
+            GoogleSheetProperties properties,
+            RetryTemplate retryTemplate
     ) {
-        return new GoogleSheetsWatchListRepository(sheetsService, properties);
+        return new GoogleSheetsWatchListRepository(sheetsService, properties, retryTemplate);
     }
 
     @Bean

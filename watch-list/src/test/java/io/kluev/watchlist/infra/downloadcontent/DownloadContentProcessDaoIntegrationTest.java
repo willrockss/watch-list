@@ -25,11 +25,12 @@ import static io.kluev.watchlist.app.downloadcontent.DownloadContentProcessStatu
 import static io.kluev.watchlist.app.downloadcontent.DownloadContentProcessStatus.PROCESSING;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("unused")
 @MockBean(GoogleSheetsClient.class)
 @Tag("IntegrationTest")
 @Testcontainers
 @Transactional
-@SpringBootTest
+@SpringBootTest(properties = "spring.temporal.start-workers=false")
 class DownloadContentProcessDaoIntegrationTest {
 
     @Autowired

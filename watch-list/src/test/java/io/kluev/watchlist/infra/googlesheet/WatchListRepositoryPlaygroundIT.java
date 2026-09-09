@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.retry.support.RetryTemplate;
 
 import java.time.LocalDate;
 
@@ -50,11 +51,14 @@ class WatchListRepositoryPlaygroundIT {
     @Autowired
     private GoogleSheetProperties properties;
 
+    @Autowired
+    private RetryTemplate retryTemplate;
+
     private MovieRepository movieRepository;
 
     @BeforeEach
     public void init() {
-        movieRepository = new GoogleSheetsWatchListRepository(service, properties);
+        movieRepository = new GoogleSheetsWatchListRepository(service, properties, retryTemplate);
     }
 
     @SneakyThrows
