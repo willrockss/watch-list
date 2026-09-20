@@ -70,9 +70,7 @@ public class DownloadProcessCoordinator {
             return;
         }
 
-        if (!hasEnoughReadyToWatchMovies()) {
-            enqueueNewAsPaused();
-        }
+        enqueueNewAsPaused();
 
         val process = activeProcessesCache.getFirst();
         val status = process.getStatus();
@@ -80,7 +78,7 @@ public class DownloadProcessCoordinator {
             case INITIAL -> {
                 if (insufficientDiskSpace) {
                     if (!insufficientDiskSpaceLogPrinted) {
-                        log.info("Not enough disk space to start {}. Keep it initial and retry later", process);
+                        log.info("Not enough disk space to start {}. Keep it paused and retry later", process);
                         insufficientDiskSpaceLogPrinted = true;
                     }
                     return;
@@ -104,7 +102,7 @@ public class DownloadProcessCoordinator {
             case PAUSED -> {
                 if (insufficientDiskSpace) {
                     if (!insufficientDiskSpaceLogPrinted) {
-                        log.info("Not enough disk space to start {}. Keep it initial and retry later", process);
+                        log.info("Not enough disk space to start {}. Keep it paused and retry later", process);
                         insufficientDiskSpaceLogPrinted = true;
                     }
                     return;
@@ -138,6 +136,7 @@ public class DownloadProcessCoordinator {
 
     private void enqueueNewAsPaused() {
         activeProcessesCache.stream().filter(DownloadContentProcess::hasInitialStatus).forEach(it -> {
+            log.info("Enqueue {} into qBittorrent paused", it);
             it.enqueuePaused(qBitClient);
             downloadContentProcessDao.save(it);
             eventPublisher.publishEvent(new ContentItemEnqueuedEvent(it.getContentItemIdentity()));
