@@ -84,6 +84,20 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                 .toList();
     }
 
+    @Override
+    public List<MovieItem> getWatchList() {
+        final List<List<Object>> toWatchMoviesRows;
+        try {
+            toWatchMoviesRows = findToWatchMoviesRows();
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to fetch rows from " + properties.getSpreadsheetId() + " range " + TO_WATCH_READ_RANGE, e);
+        }
+        return toWatchMoviesRows.stream()
+                .map(this::mapToMovieItemOrNull)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
     private @NotNull List<List<Object>> findToWatchMoviesRows() throws IOException {
         return retryTemplate.execute(context -> {
             val result = service.spreadsheets().values().get(properties.getSpreadsheetId(), TO_WATCH_READ_RANGE).execute();
