@@ -13,6 +13,7 @@ public interface MovieRepository {
     void enlist(MovieItem movieItem);
     void enlistWatched(MovieItem movieItem, LocalDate watchedAt);
     List<MovieItem> getMoviesReadyToWatch();
+    List<MovieItem> getWatchList();
     void markWatched(String kinopoiskId, LocalDate watchedAt);
     void markAsEnqueued(ContentItemEnqueuedEvent contentItemEnqueuedEvent) throws IOException;
     void markAsStarted(ContentItemDownloadStartedEvent contentItemDownloadStartedEvent) throws IOException;

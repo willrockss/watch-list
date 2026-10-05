@@ -13,16 +13,19 @@ import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.event.MovieEnlisted;
 import io.temporal.spring.boot.ActivityImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 // TODO Split into separate activities
+@Slf4j
 @ActivityImpl(taskQueues = "watch-list-activity-worker")
 @ConditionalOnProperty(name = "workflow-engine", havingValue = "TEMPORAL")
 @Component("searchMovieActivitiesBean")
@@ -54,8 +57,14 @@ public class SearchMovieActivitiesImpl implements SearchMovieActivities {
     @Override
     public EnlistMovieResponse addToWatchList(EnlistMovieRequest request) {
         val movie = createMovieItemByRequest(request);
-        movieRepository.enlist(movie);
-        return new EnlistMovieResponse(movie);
+        val absent = movieRepository.getWatchList()
+                .stream()
+                .noneMatch(it -> Objects.equals(it.getExternalId(), movie.getExternalId()));
+        if (absent) {
+            movieRepository.enlist(movie);
+            log.info("{} was added into list", movie);
+        }
+        return new EnlistMovieResponse(movie, absent);
     }
 
     @Override

@@ -53,15 +53,7 @@ public class MovieItemRowMapper {
             return null;
         }
         val status = getStatusOrNull();
-        if (status == null) {
-            log.warn("Unable to parse status from {}. Skip", row);
-            return null;
-        }
         val path = getFilePathOrNull();
-        if (path == null) {
-            log.warn("Unable to parse path from {}. Skip", row);
-            return null;
-        }
         return MovieItem.builder()
                 .fullTitle(fullTitle)
                 .externalId(externalId)

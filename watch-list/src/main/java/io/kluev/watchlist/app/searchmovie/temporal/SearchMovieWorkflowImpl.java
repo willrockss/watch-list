@@ -154,12 +154,23 @@ public class SearchMovieWorkflowImpl implements SearchMovieWorkflow {
 
         EnlistMovieResponse resp = activities.addToWatchList(enlistRequest);
 
-        activities.sendChatMessage(ChatGateway.MessageArgs.builder()
-                .chatId(responseMsg.chatId())
-                .replyMessageId(initialMessageId)
-                .messageTemplate("Фильм %s добавлен в список")
-                .templateArgs(List.of(resp.movieItem().getFullTitle()))
-                .build());
+        if (resp.justAdded()) {
+            activities.sendChatMessage(ChatGateway.MessageArgs.builder()
+                    .chatId(responseMsg.chatId())
+                    .replyMessageId(initialMessageId)
+                    .messageTemplate("Фильм %s добавлен в список")
+                    .templateArgs(List.of(resp.movieItem().getFullTitle()))
+                    .build());
+        } else {
+            activities.sendChatMessage(ChatGateway.MessageArgs.builder()
+                    .chatId(responseMsg.chatId())
+                    .replyMessageId(initialMessageId)
+                    .messageTemplate("Фильм %s уже в списке")
+                    .templateArgs(List.of(resp.movieItem().getFullTitle()))
+                    .build());
+        }
+
+
 
         activities.startContentSearch(resp.movieItem(), enlistRequest);
     }
