@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-20
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "Coordinate the end-to-end download of a selected content item through qBittorrent: enqueue, start, and track completion of a single download process while respecting capacity limits (disk space and ready-to-watch quota)."
 
@@ -12,7 +12,7 @@
 
 ### User Story 1 - Enqueue and Start a Selected Download (Priority: P1)
 
-When content is selected for download, the system records a new download process and, as soon as conditions allow, hands it to the downloader paused, then starts it. The user can see the download progress in qBittorrent and the system knows exactly which content item maps to which torrent.
+When content is selected for download, the system records a new download process, hands it to the downloader paused, and, as soon as conditions allow, starts it. The user can see the download progress in qBittorrent and the system knows exactly which content item maps to which torrent.
 
 **Why this priority**: This is the core journey - without it nothing ever downloads. Everything else (gates, completion) wraps this flow.
 
@@ -21,23 +21,24 @@ When content is selected for download, the system records a new download process
 **Acceptance Scenarios**:
 
 1. **Given** a content item is selected for download with a torrent file path, **When** the selection event is handled, **Then** a download process is persisted with status INITIAL, the content item identity, and the torrent file path.
-2. **Given** an INITIAL download process, qBittorrent available, enough free disk space, and the ready-to-watch quota not reached, **When** the periodic tick runs, **Then** the torrent is added to qBittorrent paused, the torrent hash and content path are captured, the process transitions to PROCESSING, and a started event is published.
-3. **Given** several non-finished processes, **When** the tick runs, **Then** only the oldest process is started; all others remain queued, so at most one process is actively processing at a time.
+2. **Given** an INITIAL download process and qBittorrent available, **When** the periodic tick runs, **Then** the torrent is added to qBittorrent paused, the torrent hash and content path are captured, the process transitions to PAUSED, and an enqueued event is published.
+3. **Given** a PAUSED download process, enough free disk space, and the ready-to-watch quota not reached, **When** the periodic tick runs, **Then** the process transitions to PROCESSING and a started event is published.
+4. **Given** several non-finished processes, **When** the tick runs, **Then** only the oldest process is started; all others remain queued, so at most one process is actively processing at a time.
 
 ---
 
 ### User Story 2 - Respect Capacity Limits (Priority: P2)
 
-The system protects the machine and the viewing pipeline: it will not start a download when the downloader's free disk space falls below a configured minimum, or when the number of movies already ready to watch meets or exceeds a configured maximum. Processes are not lost - they simply wait and are retried on later ticks.
+The system protects the machine and the viewing pipeline: it will not start a download when the downloader's free disk space falls below a configured minimum, or when the number of movies already ready to watch meets or exceeds a configured maximum. Enqueuing into qBittorrent paused is never blocked by these gates — a paused torrent consumes no disk space and reserves no processing slot — so every INITIAL process is still enqueued and persisted as PAUSED, making the pending download visible in the status table (e.g., the Google Sheet) and as a paused entry in qBittorrent. Only the start step waits for the gates; processes are not lost - they simply wait and are retried on later ticks.
 
 **Why this priority**: Without these gates the disk can fill up and the ready-to-watch backlog can grow unboundedly. It sits on top of the P1 flow, gating its start step.
 
-**Independent Test**: With either gate condition active, run ticks and verify no process is started, no process is dropped, and the gate is logged once. Delivers protection independent of the completion logic.
+**Independent Test**: With either gate condition active, run ticks and verify no process is started, every INITIAL process is enqueued into qBittorrent paused and persisted as PAUSED, no process is dropped, and the gate is logged once. Delivers protection independent of the completion logic.
 
 **Acceptance Scenarios**:
 
-1. **Given** free disk space below the configured minimum, **When** the tick runs with a process waiting to start, **Then** the process is not started, remains queued, is retried on subsequent ticks, and the insufficient-space condition is logged only once per cache refresh.
-2. **Given** the ready-to-watch movie count is at least the configured maximum, **When** the tick runs with a process waiting to start, **Then** the process is not started, remains queued, is retried on subsequent ticks, and the quota condition is logged only once per cache refresh.
+1. **Given** free disk space below the configured minimum, **When** the tick runs with a process waiting to start, **Then** the process is not started, stays PAUSED (already enqueued into qBittorrent), is retried on subsequent ticks, and the insufficient-space condition is logged only once per cache refresh.
+2. **Given** the ready-to-watch movie count is at least the configured maximum, **When** the tick runs with a process waiting to start, **Then** the process is not started, stays PAUSED (already enqueued into qBittorrent), is retried on subsequent ticks, and the quota condition is logged only once per cache refresh.
 3. **Given** the free disk space query fails, **When** the tick runs, **Then** the system treats the situation as insufficient disk space (fail-safe) and does not start any process.
 4. **Given** qBittorrent is unavailable, **When** the tick runs, **Then** the whole tick is skipped without state changes and the condition is logged.
 
@@ -61,6 +62,7 @@ The system polls actively downloading processes and, once a torrent finishes, re
 ### Edge Cases
 
 - What happens when the torrent cannot be found in qBittorrent when starting? The attempt fails without marking the process failed; the process is retried on later ticks.
+- What happens when capacity gates stay closed for a long time? The process stays PAUSED and remains enqueued in qBittorrent paused, so the pending download stays visible in qBittorrent and in the status table; it is retried on each tick until the gates pass.
 - How does the system handle a torrent that disappears mid-download? It logs the condition, keeps the process PROCESSING, and retries on later ticks.
 - How does the system recover after a restart? Active processes are reloaded from the database when the cache is refreshed, so no process is lost.
 
@@ -72,9 +74,9 @@ The system polls actively downloading processes and, once a torrent finishes, re
 - **FR-002**: System MUST periodically (fixed tick, default every 60 seconds) drive active, non-finished download processes toward completion.
 - **FR-003**: System MUST skip the entire tick when qBittorrent is unavailable.
 - **FR-004**: System MUST keep an in-memory cache of active processes, refreshing it when it expires (15-minute TTL) or is invalidated by a state change, and MUST order cached processes oldest-first by creation time.
-- **FR-005**: System MUST NOT start a download while free disk space on qBittorrent is below the configured minimum (`download.min-free-disk-space`, default 50 GB); a failed free-space query MUST be treated as insufficient space (fail-safe).
-- **FR-006**: System MUST NOT start a download while the count of movies ready to watch is at least the configured maximum (`download.max-ready-to-watch`, default 4).
-- **FR-007**: System MUST enqueue an INITIAL process in qBittorrent in paused state, capture the resulting torrent hash and content path, transition the process to PAUSED, persist it, and publish an enqueued event.
+- **FR-005**: System MUST NOT start a download while free disk space on qBittorrent is below the configured minimum (`download.min-free-disk-space`, default 50 GB); a failed free-space query MUST be treated as insufficient space (fail-safe). Enqueuing a torrent as paused is NOT blocked by this gate.
+- **FR-006**: System MUST NOT start a download while the count of movies ready to watch is at least the configured maximum (`download.max-ready-to-watch`, default 4). Enqueuing a torrent as paused is NOT blocked by this gate.
+- **FR-007**: System MUST enqueue an INITIAL process in qBittorrent in paused state — regardless of the capacity gates — capture the resulting torrent hash and content path, transition the process to PAUSED, persist it, and publish an enqueued event.
 - **FR-008**: System MUST start an INITIAL or PAUSED process when capacity gates pass, transition it to PROCESSING, persist it, and publish a download-started event.
 - **FR-009**: At most one process MUST be in PROCESSING status at any time; processes are advanced oldest-first.
 - **FR-010**: System MUST check a PROCESSING process each tick and, when its torrent is finished, transition it to FINISHED, persist it, and publish a download-finished event.
