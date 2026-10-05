@@ -82,6 +82,8 @@ dependencies {
 
 tasks.register("integrationTest", Test) {
     group = "verification"
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform {
         includeTags("IntegrationTest")
     }
@@ -89,6 +91,8 @@ tasks.register("integrationTest", Test) {
 
 tasks.register("unitTest", Test) {
     group = "verification"
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform {
         excludeTags("IntegrationTest")
     }
