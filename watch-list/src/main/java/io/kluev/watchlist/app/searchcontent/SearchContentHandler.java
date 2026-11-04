@@ -4,7 +4,7 @@ import io.kluev.watchlist.app.chat.ChatGateway;
 import io.kluev.watchlist.app.chat.ChatMessageResponse;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.app.FileContent;
-import io.kluev.watchlist.app.JackettGateway;
+import io.kluev.watchlist.app.DownloadableContentGateway;
 import io.kluev.watchlist.app.event.ContentSelectedForDownload;
 import io.kluev.watchlist.common.utils.NumberUtils;
 import io.kluev.watchlist.domain.MovieItem;
@@ -43,7 +43,7 @@ public class SearchContentHandler {
     public static int OK_FOUND_SIZE_THRESHOLD = 3;
 
     private final SearchContentProperties properties;
-    private final JackettGateway jackettGateway;
+    private final DownloadableContentGateway downloadableContentGateway;
     private final ChatGateway chatGateway;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -76,19 +76,19 @@ public class SearchContentHandler {
     }
 
     private @NonNull List<DownloadableContentInfo> findDownloadableContent(MovieItem item, @NonNull Predicate<DownloadableContentInfo> filter) {
-        var foundByFullTitle = jackettGateway.query(item.getFullTitle(), filter);
+        var foundByFullTitle = downloadableContentGateway.query(item.getFullTitle(), filter);
         if (isResultConsideredOk(foundByFullTitle)) {
             return foundByFullTitle;
         }
 
         List<DownloadableContentInfo> foundByForeignTitle = List.of();
         if (item.hasForeignTitle()) {
-            foundByForeignTitle = jackettGateway.query("%s %s".formatted(item.getTitle(), item.getForeignTitle()), filter);
+            foundByForeignTitle = downloadableContentGateway.query("%s %s".formatted(item.getTitle(), item.getForeignTitle()), filter);
             if (isResultConsideredOk(foundByForeignTitle)) {
                 return combine(foundByFullTitle, foundByForeignTitle);
             }
         }
-        return combine(foundByFullTitle, foundByForeignTitle, jackettGateway.query(item.getTitle(), filter));
+        return combine(foundByFullTitle, foundByForeignTitle, downloadableContentGateway.query(item.getTitle(), filter));
     }
 
     // TODO Use Specification instead
@@ -122,7 +122,7 @@ public class SearchContentHandler {
         }
 
         val selectedContent = findSelectedDownloadableContentInfoOrNull(saga, resp);
-        val torrFileContent = jackettGateway.download(selectedContent);
+        val torrFileContent = downloadableContentGateway.download(selectedContent);
         val savedFilename = save(torrFileContent, saga);
         chatGateway.sendMessage(rawResponse.chatId(), "`file://%s` был успешно скачан", savedFilename.replace("torrent", "tt"));
         eventPublisher.publishEvent(new ContentSelectedForDownload(saga.getMovieItem(), savedFilename));

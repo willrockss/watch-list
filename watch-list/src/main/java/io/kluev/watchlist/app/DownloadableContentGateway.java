@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-public interface JackettGateway {
+public interface DownloadableContentGateway {
     default List<DownloadableContentInfo> query(String query) {
         return query(query, Objects::nonNull);
     }

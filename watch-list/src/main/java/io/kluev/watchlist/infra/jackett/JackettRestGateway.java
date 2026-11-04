@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.app.FileContent;
-import io.kluev.watchlist.app.JackettGateway;
+import io.kluev.watchlist.app.DownloadableContentGateway;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
 import io.kluev.watchlist.infra.jackett.dto.Item;
 import io.kluev.watchlist.infra.jackett.dto.Rss;
@@ -30,7 +30,7 @@ import java.util.function.Predicate;
 import static java.util.Objects.requireNonNull;
 
 @RequiredArgsConstructor
-public class JackettRestGateway implements JackettGateway {
+public class JackettRestGateway implements DownloadableContentGateway {
 
     public static final int DEFAULT_PAGE_SIZE = 40;
     private final static ObjectMapper MAPPER = createXmlMapper();

@@ -3,7 +3,7 @@ package io.kluev.watchlist.infra.config.beans;
 import com.google.api.services.sheets.v4.Sheets;
 import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.GetWatchListHandler;
-import io.kluev.watchlist.app.JackettGateway;
+import io.kluev.watchlist.app.DownloadableContentGateway;
 import io.kluev.watchlist.app.LockService;
 import io.kluev.watchlist.app.PlayHandler;
 import io.kluev.watchlist.app.SeriesRepository;
@@ -310,7 +310,7 @@ public class MainBeansConfig {
     }
 
     @Bean
-    public JackettGateway jackettRestGateway(JackettProperties properties, RestClient slowEndpointRestClient) {
+    public DownloadableContentGateway jackettRestGateway(JackettProperties properties, RestClient slowEndpointRestClient) {
         return new JackettRestGateway(properties, slowEndpointRestClient);
     }
 
@@ -327,11 +327,11 @@ public class MainBeansConfig {
     @Bean
     public SearchContentHandler searchContentHandler(
             SearchContentProperties properties,
-            JackettGateway jackettGateway,
+            DownloadableContentGateway downloadableContentGateway,
             ChatGateway chatGateway,
             ApplicationEventPublisher eventPublisher
     ) {
-        return new SearchContentHandler(properties, jackettGateway, chatGateway, eventPublisher);
+        return new SearchContentHandler(properties, downloadableContentGateway, chatGateway, eventPublisher);
     }
 
     @Bean

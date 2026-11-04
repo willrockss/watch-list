@@ -1,7 +1,7 @@
 package io.kluev.watchlist.app.searchcontent.temporal;
 
 import io.kluev.watchlist.app.DownloadableContentInfo;
-import io.kluev.watchlist.app.JackettGateway;
+import io.kluev.watchlist.app.DownloadableContentGateway;
 import io.kluev.watchlist.app.chat.ChatGateway;
 import io.kluev.watchlist.app.event.ContentSelectedForDownload;
 import io.kluev.watchlist.domain.MovieItem;
@@ -33,7 +33,7 @@ public class SearchContentActivitiesImpl implements SearchContentActivities {
     public static int OK_FOUND_SIZE_THRESHOLD = 3;
 
     private final SearchContentProperties properties;
-    private final JackettGateway jackettGateway;
+    private final DownloadableContentGateway downloadableContentGateway;
     private final ChatGateway chatGateway;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -62,7 +62,7 @@ public class SearchContentActivitiesImpl implements SearchContentActivities {
     @Override
     @SneakyThrows
     public String downloadAndSave(DownloadableContentInfo content, MovieItem movie) {
-        val torrFileContent = jackettGateway.download(content);
+        val torrFileContent = downloadableContentGateway.download(content);
         String filename = switch (properties.getTorrFilenameStrategy()) {
             case EXTERNAL_ID -> movie.getExternalId() + ".torrent";
             case ESCAPED -> torrFileContent.filename();
@@ -86,19 +86,19 @@ public class SearchContentActivitiesImpl implements SearchContentActivities {
     }
 
     private @NotNull List<DownloadableContentInfo> findDownloadableContent(MovieItem item, @NotNull Predicate<DownloadableContentInfo> filter) {
-        var foundByFullTitle = jackettGateway.query(item.getFullTitle(), filter);
+        var foundByFullTitle = downloadableContentGateway.query(item.getFullTitle(), filter);
         if (isResultConsideredOk(foundByFullTitle)) {
             return foundByFullTitle;
         }
 
         List<DownloadableContentInfo> foundByForeignTitle = List.of();
         if (item.hasForeignTitle()) {
-            foundByForeignTitle = jackettGateway.query("%s %s".formatted(item.getTitle(), item.getForeignTitle()), filter);
+            foundByForeignTitle = downloadableContentGateway.query("%s %s".formatted(item.getTitle(), item.getForeignTitle()), filter);
             if (isResultConsideredOk(foundByForeignTitle)) {
                 return combine(foundByFullTitle, foundByForeignTitle);
             }
         }
-        return combine(foundByFullTitle, foundByForeignTitle, jackettGateway.query(item.getTitle(), filter));
+        return combine(foundByFullTitle, foundByForeignTitle, downloadableContentGateway.query(item.getTitle(), filter));
     }
 
     private boolean isResultConsideredOk(List<DownloadableContentInfo> result) {
