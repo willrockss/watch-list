@@ -116,10 +116,14 @@ public class MainBeansConfig {
 
 
     @Bean
-    public RestClient slowEndpointRestClient(RestClient.Builder builder) {
+    public RestClient slowEndpointRestClient(
+            RestClient.Builder builder,
+            @Value("${rest-client.slow-endpoint.timeout:3m}") Duration timeoutValue
+    ) {
+        val timeout = Timeout.of(timeoutValue);
         val connectionConfig = ConnectionConfig.custom()
-                .setConnectTimeout(Timeout.ofMinutes(2))
-                .setSocketTimeout(Timeout.ofMinutes(2))
+                .setConnectTimeout(timeout)
+                .setSocketTimeout(timeout)
                 .build();
 
         val connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
@@ -127,7 +131,7 @@ public class MainBeansConfig {
                 .build();
 
         val requestConfig = RequestConfig.custom()
-                .setConnectionRequestTimeout(Timeout.ofMinutes(2))
+                .setConnectionRequestTimeout(timeout)
                 .build();
 
         HttpClient httpClient = HttpClients.custom()

@@ -25,7 +25,12 @@ import java.util.concurrent.CountDownLatch;
 @MockBean({GoogleSheetsClient.class, JdbcClient.class})
 @SpringBootTest(
         properties = {
-                "integration.telegram-bot.session-store-type=NOOP"
+                "integration.telegram-bot.session-store-type=NOOP",
+                "spring.temporal.connection.target=localhost:7233",
+                "integration.jackett.enabled=false",
+                "integration.prowlarr.enabled=true",
+                "integration.prowlarr.base-url=http://localhost:9696",
+                "integration.prowlarr.api-key=123",
         }
 )
 @EnableAutoConfiguration(exclude={DataSourceAutoConfiguration.class, JdbcTemplateAutoConfiguration.class})
@@ -39,7 +44,7 @@ class SearchContentHandlerPlaygroundIT {
     @Test
     @SneakyThrows
     public void should_select_and_download_torr() {
-        val movie = MovieItem.create("Золотые руки", "Gifted Hands: The Ben Carson Story", 2009, "427195");
+        val movie = MovieItem.create("Гравитация", "Gravity", 2013, "468466");
         val enlistedEvent = new MovieEnlisted(movie, "cranman89");
         searchContentHandler.handle(enlistedEvent);
         countDownLatch.await();
