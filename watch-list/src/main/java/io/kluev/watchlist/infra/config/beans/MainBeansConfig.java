@@ -31,6 +31,7 @@ import io.kluev.watchlist.infra.config.props.DownloadProperties;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
+import io.kluev.watchlist.infra.config.props.ProwlarrProperties;
 import io.kluev.watchlist.infra.config.props.QBitClientProperties;
 import io.kluev.watchlist.infra.config.props.SearchContentProperties;
 import io.kluev.watchlist.infra.config.props.TelegramBotProperties;
@@ -41,6 +42,7 @@ import io.kluev.watchlist.infra.googlesheet.GoogleSheetsSeriesRepository;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
+import io.kluev.watchlist.infra.prowlarr.ProwlarrRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
 import io.kluev.watchlist.infra.qbit.QBitClientImpl;
 import io.kluev.watchlist.infra.telegrambot.LazyTelegramBotInitializer;
@@ -309,9 +311,16 @@ public class MainBeansConfig {
         return new EnlistWatchedMovieHandler(movieRepository);
     }
 
+    @ConditionalOnProperty(value = "integration.jackett.enabled", havingValue = "true", matchIfMissing = true)
     @Bean
     public DownloadableContentGateway jackettRestGateway(JackettProperties properties, RestClient slowEndpointRestClient) {
         return new JackettRestGateway(properties, slowEndpointRestClient);
+    }
+
+    @ConditionalOnProperty(value = "integration.prowlarr.enabled", havingValue = "true")
+    @Bean
+    public DownloadableContentGateway prowlarrRestGateway(ProwlarrProperties properties, RestClient slowEndpointRestClient) {
+        return new ProwlarrRestGateway(properties, slowEndpointRestClient);
     }
 
     @ConditionalOnProperty(value = "integration.telegram-bot.enabled")

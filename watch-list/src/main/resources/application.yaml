@@ -89,8 +89,13 @@ integration:
       admins: <comma separated list of usernames of admins>
 
   jackett:
+    enabled: true
     apiKey: <your Jackett API key>
     baseUrl: http://localhost:9117
+  prowlarr:
+    enabled: false
+    apiKey: <your Prowlarr API key>
+    baseUrl: http://localhost:9696
   qbit:
     url: http://localhost:8080
 
