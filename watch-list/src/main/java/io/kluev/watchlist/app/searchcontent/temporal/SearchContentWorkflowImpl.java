@@ -23,11 +23,12 @@ public class SearchContentWorkflowImpl implements SearchContentWorkflow {
             SearchContentActivities.class,
             ActivityOptions.newBuilder()
                     .setTaskQueue(TemporalQueues.DEFAULT_ACTIVITY_QUEUE)
-                    .setStartToCloseTimeout(Duration.ofMinutes(1))
+                    .setStartToCloseTimeout(Duration.ofMinutes(10))
                     .setRetryOptions(
                             RetryOptions.newBuilder()
                                     .setInitialInterval(Duration.ofSeconds(1))
-                                    .setMaximumAttempts(3)
+                                    .setBackoffCoefficient(2.0)
+                                    .setMaximumAttempts(5)
                                     .build())
                     .build());
 
