@@ -21,7 +21,7 @@ spring:
         - io.kluev.watchlist.app.searchmovie.temporal
         - io.kluev.watchlist.app.searchcontent.temporal
 
-workflow-engine: RESTATE
+workflow-engine: TEMPORAL
 
 restate:
   client:

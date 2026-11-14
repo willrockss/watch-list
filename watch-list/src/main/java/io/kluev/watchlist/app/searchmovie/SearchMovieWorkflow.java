@@ -12,6 +12,7 @@ import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.common.TerminalException;
 import dev.restate.sdk.springboot.RestateWorkflow;
 import dev.restate.serde.TypeRef;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import io.kluev.watchlist.app.EnlistMovieRequest;
 import io.kluev.watchlist.app.EnlistWatchedMovieHandler;
 import io.kluev.watchlist.app.EnlistWatchedMovieRequest;
@@ -33,6 +34,7 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "workflow-engine", havingValue = "RESTATE")
 @RestateWorkflow // TODO Rewrite to VirtualObject
 public class SearchMovieWorkflow {
 

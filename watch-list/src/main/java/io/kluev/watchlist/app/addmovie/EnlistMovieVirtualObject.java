@@ -3,6 +3,7 @@ package io.kluev.watchlist.app.addmovie;
 import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.annotation.Handler;
 import dev.restate.sdk.springboot.RestateVirtualObject;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import io.kluev.watchlist.app.EnlistMovieRequest;
 import io.kluev.watchlist.app.EnlistMovieResponse;
 import io.kluev.watchlist.app.searchcontent.SearchContentHandler;
@@ -15,6 +16,7 @@ import lombok.val;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "workflow-engine", havingValue = "RESTATE")
 @RestateVirtualObject
 public class EnlistMovieVirtualObject {
 

@@ -4,9 +4,11 @@ import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.annotation.Handler;
 import dev.restate.sdk.common.StateKey;
 import dev.restate.sdk.springboot.RestateVirtualObject;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.util.Optional;
 
+@ConditionalOnProperty(name = "workflow-engine", havingValue = "RESTATE")
 @RestateVirtualObject
 public class KeyValueVirtualObject {
 

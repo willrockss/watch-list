@@ -5,11 +5,13 @@ import dev.restate.client.Client;
 import io.kluev.watchlist.app.KeyValueStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
 
+@ConditionalOnProperty(name = "workflow-engine", havingValue = "RESTATE")
 @RequiredArgsConstructor
 @Service
 public class RestateBasedKeyValueStorage implements KeyValueStorage {
