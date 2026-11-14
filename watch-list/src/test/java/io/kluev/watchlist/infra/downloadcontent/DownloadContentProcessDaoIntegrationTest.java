@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -26,7 +26,7 @@ import static io.kluev.watchlist.app.downloadcontent.DownloadContentProcessStatu
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("unused")
-@MockBean(GoogleSheetsClient.class)
+@MockitoBean(types = GoogleSheetsClient.class)
 @Tag("IntegrationTest")
 @Testcontainers
 @Transactional

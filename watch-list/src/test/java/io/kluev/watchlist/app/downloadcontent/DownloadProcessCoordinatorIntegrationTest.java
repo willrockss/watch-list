@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -86,11 +86,11 @@ class DownloadProcessCoordinatorIntegrationTest {
     @Autowired
     private EventRecorder eventRecorder;
 
-    @MockBean
+    @MockitoBean
     private QBitClient qBitClient;
-    @MockBean
+    @MockitoBean
     private MovieRepository movieRepository;
-    @MockBean
+    @MockitoBean
     private GoogleSheetsClient googleSheetsClient;
 
     private final Map<ch.qos.logback.classic.Logger, ListAppender<ILoggingEvent>> logAppenders = new HashMap<>();

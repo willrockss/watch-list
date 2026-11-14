@@ -1,7 +1,13 @@
 plugins {
-    id 'org.springframework.boot' version '3.3.1'
+    id 'org.springframework.boot' version '3.5.16'
     id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.openrewrite.rewrite' version '7.39.0'
     id 'java'
+}
+
+rewrite {
+    activeRecipe("org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_5")
+    setExportDatatables(false)
 }
 
 group = 'io.kluev'
@@ -35,20 +41,20 @@ def restateVersion = "2.6.0"
 dependencies {
     implementation('org.springframework.boot:spring-boot-starter-web')
     implementation('org.springframework.boot:spring-boot-starter-validation')
-    implementation('org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0')
+    implementation('org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17')
     implementation('org.springframework.boot:spring-boot-starter-jdbc')
     implementation('org.springframework.boot:spring-boot-starter-actuator')
 
     implementation('org.apache.commons:commons-lang3:3.14.0')
     implementation('org.springframework.retry:spring-retry')
     implementation('commons-io:commons-io:2.15.1')
-    implementation('org.apache.httpcomponents.client5:httpclient5:5.2.3')
+    implementation('org.apache.httpcomponents.client5:httpclient5')
     implementation('com.google.apis:google-api-services-sheets:v4-rev612-1.25.0')
     implementation('org.apache.commons:commons-collections4:4.5.0-M1')
     implementation('org.telegram:telegrambots-springboot-longpolling-starter:7.3.0')
     implementation('org.telegram:telegrambots-client:7.3.0')
     implementation('jakarta.validation:jakarta.validation-api:3.1.0')
-    implementation('com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.3')
+    implementation('com.fasterxml.jackson.dataformat:jackson-dataformat-xml')
     implementation('org.postgresql:postgresql')
     implementation('io.micrometer:micrometer-registry-prometheus')
     implementation('com.squareup.okhttp3:okhttp:4.12.0')
@@ -69,10 +75,10 @@ dependencies {
     testImplementation('com.maciejwalkowiak.spring:wiremock-spring-boot:2.1.2')
     testImplementation('org.testcontainers:postgresql:1.20.3')
     testImplementation('org.testcontainers:junit-jupiter:1.20.1')
-    testImplementation('org.junit.jupiter:junit-jupiter-api:5.10.1')
     testImplementation('org.springframework.boot:spring-boot-testcontainers')
-    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.10.1')
     testRuntimeOnly('org.junit.platform:junit-platform-launcher')
+
+    rewrite("org.openrewrite.recipe:rewrite-spring:6.37.1")
 
     // Обязательно укажите processor path явно
     tasks.withType(JavaCompile) {

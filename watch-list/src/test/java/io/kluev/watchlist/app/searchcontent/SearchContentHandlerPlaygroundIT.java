@@ -14,7 +14,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
@@ -22,7 +22,7 @@ import java.util.concurrent.CountDownLatch;
 
 @Disabled
 @Tag("IntegrationTest")
-@MockBean({GoogleSheetsClient.class, JdbcClient.class})
+@MockitoBean(types = {GoogleSheetsClient.class, JdbcClient.class})
 @SpringBootTest(
         properties = {
                 "integration.telegram-bot.session-store-type=NOOP",

@@ -85,10 +85,8 @@ public class ProwlarrRestGateway implements DownloadableContentGateway {
                     .queryParam("apikey", apiKey)
                     .queryParam("query", query)
                     .queryParam("limit", DEFAULT_PAGE_SIZE)
-                    .queryParam("type", "search");
-            for (val category : DEFAULT_CATEGORIES.split(",")) {
-                uri.queryParam("categories", category.trim());
-            }
+                    .queryParam("type", "search")
+                    .queryParam("categories", DEFAULT_CATEGORIES);
             return uri.build();
         };
     }
