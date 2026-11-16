@@ -31,7 +31,8 @@ public class SearchResource {
                 .title(title)
                 .link(downloadUrl != null ? downloadUrl : magnetUrl)
                 .size(size)
-                .statistics(new DownloadableContentInfo.Statistics(grabs, seeders, leechers))
+                // some indexers don't report grabs at all, default to 0 to keep statistics rendering safe
+                .statistics(new DownloadableContentInfo.Statistics(grabs != null ? grabs : 0, seeders, leechers))
                 .build();
     }
 }

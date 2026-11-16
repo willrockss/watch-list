@@ -85,4 +85,30 @@ public class ProwlarrJsonMappingTest {
         val second = resources.get(1).toDownloadableContentInfo();
         assertThat(second.getLink()).isEqualTo("magnet:?xt=urn:btih:def456&dn=The.Walking.Dead.Dead.City.S01.1080p&tr=...");
     }
+
+    @SneakyThrows
+    @Test
+    public void should_default_grabs_to_zero_when_indexer_does_not_report_it() {
+        val rawJson =
+        """
+        [
+          {
+            "guid": "some-indexer/t=1",
+            "indexerId": 7,
+            "indexer": "SomeIndexer",
+            "title": "Terminator [1991, BDRip 1080p]",
+            "size": 10709966848,
+            "downloadUrl": "http://localhost:9696/7/download?apikey=~~api_key~~&torrent=...",
+            "seeders": 7,
+            "leechers": 0
+          }
+        ]
+        """;
+
+        val mapped = mapper.readValue(rawJson, SearchResource[].class)[0].toDownloadableContentInfo();
+
+        assertThat(mapped.getStatistics().getDownloadedTimes()).isEqualTo(0);
+        assertThat(mapped.getStatistics().getSeeders()).isEqualTo(7);
+        assertThat(mapped.getStatistics().getPeers()).isEqualTo(0);
+    }
 }

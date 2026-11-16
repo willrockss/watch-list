@@ -64,7 +64,8 @@ class ProwlarrRestGatewayIntegrationTest {
                 .withQueryParam("query", equalTo("terminator"))
                 .withQueryParam("limit", equalTo("40"))
                 .withQueryParam("type", equalTo("search"))
-                .withQueryParam("categories", equalTo("2000,5000"))
+                .withQueryParam("categories", equalTo("2000"))
+                .withQueryParam("categories", equalTo("5000"))
                 .willReturn(okForContentType("application/json", """
                         [
                           {
@@ -119,7 +120,7 @@ class ProwlarrRestGatewayIntegrationTest {
         );
 
         // when
-        val result = sut.query("terminator", (Predicate<DownloadableContentInfo>) info -> info.getSize() > 1024 * 1024);
+        val result = sut.query("terminator", info -> info.getSize() > 1024 * 1024);
 
         // then
         assertThat(result).hasSize(1);

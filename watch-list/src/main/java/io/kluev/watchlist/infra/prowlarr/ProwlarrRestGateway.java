@@ -29,7 +29,8 @@ import static java.util.Objects.requireNonNull;
 public class ProwlarrRestGateway implements DownloadableContentGateway {
 
     public static final int DEFAULT_PAGE_SIZE = 40;
-    public static final String DEFAULT_CATEGORIES = "2000,5000";
+    // Prowlarr expects categories as repeated query params: ?categories=2000&categories=5000
+    public static final List<String> DEFAULT_CATEGORIES = List.of("2000", "5000");
 
     private final ProwlarrProperties properties;
     private final RestClient restClient;
