@@ -9,7 +9,6 @@ import io.kluev.watchlist.app.chat.CallbackCommand;
 import io.kluev.watchlist.app.chat.ChatMessageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
@@ -74,7 +73,7 @@ public class RestateCallbackHandler {
                 .idempotencyKey(chatResponse.messageId())
                 .build();
 
-        val response = restateClient.call(req);
+        var response = restateClient.call(req);
         System.out.println(response.response());
     }
 

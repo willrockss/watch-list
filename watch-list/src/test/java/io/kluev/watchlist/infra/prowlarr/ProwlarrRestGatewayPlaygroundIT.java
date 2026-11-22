@@ -2,7 +2,6 @@ package io.kluev.watchlist.infra.prowlarr;
 
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.infra.config.props.ProwlarrProperties;
-import lombok.val;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -34,13 +33,13 @@ class ProwlarrRestGatewayPlaygroundIT {
 
     @Test
     public void should_find_content() {
-        val query = "Терминатор 2";
-        val response = prowlarrRestGateway.query(query);
+        var query = "Терминатор 2";
+        var response = prowlarrRestGateway.query(query);
         System.out.println(response);
         for (DownloadableContentInfo con : response) {
             System.out.println(con.getLink());
         }
-        val content = prowlarrRestGateway.download(response.getFirst());
+        var content = prowlarrRestGateway.download(response.getFirst());
         System.out.println(content);
     }
 

@@ -2,7 +2,6 @@ package io.kluev.watchlist.app.downloadcontent;
 
 import io.kluev.watchlist.infra.config.props.QBitClientProperties;
 import io.kluev.watchlist.infra.qbit.QBitClientImpl;
-import lombok.val;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -38,8 +37,8 @@ class QBitClientTestPlaygroundIT {
 
     @Test
     public void test_add() {
-        val torrPath = "/home/alex/Downloads/torr/Головоломка_2_Inside_Out_2_(Келси_Манн)_[2024_комедия_приключения_семейный_WEBRip]_тизер.torrent";
-        val torr = qBitClient.addTorrPaused(torrPath, new ContentItemIdentity("inside_out_2"));
+        var torrPath = "/home/alex/Downloads/torr/Головоломка_2_Inside_Out_2_(Келси_Манн)_[2024_комедия_приключения_семейный_WEBRip]_тизер.torrent";
+        var torr = qBitClient.addTorrPaused(torrPath, new ContentItemIdentity("inside_out_2"));
         assertThat(torr).isNotNull();
         assertThat(torr.infoHash()).isNotNull();
         assertThat(torr.contentPath()).isNotNull();
@@ -47,33 +46,33 @@ class QBitClientTestPlaygroundIT {
 
     @Test
     public void test_start() {
-        val found = qBitClient.findByIdTagOrNull(new ContentItemIdentity("inside_out_2"));
+        var found = qBitClient.findByIdTagOrNull(new ContentItemIdentity("inside_out_2"));
         assertThat(found).isNotNull();
         qBitClient.start(found);
     }
 
     @Test
     public void find_torr() {
-        val found = qBitClient.findByIdTagOrNull(new ContentItemIdentity("inside_out_2"));
+        var found = qBitClient.findByIdTagOrNull(new ContentItemIdentity("inside_out_2"));
         assertThat(found).isNotNull();
     }
 
     @Test
     public void delete() {
-        val found = qBitClient.findByIdTagOrNull(new ContentItemIdentity("inside_out_2"));
+        var found = qBitClient.findByIdTagOrNull(new ContentItemIdentity("inside_out_2"));
         assert found != null;
         qBitClient.deleteWithContent(found);
     }
 
     @Test
     public void test_available() {
-        val isAvailable = qBitClient.isAvailable();
+        var isAvailable = qBitClient.isAvailable();
         Assertions.assertThat(isAvailable).isTrue();
     }
 
     @Test
     public void test_free_space_on_disk() {
-        val freeSpace = qBitClient.getFreeSpaceOnDisk();
+        var freeSpace = qBitClient.getFreeSpaceOnDisk();
         Assertions.assertThat(freeSpace).isNotNull();
         Assertions.assertThat(freeSpace.toBytes()).isPositive();
     }

@@ -7,7 +7,6 @@ import jakarta.annotation.Nullable;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.util.UriUtils;
 
@@ -27,8 +26,8 @@ public class GetWatchListHandler {
 
     @SneakyThrows
     public WatchListResponse handle() {
-        val seriesFuture = getSeriesFuture();
-        val moviesFuture = getMoviesFuture();
+        var seriesFuture = getSeriesFuture();
+        var moviesFuture = getMoviesFuture();
         return new WatchListResponse(
                 seriesFuture.get(2, TimeUnit.MINUTES),
                 moviesFuture.get(2, TimeUnit.MINUTES)
@@ -62,7 +61,7 @@ public class GetWatchListHandler {
         if (StringUtils.isBlank(path)) {
             return null;
         }
-        val requestPart = videoServerProperties.getVideoPathTemplate().formatted(
+        var requestPart = videoServerProperties.getVideoPathTemplate().formatted(
                 id,
                 UriUtils.encode(path, StandardCharsets.UTF_8),
                 VideoType.MOVIE.name()

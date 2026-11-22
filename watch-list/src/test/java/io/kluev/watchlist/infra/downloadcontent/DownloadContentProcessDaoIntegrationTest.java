@@ -3,7 +3,6 @@ package io.kluev.watchlist.infra.downloadcontent;
 import io.kluev.watchlist.app.downloadcontent.ContentItemIdentity;
 import io.kluev.watchlist.app.downloadcontent.DownloadContentProcess;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;
-import lombok.val;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +13,9 @@ import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.stream.Collectors;
 
@@ -44,13 +43,13 @@ class DownloadContentProcessDaoIntegrationTest {
 
     @Container
     @ServiceConnection
-    static PostgreSQLContainer<?> postgreSQL = new PostgreSQLContainer<>("postgres:14");
+    static PostgreSQLContainer postgreSQL = new PostgreSQLContainer("postgres:14");
 
 
     @Test
     void test_add_new_and_save_process() {
         // given
-        val process = DownloadContentProcess
+        var process = DownloadContentProcess
                 .builder()
                 .contentItemIdentity(new ContentItemIdentity("kinopoisk-123"))
                 .torrFilePath("/tmp/some_file.torr")
@@ -60,7 +59,7 @@ class DownloadContentProcessDaoIntegrationTest {
         downloadContentProcessDao.save(process);
 
         // then
-        val result = jdbcClient.sql("SELECT * FROM download_content_process WHERE content_item_identity = 'kinopoisk-123'")
+        var result = jdbcClient.sql("SELECT * FROM download_content_process WHERE content_item_identity = 'kinopoisk-123'")
                 .query(DownloadContentTaskDbRecordRowMapper.INSTANCE)
                 .optional()
                 .orElse(null);
@@ -78,7 +77,7 @@ class DownloadContentProcessDaoIntegrationTest {
     @Test
     void test_update_process() {
         // given
-        val initialRecord = jdbcClient.sql("SELECT * FROM download_content_process WHERE content_item_identity = 'mvi-005'")
+        var initialRecord = jdbcClient.sql("SELECT * FROM download_content_process WHERE content_item_identity = 'mvi-005'")
                 .query(DownloadContentTaskDbRecordRowMapper.INSTANCE)
                 .optional()
                 .orElse(null);
@@ -89,7 +88,7 @@ class DownloadContentProcessDaoIntegrationTest {
         assertThat(initialRecord.torrInfoHash()).isNull();
 
         // when
-        val savedSuccessfully = downloadContentProcessDao.save(DownloadContentProcess
+        var savedSuccessfully = downloadContentProcessDao.save(DownloadContentProcess
                 .builder()
                 .id(initialRecord.id())
                 .contentItemIdentity(new ContentItemIdentity("mvi-005"))
@@ -101,7 +100,7 @@ class DownloadContentProcessDaoIntegrationTest {
         assertThat(savedSuccessfully).isTrue();
 
         // then
-        val updatedRecord = jdbcClient.sql("SELECT * FROM download_content_process WHERE content_item_identity = 'mvi-005'")
+        var updatedRecord = jdbcClient.sql("SELECT * FROM download_content_process WHERE content_item_identity = 'mvi-005'")
                 .query(DownloadContentTaskDbRecordRowMapper.INSTANCE)
                 .optional()
                 .orElse(null);
@@ -117,12 +116,12 @@ class DownloadContentProcessDaoIntegrationTest {
     void test_load_for_processing() {
         // given -> setup Sql
         // when
-        val result = downloadContentProcessDao.getActive();
+        var result = downloadContentProcessDao.getActive();
 
         // then
         assertThat(result).isNotEmpty();
 
-        val statuses = result.stream().map(DownloadContentProcess::getStatus).collect(Collectors.toSet());
+        var statuses = result.stream().map(DownloadContentProcess::getStatus).collect(Collectors.toSet());
         assertThat(statuses).containsOnly(INITIAL, PROCESSING);
 
         for (DownloadContentProcess downloadContentProcess : result) {

@@ -9,7 +9,6 @@ import io.temporal.common.RetryOptions;
 import io.temporal.spring.boot.WorkflowImpl;
 import io.temporal.workflow.Workflow;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 
 import java.time.Duration;
 import java.util.List;
@@ -38,18 +37,18 @@ public class SearchContentWorkflowImpl implements SearchContentWorkflow {
 
     @Override
     public void run(SearchContentRequest req) {
-        val movie = req.toMovieItem();
+        var movie = req.toMovieItem();
         found = activities.findDownloadableContent(movie);
 
-        val buttonPrefix = "T|%s|%s|processUserCommand|s_".formatted(
+        var buttonPrefix = "T|%s|%s|processUserCommand|s_".formatted(
                 Workflow.getInfo().getWorkflowType(),
                 Workflow.getInfo().getWorkflowId());
         activities.sendSelectContentRequest(buttonPrefix, found);
 
         Workflow.await(() -> selectedIndex != null);
 
-        val content = found.get(selectedIndex);
-        val savedFilename = activities.downloadAndSave(content, req.toMovieItem());
+        var content = found.get(selectedIndex);
+        var savedFilename = activities.downloadAndSave(content, req.toMovieItem());
         activities.sendMessage(
                 command.response().chatId(),
                 "`file://%s` был успешно скачан",

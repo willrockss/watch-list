@@ -11,7 +11,6 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -48,7 +47,7 @@ public class QBitClientImpl implements QBitClient {
 
     @Override
     public EnqueuedTorr addTorrPaused(String torrFilePath, ContentItemIdentity contentItemIdentity) {
-        val alreadyPresent = findByIdTagOrNull(contentItemIdentity);
+        var alreadyPresent = findByIdTagOrNull(contentItemIdentity);
         if (alreadyPresent != null) {
             log.info("Already present: {}", alreadyPresent);
             return alreadyPresent;
@@ -72,13 +71,13 @@ public class QBitClientImpl implements QBitClient {
                 .build();
 
         try(Response response = okHttpClient.newCall(request).execute()) {
-            val bodyOrNull = response.body() == null ? null : response.body().string();
+            var bodyOrNull = response.body() == null ? null : response.body().string();
             log.info("Response code: {} {} with body {}", response.code(), response.message(), bodyOrNull);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        val justAdded = findByIdTagOrNull(contentItemIdentity);
+        var justAdded = findByIdTagOrNull(contentItemIdentity);
         Assert.notNull(justAdded, () -> "Unable to find just added torr by " + contentItemIdentity);
         return justAdded;
     }
@@ -86,8 +85,8 @@ public class QBitClientImpl implements QBitClient {
     @Override
     @Nullable
     public EnqueuedTorr findByIdTagOrNull(ContentItemIdentity contentItemIdentity) {
-        val idTagValue = ID_TAG_TEMPLATE.formatted(contentItemIdentity.value());
-        val resp = restClient.get()
+        var idTagValue = ID_TAG_TEMPLATE.formatted(contentItemIdentity.value());
+        var resp = restClient.get()
                 .uri(properties.getUrl() + "/api/v2/torrents/info?tag={idTagValue}", idTagValue)
                 .retrieve()
                 .body(ResponseDto.class);
@@ -107,7 +106,7 @@ public class QBitClientImpl implements QBitClient {
     public void deleteWithContent(@NonNull EnqueuedTorr torr) {
         Assert.notNull(torr, "torr cannot be null");
 
-        val body = new LinkedMultiValueMap<String, String>();
+        var body = new LinkedMultiValueMap<String, String>();
         body.add("hashes", torr.infoHash());
         body.add("deleteFiles", Boolean.TRUE.toString());
 
@@ -123,7 +122,7 @@ public class QBitClientImpl implements QBitClient {
     public void start(@NonNull EnqueuedTorr torr) {
         Assert.notNull(torr, "torr cannot be null");
 
-        val body = new LinkedMultiValueMap<String, String>();
+        var body = new LinkedMultiValueMap<String, String>();
         body.add("hashes", torr.infoHash());
         restClient.post()
                 .uri(properties.getUrl() + "/api/v2/torrents/start")
@@ -135,10 +134,10 @@ public class QBitClientImpl implements QBitClient {
 
     @Override
     public boolean isAvailable() {
-        val request = new Request.Builder()
+        var request = new Request.Builder()
                 .url(properties.getUrl() + "/api/v2/app/webapiVersion")
                 .build();
-        try(val resp = okHttpClientChecker.newCall(request).execute()) {
+        try(var resp = okHttpClientChecker.newCall(request).execute()) {
             log.debug("Web API version: {}", resp.body() == null ? null : resp.body().string());
             return resp.isSuccessful();
         } catch (IOException e) {
@@ -149,12 +148,12 @@ public class QBitClientImpl implements QBitClient {
 
     @Override
     public DataSize getFreeSpaceOnDisk() {
-        val resp = restClient.get()
+        var resp = restClient.get()
                 .uri(properties.getUrl() + "/api/v2/sync/maindata")
                 .retrieve()
                 .body(SyncMainDataDto.class);
         Assert.notNull(resp, "response should not be null!");
-        val serverState = resp.serverState;
+        var serverState = resp.serverState;
         Assert.notNull(serverState, "serverState should not be null!");
         return DataSize.ofBytes(serverState.freeSpaceOnDisk);
     }

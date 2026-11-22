@@ -11,7 +11,6 @@ import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import jakarta.annotation.Nullable;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.event.EventListener;
 import org.springframework.retry.support.RetryTemplate;
@@ -47,15 +46,15 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
     }
 
     private String calculateToWatchInsertRange() {
-        val toWatchProps = properties.getMoviesToWatch();
-        val headerRange = toWatchProps.getHeaderRange();
+        var toWatchProps = properties.getMoviesToWatch();
+        var headerRange = toWatchProps.getHeaderRange();
         return headerRange.getSheetName() + "!A2:A2";
     }
 
     @SneakyThrows
     @Override
     public void enlist(MovieItem movieItem) {
-        val preComment = "";
+        var preComment = "";
         service.spreadsheets().values().append(
                         properties.getSpreadsheetId(),
                         toWatchInsertRange,
@@ -100,8 +99,8 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     private @NotNull List<List<Object>> findToWatchMoviesRows() throws IOException {
         return retryTemplate.execute(context -> {
-            val result = service.spreadsheets().values().get(properties.getSpreadsheetId(), TO_WATCH_READ_RANGE).execute();
-            val values = result.getValues();
+            var result = service.spreadsheets().values().get(properties.getSpreadsheetId(), TO_WATCH_READ_RANGE).execute();
+            var values = result.getValues();
             return values == null ? List.of() : values;
         });
     }
@@ -112,9 +111,9 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     @SneakyThrows
     public void enlistWatched(MovieItem movieItem, LocalDate watchedAt) {
-        val fullTitle = movieItem.getFullTitle();
-        val postComment = "";
-        val kinopoiskId = movieItem.getExternalId();
+        var fullTitle = movieItem.getFullTitle();
+        var postComment = "";
+        var kinopoiskId = movieItem.getExternalId();
         var rowData = IntStream
                 .rangeClosed(0, 9) // TODO Make column indexes configurable
                 .mapToObj(i -> switch (i) {
@@ -131,7 +130,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                     default -> new CellData();
                 })
                 .toList();
-        val watchedSheetId = getSheetIdByName("Просмотренные"); // TODO Make sheet name configurable
+        var watchedSheetId = getSheetIdByName("Просмотренные"); // TODO Make sheet name configurable
         BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest();
         request.setRequests(List.of(
                 new Request()
@@ -162,7 +161,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
     @SneakyThrows
     @Override
     public void markWatched(String kinopoiskId, LocalDate watchedAt) {
-        val watchedMovieRowIndex = findRowIndexByItemKinopoiskIdOrNull(kinopoiskId);
+        var watchedMovieRowIndex = findRowIndexByItemKinopoiskIdOrNull(kinopoiskId);
         if (watchedMovieRowIndex == null) {
             throw new IllegalArgumentException("Movie with id " + kinopoiskId + " not found");
         }
@@ -223,13 +222,13 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
                         )
         ));
 
-        val resp = service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
+        var resp = service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
         log.info("Mark {} as watched with result {}", kinopoiskId, resp);
     }
 
     @EventListener(ContentItemEnqueuedEvent.class)
     public void markAsEnqueued(ContentItemEnqueuedEvent event) throws IOException {
-        val itemIndex = findRowIndexByItemKinopoiskIdOrNull(event.identity().value());
+        var itemIndex = findRowIndexByItemKinopoiskIdOrNull(event.identity().value());
         if (itemIndex == null) {
             log.error("Unable to find row by {}. Do nothing", event.identity());
             return;
@@ -239,7 +238,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     @EventListener(ContentItemDownloadStartedEvent.class)
     public void markAsStarted(ContentItemDownloadStartedEvent event) throws IOException {
-        val itemIndex = findRowIndexByItemKinopoiskIdOrNull(event.identity().value());
+        var itemIndex = findRowIndexByItemKinopoiskIdOrNull(event.identity().value());
         if (itemIndex == null) {
             log.error("Unable to find row by {}. Do nothing", event.identity());
             return;
@@ -249,7 +248,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
 
     @EventListener(ContentItemDownloadFinishedEvent.class)
     public void markAsFinished(ContentItemDownloadFinishedEvent event) throws IOException {
-        val itemIndex = findRowIndexByItemKinopoiskIdOrNull(event.identity().value());
+        var itemIndex = findRowIndexByItemKinopoiskIdOrNull(event.identity().value());
         if (itemIndex == null) {
             log.error("Unable to find row by {}. Do nothing", event.identity());
             return;
@@ -266,10 +265,10 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
     private Integer findRowIndexByItemKinopoiskIdOrNull(@NotNull String kinopoiskId) {
         Assert.notNull(kinopoiskId, "kinopoiskId cannot be null");
 
-        val range = "'Посмотреть'!J2:J22"; // TODO read from properties
+        var range = "'Посмотреть'!J2:J22"; // TODO read from properties
         try {
-            val result = service.spreadsheets().values().get(properties.getSpreadsheetId(), range).execute();
-            val values = result.getValues();
+            var result = service.spreadsheets().values().get(properties.getSpreadsheetId(), range).execute();
+            var values = result.getValues();
             if (values == null) {
                 return null;
             }
@@ -294,28 +293,28 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
     }
 
     private void updateStatus(int rowIndex, String status) throws IOException {
-        val oneBasedRowNumber = rowIndex + 1;
-        val statusRange = "Посмотреть!K" + oneBasedRowNumber + ":K" + oneBasedRowNumber; // TODO read from properties
+        var oneBasedRowNumber = rowIndex + 1;
+        var statusRange = "Посмотреть!K" + oneBasedRowNumber + ":K" + oneBasedRowNumber; // TODO read from properties
         update(statusRange, List.of(status));
     }
 
     private void updateStatusAndContentPath(int rowIndex, String status, String contentPath) throws IOException {
-        val oneBasedRowNumber = rowIndex + 1;
-        val range = "Посмотреть!K" + oneBasedRowNumber + ":L" + oneBasedRowNumber; // TODO read from properties
+        var oneBasedRowNumber = rowIndex + 1;
+        var range = "Посмотреть!K" + oneBasedRowNumber + ":L" + oneBasedRowNumber; // TODO read from properties
         update(range, List.of(status, contentPath));
     }
 
     private void update(String range, List<Object> values) throws IOException {
-        val rawResponse = service.spreadsheets().values().update(
-                        properties.getSpreadsheetId(),
-                        range,
-                        new ValueRange()
-                                .setValues(List.of(values))
-                                .setMajorDimension("ROWS")
+        var rawResponse = service.spreadsheets().values().update(
+                properties.getSpreadsheetId(),
+                range,
+                new ValueRange()
+                        .setValues(List.of(values))
+                        .setMajorDimension("ROWS")
 
-                                .setRange(range)
-                )
-                .setValueInputOption("USER_ENTERED")
+                        .setRange(range)
+        )
+        .setValueInputOption("USER_ENTERED")
                 .execute();
         log.debug("Updated data: {}", rawResponse.getUpdatedData());
     }
@@ -325,7 +324,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
         if (sheetIdByName.isEmpty()) {
             Spreadsheet spreadsheet = service.spreadsheets().get(properties.getSpreadsheetId()).execute();
             for (Sheet sheet : spreadsheet.getSheets()) {
-                val props = Objects.requireNonNull(sheet.getProperties(), () -> "Properties is null for " + sheet);
+                var props = Objects.requireNonNull(sheet.getProperties(), () -> "Properties is null for " + sheet);
                 sheetIdByName.put(props.getTitle(), props.getSheetId());
             }
         }
@@ -333,7 +332,7 @@ public class GoogleSheetsWatchListRepository implements MovieRepository {
     }
 
     private CellFormat getDateStrCellFormat() {
-        val cellFormat = new CellFormat();
+        var cellFormat = new CellFormat();
          cellFormat.setHorizontalAlignment("RIGHT");
         return cellFormat;
     }

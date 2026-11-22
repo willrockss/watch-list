@@ -1,6 +1,5 @@
 package io.kluev.watchlist.infra.jackett;
 
-import lombok.val;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -40,7 +39,7 @@ class WLFilenameUtilsTest {
     @MethodSource("escapeFilenameArgs")
     @ParameterizedTest
     void escapeFilename(String initialFilename, String expectedFilename) {
-        val actual = WLFilenameUtils.escapeFilename(initialFilename);
+        var actual = WLFilenameUtils.escapeFilename(initialFilename);
         assertEquals(expectedFilename, actual);
     }
 }

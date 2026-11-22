@@ -3,7 +3,6 @@ package io.kluev.watchlist.infra.telegrambot;
 import io.kluev.watchlist.app.chat.ChatGateway;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.infra.config.props.TelegramBotProperties;
-import lombok.val;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -54,7 +53,7 @@ class TelegramChatGatewayPlaygroundIT {
     public void should_send_found_content_table() {
         Mockito.when(telegramSessionStore.findChatIdsByUsernames(Mockito.any())).thenReturn(List.of("521320812"));
 
-        val content = new ArrayList<DownloadableContentInfo>(10);
+        var content = new ArrayList<DownloadableContentInfo>(10);
         for (int i = 0; i < 5; i++) {
             content.add(generateDownloadableContentInfo());
         }
@@ -66,7 +65,7 @@ class TelegramChatGatewayPlaygroundIT {
     public void should_send_markdown_result() throws IOException {
         Mockito.when(telegramSessionStore.findChatIdsByUsernames(Mockito.any())).thenReturn(List.of("521320812"));
         TypeReference<List<DownloadableContentInfo>> myType = new TypeReference<>() {};
-        try(val is = foundContentData.getInputStream()) {
+        try(var is = foundContentData.getInputStream()) {
             List<DownloadableContentInfo> content = objectMapper.readValue(is.readAllBytes(), myType);
             chatGateway.sendSelectContentRequest(UUID.randomUUID(), content);
         }

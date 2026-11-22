@@ -3,7 +3,6 @@ package io.kluev.watchlist.infra.googlesheet.clientimpl;
 import com.google.api.services.sheets.v4.Sheets;
 import io.kluev.watchlist.infra.config.beans.GoogleSheetServiceConfig;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
-import lombok.val;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -41,7 +40,7 @@ class GoogleSheetsClientPlaygroundTest {
 
     @Test
     public void ok_find() {
-        val result = client.findRow(new FindRowByValues(
+        var result = client.findRow(new FindRowByValues(
                 "series",
                 List.of(
                         new RowCellValue("name", "Волга"),
@@ -54,14 +53,14 @@ class GoogleSheetsClientPlaygroundTest {
 
     @Test
     public void ok_delete() {
-        val result = client.deleteRow(DeleteRow.of("watchedMovies", RowNumber.of(2)));
+        var result = client.deleteRow(DeleteRow.of("watchedMovies", RowNumber.of(2)));
         assertThat(result).isTrue();
     }
 
     @Test
     public void ok_find_and_delete() {
-        val sheetCode = "series";
-        val rowNumberToDelete = client.findRow(new FindRowByValues(
+        var sheetCode = "series";
+        var rowNumberToDelete = client.findRow(new FindRowByValues(
                 sheetCode,
                 List.of(
                         new RowCellValue("name", "Волга"),
@@ -69,13 +68,13 @@ class GoogleSheetsClientPlaygroundTest {
                 )
         ));
 
-        val result = client.deleteRow(DeleteRow.of(sheetCode, rowNumberToDelete));
+        var result = client.deleteRow(DeleteRow.of(sheetCode, rowNumberToDelete));
         assertThat(result).isTrue();
     }
 
     @Test
-    public void ok_cut_insert_with_modification() throws IOException {
-        val result = client.cutInsertWithUpdate(
+    public void ok_cut_insert_with_modification() {
+        var result = client.cutInsertWithUpdate(
                 CutInsertWithUpdateRowCommand
                         .builder()
                         .sheetCodeCutFrom("moviesToWatch")

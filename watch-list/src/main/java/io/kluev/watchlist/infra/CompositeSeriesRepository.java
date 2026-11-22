@@ -8,7 +8,6 @@ import io.kluev.watchlist.domain.event.SeasonWatched;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsSeriesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,11 +34,11 @@ public class CompositeSeriesRepository implements SeriesRepository {
 
     @Override
     public void save(Series series) {
-        val hasEpisodeWatchedEvent = series.getEvents().stream().anyMatch(it -> it instanceof EpisodeWatched);
+        var hasEpisodeWatchedEvent = series.getEvents().stream().anyMatch(it -> it instanceof EpisodeWatched);
         if (hasEpisodeWatchedEvent) {
             nodeRedSeriesRepository.save(series);
         }
-        val hasSeasonWatchedEvent = series.getEvents().stream().anyMatch(it -> it instanceof SeasonWatched);
+        var hasSeasonWatchedEvent = series.getEvents().stream().anyMatch(it -> it instanceof SeasonWatched);
         if (hasSeasonWatchedEvent) {
             googleSheetsSeriesRepository.save(series);
         }

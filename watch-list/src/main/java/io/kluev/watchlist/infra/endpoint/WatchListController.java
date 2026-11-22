@@ -10,7 +10,6 @@ import io.kluev.watchlist.app.progress.ProgressRequestV2;
 import io.kluev.watchlist.app.progress.ProgressResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,7 +52,7 @@ public class WatchListController {
     @PostMapping("/v2/progress")
     public ResponseEntity<String> progressV2(@RequestBody ProgressRequestV2 request) {
         log.trace("Received progress request v2 {}", request);
-        val resp = progressHandlerV2.handle(request);
+        var resp = progressHandlerV2.handle(request);
         if (resp.error() == null) {
             return ResponseEntity.ok(null);
         }
@@ -63,7 +62,7 @@ public class WatchListController {
     @PostMapping("/v3/progress")
     public ResponseEntity<ProgressResponse> progressV3(@RequestBody ProgressRequestV2 request) {
         log.trace("Received progress request v3 {}", request);
-        val resp = progressHandlerV2.handle(request);
+        var resp = progressHandlerV2.handle(request);
         if (resp.error() == null) {
             return ResponseEntity.ok(resp);
         }

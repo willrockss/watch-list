@@ -20,7 +20,6 @@ import io.kluev.watchlist.infra.chat.ChatSessionStore;
 import io.kluev.watchlist.infra.config.props.VkontakteBotProperties;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -67,7 +66,7 @@ public class VkChatGateway implements ChatGateway {
     }
 
     private void sendToAdmins(String buttonPrefix, List<DownloadableContentInfo> found) {
-        val chatIds = getAdminsChatsIds();
+        var chatIds = getAdminsChatsIds();
         Assert.state(!ObjectUtils.isEmpty(chatIds), "No active admins session present!");
 
         for (String chatId : chatIds) {
@@ -88,9 +87,9 @@ public class VkChatGateway implements ChatGateway {
     }
 
     private List<List<CommandButton>> generateKeyboard(String buttonPrefix, List<DownloadableContentInfo> found) {
-        val result = new ArrayList<List<CommandButton>>();
+        var result = new ArrayList<List<CommandButton>>();
 
-        val size = found.size();
+        var size = found.size();
 
         for (int i = 0; i < size; i += 2) {
             var buttonRow = new ArrayList<CommandButton>();
@@ -117,10 +116,10 @@ public class VkChatGateway implements ChatGateway {
     }
 
     private String generateText(List<DownloadableContentInfo> found) {
-        val textBuilder = new StringBuilder("Выберите контент для добавления в список: \n\n");
+        var textBuilder = new StringBuilder("Выберите контент для добавления в список: \n\n");
         for (int i = 0; i < found.size(); i++) {
-            val elem = found.get(i);
-            val readableSize = FileUtils.byteCountToDisplaySize(elem.getSize());
+            var elem = found.get(i);
+            var readableSize = FileUtils.byteCountToDisplaySize(elem.getSize());
             textBuilder.append("\t%d. %s. \n[Размер: %s, Скачан раз: %d]\n\n".formatted(i + 1, elem.getTitle(), readableSize, elem.getStatistics().getDownloadedTimes()));
         }
         return textBuilder.toString();
@@ -152,13 +151,13 @@ public class VkChatGateway implements ChatGateway {
             msgBuilder.replyTo(Integer.valueOf(args.replyMessageId()));
         }
         // Need to parse manually because of outdated SDK
-        val response = msgBuilder.executeAsString();
+        var response = msgBuilder.executeAsString();
         log.debug("Message send result {}", response);
-        val responseBody = gson.fromJson(response, JsonElement.class);
+        var responseBody = gson.fromJson(response, JsonElement.class);
         if (responseBody.isJsonObject()) {
-            val error = responseBody.getAsJsonObject().get("error");
+            var error = responseBody.getAsJsonObject().get("error");
             if (error != null && error.isJsonObject()) {
-                val errorMsg = error.getAsJsonObject().get("error_msg");
+                var errorMsg = error.getAsJsonObject().get("error_msg");
                 if (errorMsg != null) {
                     throw new RuntimeException(errorMsg.toString());
                 }
@@ -196,12 +195,12 @@ public class VkChatGateway implements ChatGateway {
 
     @SneakyThrows
     private void attachImage(MessagesSendQueryWithUserIds msgBuilder, URI imageUri) {
-        val uploadServer = vk.photos()
+        var uploadServer = vk.photos()
                 .getMessagesUploadServer(groupActor)
                 .execute();
-        val imageUrl = imageUri.toString();
-        val md5 = md5Hex(imageUrl);
-        val tempFile = new File(System.getProperty("java.io.tmpdir"), md5 + ".jpg");
+        var imageUrl = imageUri.toString();
+        var md5 = md5Hex(imageUrl);
+        var tempFile = new File(System.getProperty("java.io.tmpdir"), md5 + ".jpg");
         if (!tempFile.exists()) {
             FileUtils.copyURLToFile(imageUri.toURL(), tempFile);
         }

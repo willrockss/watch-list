@@ -4,7 +4,6 @@ package io.kluev.watchlist.infra.restate.storage;
 import dev.restate.client.Client;
 import io.kluev.watchlist.app.KeyValueStorage;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -21,15 +20,15 @@ public class RestateBasedKeyValueStorage implements KeyValueStorage {
     @Override
     public String withRandomKey(String value) {
 
-        val key = UUID.randomUUID().toString();
-        val client = KeyValueVirtualObjectClient.fromClient(restateClient, key);
+        var key = UUID.randomUUID().toString();
+        var client = KeyValueVirtualObjectClient.fromClient(restateClient, key);
         client.setValue(value);
         return key;
     }
 
     @Override
     public Optional<String> getValue(String key) {
-        val client = KeyValueVirtualObjectClient.fromClient(restateClient, key);
+        var client = KeyValueVirtualObjectClient.fromClient(restateClient, key);
         return client.getValue();
     }
 

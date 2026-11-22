@@ -7,7 +7,6 @@ import jakarta.annotation.Nullable;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.val;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.util.Assert;
@@ -51,7 +50,7 @@ public class TelegramChatGateway implements ChatGateway {
     }
 
     private void sendToAdmins(String buttonPrefix, List<DownloadableContentInfo> found) {
-        val chatIds = getAdminsChatsIds();
+        var chatIds = getAdminsChatsIds();
         Assert.state(!isEmpty(chatIds), "No active admins session present!");
 
         for (String chatId : chatIds) {
@@ -75,10 +74,10 @@ public class TelegramChatGateway implements ChatGateway {
     }
 
     private String generateText(List<DownloadableContentInfo> found) {
-        val textBuilder = new StringBuilder("Выберите контент для добавления в список: \n\n");
+        var textBuilder = new StringBuilder("Выберите контент для добавления в список: \n\n");
         for (int i = 0; i < found.size(); i++) {
-            val elem = found.get(i);
-            val readableSize = FileUtils.byteCountToDisplaySize(elem.getSize());
+            var elem = found.get(i);
+            var readableSize = FileUtils.byteCountToDisplaySize(elem.getSize());
             textBuilder.append("\t*%d*\\. %s\\. \n\\[Размер: `%s`, Скачан раз: `%d`\\]\n\n".formatted(i + 1, escapeMarkdown(elem.getTitle()), readableSize, elem.getStatistics().getDownloadedTimes()));
         }
         return textBuilder.toString();
@@ -106,9 +105,9 @@ public class TelegramChatGateway implements ChatGateway {
     }
 
     private ReplyKeyboard generateKeyboard(String buttonPrefix, List<DownloadableContentInfo> found) {
-        val keyboardBuilder = InlineKeyboardMarkup.builder();
+        var keyboardBuilder = InlineKeyboardMarkup.builder();
 
-        val size = found.size();
+        var size = found.size();
 
         for (int i = 0; i < size; i += 2) {
             var buttonRow = new ArrayList<InlineKeyboardButton>();
@@ -136,7 +135,7 @@ public class TelegramChatGateway implements ChatGateway {
 
     @Override
     public void sendMessage(@NonNull String chatId, @NonNull String notificationTemplate, @Nullable String... args) {
-        val msgArgs = MessageArgs.builder()
+        var msgArgs = MessageArgs.builder()
                 .chatId(chatId)
                 .messageTemplate(notificationTemplate)
                 .templateArgs(args == null ? null : List.of(args))
@@ -182,7 +181,7 @@ public class TelegramChatGateway implements ChatGateway {
             return appendImageIfNeeded(args, template);
         }
 
-        val escapedArgs = args.templateArgs()
+        var escapedArgs = args.templateArgs()
                 .stream()
                 .map(this::escapeMarkdown)
                 .toArray();

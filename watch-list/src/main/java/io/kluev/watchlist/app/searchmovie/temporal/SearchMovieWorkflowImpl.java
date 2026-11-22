@@ -1,7 +1,7 @@
 package io.kluev.watchlist.app.searchmovie.temporal;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 import io.kluev.watchlist.app.EnlistMovieRequest;
 import io.kluev.watchlist.app.EnlistMovieResponse;
 import io.kluev.watchlist.app.EnlistWatchedMovieRequest;
@@ -18,7 +18,6 @@ import io.temporal.spring.boot.WorkflowImpl;
 import io.temporal.workflow.Workflow;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 
 import java.net.URI;
 import java.time.Duration;
@@ -69,8 +68,8 @@ public class SearchMovieWorkflowImpl implements SearchMovieWorkflow {
                         "Invalid index", "InvalidIndex");
             }
 
-            val currentMovie = foundMovies.get(index);
-            val searchResultMessage = ChatGateway.MessageArgs.builder()
+            var currentMovie = foundMovies.get(index);
+            var searchResultMessage = ChatGateway.MessageArgs.builder()
                     .chatId(req.chatId())
                     .messageTemplate("%s")
                     .templateArgs(List.of(currentMovie.getFullName()))
@@ -144,7 +143,7 @@ public class SearchMovieWorkflowImpl implements SearchMovieWorkflow {
     private void addToWatchList(String initialMessageId,
                                 ExternalMovieDatabase.ExternalMovieDto movieDto,
                                 ChatMessageResponse responseMsg) {
-        val enlistRequest = EnlistMovieRequest.builder()
+        var enlistRequest = EnlistMovieRequest.builder()
                 .title(movieDto.name())
                 .foreignTitle(movieDto.enName())
                 .year(movieDto.year())
@@ -213,7 +212,7 @@ public class SearchMovieWorkflowImpl implements SearchMovieWorkflow {
     // TODO Move to Test
     @SneakyThrows
     private static List<ExternalMovieDatabase.ExternalMovieDto> mockResult() {
-        return new ObjectMapper().readValue("""
+        return new JsonMapper().readValue("""
                 [
                   {
                     "year": 1991,

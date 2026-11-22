@@ -1,7 +1,6 @@
 package io.kluev.watchlist.domain;
 
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -18,8 +17,8 @@ public class SimpleOffsetWatchDateStrategy implements WatchDateStrategy {
 
     @Override
     public LocalDate calculateWatchDate(Clock clock) {
-        val now = ZonedDateTime.now(clock);
-        val nowWithOffset = now.minusHours(offsetHours);
+        var now = ZonedDateTime.now(clock);
+        var nowWithOffset = now.minusHours(offsetHours);
         return nowWithOffset.toLocalDate();
     }
 }

@@ -1,8 +1,6 @@
 package io.kluev.watchlist.infra.jackett.dto;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import lombok.val;
+import tools.jackson.dataformat.xml.XmlMapper;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,9 +8,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RssUnmarshallingTest {
 
     @Test
-    public void should_parse_empty_result_ok() throws JsonProcessingException {
+    public void should_parse_empty_result_ok() {
         // given
-        val rawResp =
+        var rawResp =
                 """
                         <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:torznab="http://torznab.com/schemas/2015/feed">
                           <channel>
@@ -27,7 +25,7 @@ class RssUnmarshallingTest {
                 """;
 
         // when
-        val result = new XmlMapper().readValue(rawResp, Rss.class);
+        var result = new XmlMapper().readValue(rawResp, Rss.class);
 
         // then
         assertThat(result.getChannel().getItem()).isEmpty();

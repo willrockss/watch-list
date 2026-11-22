@@ -7,8 +7,8 @@ public class EnlistMovieVirtualObjectServiceDefinitionFactory implements dev.res
     public dev.restate.sdk.endpoint.definition.ServiceDefinition create(io.kluev.watchlist.app.addmovie.EnlistMovieVirtualObject bindableService, dev.restate.sdk.endpoint.definition.HandlerRunner.Options overrideHandlerOptions) {
         dev.restate.sdk.HandlerRunner.Options handlerRunnerOptions = dev.restate.sdk.HandlerRunner.Options.DEFAULT;
         if (overrideHandlerOptions != null) {
-            if (overrideHandlerOptions instanceof dev.restate.sdk.HandlerRunner.Options) {
-                handlerRunnerOptions = (dev.restate.sdk.HandlerRunner.Options)overrideHandlerOptions;
+            if (overrideHandlerOptions instanceof dev.restate.sdk.HandlerRunner.Options options) {
+                handlerRunnerOptions = options;
             } else {
                 throw new IllegalArgumentException("The provided options class MUST be instance of dev.restate.sdk.HandlerRunner.Options, but was " + overrideHandlerOptions.getClass());
             }

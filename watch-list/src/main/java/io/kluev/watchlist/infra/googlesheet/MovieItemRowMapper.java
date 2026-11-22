@@ -4,7 +4,6 @@ import io.kluev.watchlist.domain.MovieItem;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 
 import java.util.List;
 
@@ -42,18 +41,18 @@ public class MovieItemRowMapper {
     }
 
     public MovieItem toMovieItemOrNull() {
-        val fullTitle = getFullTitleOrNull();
+        var fullTitle = getFullTitleOrNull();
         if (fullTitle == null) {
             log.warn("Unable to parse title from {}. Skip", row);
             return null;
         }
-        val externalId = getExternalIdOrNull();
+        var externalId = getExternalIdOrNull();
         if (externalId == null) {
             log.warn("Unable to parse externalId from {}. Skip", row);
             return null;
         }
-        val status = getStatusOrNull();
-        val path = getFilePathOrNull();
+        var status = getStatusOrNull();
+        var path = getFilePathOrNull();
         return MovieItem.builder()
                 .fullTitle(fullTitle)
                 .externalId(externalId)

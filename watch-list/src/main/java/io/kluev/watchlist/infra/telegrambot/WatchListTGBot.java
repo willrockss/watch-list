@@ -7,7 +7,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
@@ -59,8 +58,8 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
 
     private boolean isSenderAllowed(@NonNull Message message) {
         if (message.getFrom() != null && StringUtils.isNotBlank(message.getFrom().getUserName())) {
-            val username = message.getFrom().getUserName();
-            val isAllowed = allowedUsers.contains(username);
+            var username = message.getFrom().getUserName();
+            var isAllowed = allowedUsers.contains(username);
             if (!isAllowed) {
                 log.debug("User {} is not allowed. Ignore", username);
             }
@@ -72,8 +71,8 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
     @SneakyThrows
     private void processCallback(Update update) {
         String callData = update.getCallbackQuery().getData();
-        val initialMessage = update.getCallbackQuery().getMessage();
-        val username = update.getCallbackQuery().getFrom().getUserName();
+        var initialMessage = update.getCallbackQuery().getMessage();
+        var username = update.getCallbackQuery().getFrom().getUserName();
         String chatId = String.valueOf(initialMessage.getChatId());
 
         answerCallbackQuery(update.getCallbackQuery().getId());
@@ -110,7 +109,7 @@ public class WatchListTGBot implements SpringLongPollingBot, LongPollingSingleTh
     }
 
     private void answerCallbackQuery(String callbackQueryId) {
-        val answerCallbackQuery = AnswerCallbackQuery
+        var answerCallbackQuery = AnswerCallbackQuery
                 .builder()
                 .callbackQueryId(callbackQueryId)
                 .text("Обрабатывается...")

@@ -3,6 +3,7 @@ package io.kluev.watchlist.infra.config.props;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.ColNumber;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.RowNumber;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -45,6 +46,7 @@ public class GoogleSheetProperties {
 
     @Data
     public static class BaseSheetProperties {
+        @Valid
         private SheetRange headerRange;
         private Map<String, String> columnsMapping;
 
@@ -63,9 +65,13 @@ public class GoogleSheetProperties {
         private static final Pattern CELL_PATTERN = Pattern.compile("^R(\\d+)C(\\d+)$");
 
         private final String sheetName;
+        @Valid
         private final RowNumber fromRow;
+        @Valid
         private final ColNumber fromCol;
+        @Valid
         private final RowNumber toRow;
+        @Valid
         private final ColNumber toCol;
 
         public SheetRange(String rawValue) {
@@ -87,7 +93,7 @@ public class GoogleSheetProperties {
             this.toCol = ColNumber.of(to[1]);
         }
 
-        public SheetRange changeRowsInterval(RowNumber fromRowNumber, RowNumber toRowNumber) {
+        public SheetRange changeRowsInterval(@Valid RowNumber fromRowNumber, @Valid RowNumber toRowNumber) {
             return this.toBuilder()
                     .fromRow(fromRowNumber)
                     .toRow(toRowNumber)

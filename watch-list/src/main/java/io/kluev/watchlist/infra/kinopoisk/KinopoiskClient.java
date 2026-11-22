@@ -1,13 +1,12 @@
 package io.kluev.watchlist.infra.kinopoisk;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.kluev.watchlist.app.ExternalMovieDatabase;
 import io.kluev.watchlist.infra.kinopoisk.dto.Film;
 import io.kluev.watchlist.infra.kinopoisk.dto.FilmSearchResult;
 import io.kluev.watchlist.infra.kinopoisk.dto.GetFilmResult;
 import lombok.SneakyThrows;
-import lombok.val;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -28,8 +27,7 @@ public class KinopoiskClient implements ExternalMovieDatabase {
     private final String apiKey;
     private final HttpClient httpClient;
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private final ObjectMapper objectMapper = new JsonMapper();
 
     // TODO limit cache or use Spring Cache
     private final Map<String, ExternalMovieDto> cache = new HashMap<>();
@@ -41,16 +39,16 @@ public class KinopoiskClient implements ExternalMovieDatabase {
 
     public List<Film> findRaw(String query) throws Exception {
         // For some reason in Uppers case results are more correct. Try search "изгой" vs "ИЗГОЙ"
-        val encodedQuery = URLEncoder.encode(query.toUpperCase(), Charset.defaultCharset());
-        val uri = new URI("https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword?page=1&keyword=" + encodedQuery);
-        val req = HttpRequest
+        var encodedQuery = URLEncoder.encode(query.toUpperCase(), Charset.defaultCharset());
+        var uri = new URI("https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword?page=1&keyword=" + encodedQuery);
+        var req = HttpRequest
                 .newBuilder(uri)
                 .GET()
                 .setHeader("X-API-KEY", apiKey)
                 .setHeader("Content-Type", "application/json")
                 .build();
         String respBody = httpClient.send(req, HttpResponse.BodyHandlers.ofString()).body();
-        val films = objectMapper.readValue(respBody, FilmSearchResult.class).getFilms();
+        var films = objectMapper.readValue(respBody, FilmSearchResult.class).getFilms();
         if (films == null) {
             return List.of();
         }
@@ -71,12 +69,12 @@ public class KinopoiskClient implements ExternalMovieDatabase {
     @SneakyThrows
     @Override
     public Optional<ExternalMovieDto> getByExternalId(String externalId) {
-        val cachedValue = cache.get(externalId);
+        var cachedValue = cache.get(externalId);
         if (cachedValue != null) {
             return Optional.of(cachedValue);
         }
-        val req = HttpRequest.newBuilder(
-            new URI("https://kinopoiskapiunofficial.tech/api/v2.1/films/" + externalId))
+        var req = HttpRequest.newBuilder(
+                new URI("https://kinopoiskapiunofficial.tech/api/v2.1/films/" + externalId))
                 .GET()
                 .setHeader("X-API-KEY", apiKey)
                 .setHeader("Content-Type", "application/json")

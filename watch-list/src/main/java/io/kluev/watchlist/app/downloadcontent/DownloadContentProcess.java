@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.util.Assert;
 
 import java.time.OffsetDateTime;
@@ -34,7 +33,7 @@ public class DownloadContentProcess {
     private OffsetDateTime nextRunAfter;
 
     public void enqueuePaused(QBitClient client) {
-        val enqueuedPaused = client.addTorrPaused(getTorrFilePath(), getContentItemIdentity());
+        var enqueuedPaused = client.addTorrPaused(getTorrFilePath(), getContentItemIdentity());
 
         status = DownloadContentProcessStatus.PAUSED;
         torrInfoHash = Objects.requireNonNull(enqueuedPaused.infoHash(), () -> "hash should not be null in" + enqueuedPaused);
@@ -44,7 +43,7 @@ public class DownloadContentProcess {
     }
 
     public void start(QBitClient client) {
-        val paused = client.findByIdTagOrNull(getContentItemIdentity());
+        var paused = client.findByIdTagOrNull(getContentItemIdentity());
         // TODO change status to ERROR instead of throwing exception
         Assert.notNull(paused, "Unable to find paused torr " + getContentItemIdentity());
 
@@ -57,7 +56,7 @@ public class DownloadContentProcess {
     }
 
     public boolean checkFinished(QBitClient qBitClient) {
-        val torr = qBitClient.findByIdTagOrNull(getContentItemIdentity());
+        var torr = qBitClient.findByIdTagOrNull(getContentItemIdentity());
         if (torr == null) {
             // TODO count that type of errors in the context and after sine threshold mark download as failed
             log.warn("Unable to find downloading torr by {}", getContentItemIdentity());

@@ -12,7 +12,6 @@ import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDbRecord;
 import io.kluev.watchlist.infra.downloadcontent.DownloadContentTaskDbRecordRowMapper;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;
-import lombok.val;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -31,9 +30,9 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.Trigger;
 import org.springframework.test.util.AopTestUtils;
 import org.springframework.util.unit.DataSize;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.lang.reflect.Field;
 import java.time.Duration;
@@ -70,7 +69,7 @@ class DownloadProcessCoordinatorIntegrationTest {
 
     @Container
     @ServiceConnection
-    static PostgreSQLContainer<?> postgreSQL = new PostgreSQLContainer<>("postgres:14");
+    static PostgreSQLContainer postgreSQL = new PostgreSQLContainer("postgres:14");
 
     private static final String TORR_HASH = "0123456789abcdef0123456789abcdef01234567";
     private static final String CONTENT_PATH = "/downloads/movie";
@@ -122,7 +121,7 @@ class DownloadProcessCoordinatorIntegrationTest {
                 MovieItem.create("Movie A", "Movie A", 2024, "kinopoisk-t010"),
                 "/tmp/t010.torrent"));
 
-        val record = awaitRow("kinopoisk-t010");
+        var record = awaitRow("kinopoisk-t010");
 
         assertThat(record.status()).isEqualTo(INITIAL.name());
         assertThat(record.contentItemIdentity()).isEqualTo("kinopoisk-t010");
@@ -135,7 +134,7 @@ class DownloadProcessCoordinatorIntegrationTest {
 
         coordinator.tick();
 
-        val record = dbRow("kinopoisk-t011");
+        var record = dbRow("kinopoisk-t011");
         assertThat(record.status()).isEqualTo(PROCESSING.name());
         assertThat(record.torrInfoHash()).isEqualTo(TORR_HASH);
         assertThat(record.contentPath()).isEqualTo(CONTENT_PATH);
@@ -153,7 +152,7 @@ class DownloadProcessCoordinatorIntegrationTest {
 
         coordinator.tick();
 
-        val record = dbRow("kinopoisk-t020");
+        var record = dbRow("kinopoisk-t020");
         assertThat(record.status()).isEqualTo(PAUSED.name());
         assertThat(record.torrInfoHash()).isEqualTo(TORR_HASH);
         assertThat(record.contentPath()).isEqualTo(CONTENT_PATH);
@@ -170,7 +169,7 @@ class DownloadProcessCoordinatorIntegrationTest {
 
         coordinator.tick();
 
-        val record = dbRow("kinopoisk-t021");
+        var record = dbRow("kinopoisk-t021");
         assertThat(record.status()).isEqualTo(PAUSED.name());
         assertThat(record.torrInfoHash()).isEqualTo(TORR_HASH);
         verify(qBitClient).addTorrPaused(anyString(), any(ContentItemIdentity.class));
@@ -182,12 +181,12 @@ class DownloadProcessCoordinatorIntegrationTest {
     void pausedProcess_withFailingGate_secondTickStaysPausedWithoutReEnqueueOrRelog() {
         when(qBitClient.getFreeSpaceOnDisk()).thenReturn(DataSize.ofGigabytes(1));
         save(process("kinopoisk-t022"));
-        val logs = attachCoordinatorLogs();
+        var logs = attachCoordinatorLogs();
 
         coordinator.tick();
         coordinator.tick();
 
-        val record = dbRow("kinopoisk-t022");
+        var record = dbRow("kinopoisk-t022");
         assertThat(record.status()).isEqualTo(PAUSED.name());
         verify(qBitClient, times(1)).addTorrPaused(anyString(), any(ContentItemIdentity.class));
         verify(qBitClient, never()).start(any(EnqueuedTorr.class));
@@ -204,7 +203,7 @@ class DownloadProcessCoordinatorIntegrationTest {
 
         coordinator.tick();
 
-        val record = dbRow("kinopoisk-t023");
+        var record = dbRow("kinopoisk-t023");
         assertThat(record.status()).isEqualTo(PAUSED.name());
         verify(qBitClient, never()).start(any(EnqueuedTorr.class));
     }
@@ -216,7 +215,7 @@ class DownloadProcessCoordinatorIntegrationTest {
 
         coordinator.tick();
 
-        val record = dbRow("kinopoisk-t024");
+        var record = dbRow("kinopoisk-t024");
         assertThat(record.status()).isEqualTo(INITIAL.name());
         verify(qBitClient, never()).addTorrPaused(anyString(), any(ContentItemIdentity.class));
         verify(qBitClient, never()).start(any(EnqueuedTorr.class));
@@ -276,7 +275,7 @@ class DownloadProcessCoordinatorIntegrationTest {
 
     private DownloadContentProcessDbRecord awaitRow(String identity) throws InterruptedException {
         for (int i = 0; i < 100; i++) {
-            val row = jdbcClient.sql("SELECT * FROM download_content_process WHERE content_item_identity = :identity")
+            var row = jdbcClient.sql("SELECT * FROM download_content_process WHERE content_item_identity = :identity")
                     .param("identity", identity)
                     .query(DownloadContentTaskDbRecordRowMapper.INSTANCE)
                     .optional();
@@ -289,9 +288,9 @@ class DownloadProcessCoordinatorIntegrationTest {
     }
 
     private ListAppender<ILoggingEvent> attachCoordinatorLogs() {
-        val logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(DownloadProcessCoordinator.class);
+        var logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(DownloadProcessCoordinator.class);
         logger.setLevel(ch.qos.logback.classic.Level.DEBUG);
-        val appender = new ListAppender<ILoggingEvent>();
+        var appender = new ListAppender<ILoggingEvent>();
         appender.start();
         logger.addAppender(appender);
         logAppenders.put(logger, appender);
@@ -299,7 +298,7 @@ class DownloadProcessCoordinatorIntegrationTest {
     }
 
     private void resetCoordinatorCache() {
-        val target = AopTestUtils.getUltimateTargetObject(coordinator);
+        var target = AopTestUtils.getUltimateTargetObject(coordinator);
         try {
             Field cacheField = DownloadProcessCoordinator.class.getDeclaredField("activeProcessesCache");
             cacheField.setAccessible(true);

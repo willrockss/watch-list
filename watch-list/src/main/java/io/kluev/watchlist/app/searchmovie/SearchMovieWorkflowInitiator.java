@@ -4,7 +4,6 @@ import dev.restate.client.Client;
 import io.kluev.watchlist.app.chat.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
@@ -21,14 +20,14 @@ public class SearchMovieWorkflowInitiator {
     @Order(Integer.MAX_VALUE - 1000)
     @EventListener(ChatMessage.class)
     public void listenUnprocessedChatMessage(ChatMessage msg) {
-        val chatId = msg.chatId();
-        val msgId = msg.id();
+        var chatId = msg.chatId();
+        var msgId = msg.id();
 
-        val wfId = "%s-%s-%s".formatted(msg.source(), chatId, msgId);
-        val wfClient = SearchMovieWorkflowClient.fromClient(restateClient, wfId);
+        var wfId = "%s-%s-%s".formatted(msg.source(), chatId, msgId);
+        var wfClient = SearchMovieWorkflowClient.fromClient(restateClient, wfId);
 
-        val searchRequest = new SearchMovieRequest(chatId, msgId, msg.text());
-        val invId = wfClient.submit(searchRequest).invocationId();
+        var searchRequest = new SearchMovieRequest(chatId, msgId, msg.text());
+        var invId = wfClient.submit(searchRequest).invocationId();
         log.info("SearchWorkflow(invocationId={}) was successfully started.", invId);
     }
 }

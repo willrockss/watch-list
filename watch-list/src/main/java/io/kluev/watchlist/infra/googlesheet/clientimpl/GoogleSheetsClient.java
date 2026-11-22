@@ -22,7 +22,6 @@ import jakarta.annotation.Nullable;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.util.Assert;
 
@@ -66,9 +65,9 @@ public class GoogleSheetsClient {
 
     private void init() throws IOException {
         for (Map.Entry<String, GoogleSheetProperties.BaseSheetProperties> sheetPropBySheetCode : properties.getSheets().entrySet()) {
-            val sheetCode= sheetPropBySheetCode.getKey();
-            val sheetProps = sheetPropBySheetCode.getValue();
-            val colNumberByCode = initSheetColumnMapping(sheetProps);
+            var sheetCode = sheetPropBySheetCode.getKey();
+            var sheetProps = sheetPropBySheetCode.getValue();
+            var colNumberByCode = initSheetColumnMapping(sheetProps);
             colNumberByCodeBySheet.put(sheetCode, colNumberByCode);
             sheetNameByCode.put(sheetCode, sheetProps.getSheetName());
         }
@@ -79,11 +78,11 @@ public class GoogleSheetsClient {
     }
 
     private Map<String, Integer> initSheetColumnMapping(GoogleSheetProperties.BaseSheetProperties sheetProps) throws IOException {
-        val colNumberByCode = new HashMap<String, Integer>();
-        val result = service.spreadsheets().values().get(properties.getSpreadsheetId(), sheetProps.getHeaderRange().asString()).execute();
-        val line = result.getValues().getFirst();
+        var colNumberByCode = new HashMap<String, Integer>();
+        var result = service.spreadsheets().values().get(properties.getSpreadsheetId(), sheetProps.getHeaderRange().asString()).execute();
+        var line = result.getValues().getFirst();
         for (int i = 0; i < line.size(); i++) {
-            val value = line.get(i);
+            var value = line.get(i);
             for (Map.Entry<String, String> entry : sheetProps.getColumnsMapping().entrySet()) {
                 if (Objects.equals(value, entry.getValue()))  {
                     colNumberByCode.put(entry.getKey(), i + 1);
@@ -98,25 +97,25 @@ public class GoogleSheetsClient {
      * @return rowNumber (1-based) of found row or {@code null} is nothing found
      */
     public RowNumber findRow(FindRowByValues command) {
-        val sheetProp = properties.getSheets().get(command.getSheetCode());
+        var sheetProp = properties.getSheets().get(command.getSheetCode());
         int rowOffset = 2; // Index to Number + Header row
         // TODO add page iteration, for now look at first page only
         GoogleSheetProperties.SheetRange range = sheetProp
                 .getHeaderRange()
                 .changeRowsInterval(RowNumber.of(rowOffset), RowNumber.of(rowOffset + PAGE_SIZE));
-        val fullRange = range.asString();
+        var fullRange = range.asString();
         try {
-            val result = service.spreadsheets().values().get(properties.getSpreadsheetId(), fullRange).execute();
-            val values = result.getValues();
+            var result = service.spreadsheets().values().get(properties.getSpreadsheetId(), fullRange).execute();
+            var values = result.getValues();
             if (values == null) {
                 return null;
             }
-            val colMapping = colNumberByCodeBySheet.get(command.getSheetCode());
+            var colMapping = colNumberByCodeBySheet.get(command.getSheetCode());
             for (int i = 0; i < values.size(); i++) {
-                val row = values.get(i);
+                var row = values.get(i);
                 boolean allMatched = true;
                 for (RowCellValue expectedValue : command.getValues()) {
-                    val colNumber = colMapping.get(expectedValue.columnCode());
+                    var colNumber = colMapping.get(expectedValue.columnCode());
                     Assert.notNull(colNumber, "column number is not configured for code " + expectedValue.columnCode());
                     if (!Objects.equals(row.get(colNumber - 1), expectedValue.value())) {
                         allMatched = false;
@@ -152,7 +151,7 @@ public class GoogleSheetsClient {
         ));
 
         try {
-            val resp = service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
+            var resp = service.spreadsheets().batchUpdate(properties.getSpreadsheetId(), request).execute();
             return !resp.isEmpty();
         } catch (IOException e) {
             throw new RuntimeException("Unable to execute " + command, e);
@@ -160,7 +159,7 @@ public class GoogleSheetsClient {
     }
 
     public boolean cutInsertWithUpdate(CutInsertWithUpdateRowCommand command) {
-        val reqList = new ArrayList<Request>();
+        var reqList = new ArrayList<Request>();
         reqList.add(
                 new Request()
                 .setInsertDimension(new InsertDimensionRequest()
@@ -219,20 +218,20 @@ public class GoogleSheetsClient {
         }
 
         // TODO Group by adjacent cell
-        val result = new ArrayList<Request>();
-        val sheetId = getSheetIdByCode(command.getSheetCodeInsertInto());
-        val rowIndex = command.getInsertRowNumber().toRowIndex();
+        var result = new ArrayList<Request>();
+        var sheetId = getSheetIdByCode(command.getSheetCodeInsertInto());
+        var rowIndex = command.getInsertRowNumber().toRowIndex();
 
         Map<String, Integer> colNumberByCode = requireNonNull(colNumberByCodeBySheet.get(command.getSheetCodeInsertInto()),
                 () -> "Column mapping is not defined for sheet [" + command.getSheetCodeInsertInto() + "]");
 
         for (Map.Entry<String, Object> colCodeValuePair : command.getUpdatedFields().entrySet()) {
-           val colCode = colCodeValuePair.getKey();
-           val colNumber = requireNonNull(colNumberByCode.get(colCode),
-                   () -> "columnNumber mapping is not specified for column " +
-                           "[" + colCode + "] for sheet [" + command.getSheetCodeInsertInto() + "]");
-           val colIndex = colNumber - 1;
-           val value = colCodeValuePair.getValue();
+            var colCode = colCodeValuePair.getKey();
+            var colNumber = requireNonNull(colNumberByCode.get(colCode),
+                    () -> "columnNumber mapping is not specified for column " +
+                            "[" + colCode + "] for sheet [" + command.getSheetCodeInsertInto() + "]");
+            var colIndex = colNumber - 1;
+            var value = colCodeValuePair.getValue();
            result.add(generateUpdateRequestForSingleValue(sheetId, rowIndex, colIndex, value));
         }
         return result;
@@ -276,7 +275,7 @@ public class GoogleSheetsClient {
             default -> extVal.setStringValue(value.toString());
         }
 
-        val cellData = new CellData().setUserEnteredValue(extVal);
+        var cellData = new CellData().setUserEnteredValue(extVal);
 
         if (value instanceof LocalDate) {
             cellData.setUserEnteredFormat(DATE_CELL_FORMAT);
@@ -289,8 +288,8 @@ public class GoogleSheetsClient {
         if (sheetIdByCode.isEmpty()) {
             Spreadsheet spreadsheet = service.spreadsheets().get(properties.getSpreadsheetId()).execute();
             for (Sheet sheet : spreadsheet.getSheets()) {
-                val props = requireNonNull(sheet.getProperties(), () -> "Properties is null for " + sheet);
-                val code = this.sheetCodeByName.get(props.getTitle());
+                var props = requireNonNull(sheet.getProperties(), () -> "Properties is null for " + sheet);
+                var code = this.sheetCodeByName.get(props.getTitle());
                 sheetIdByCode.put(code, props.getSheetId());
             }
         }
@@ -298,7 +297,7 @@ public class GoogleSheetsClient {
     }
 
     private static CellFormat getDateStrCellFormat() {
-        val cellFormat = new CellFormat();
+        var cellFormat = new CellFormat();
         cellFormat.setHorizontalAlignment("RIGHT");
         return cellFormat;
     }

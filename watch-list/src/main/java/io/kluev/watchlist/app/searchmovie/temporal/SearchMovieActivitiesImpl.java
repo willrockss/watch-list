@@ -14,7 +14,6 @@ import io.kluev.watchlist.domain.event.MovieEnlisted;
 import io.temporal.spring.boot.ActivityImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -50,14 +49,14 @@ public class SearchMovieActivitiesImpl implements SearchMovieActivities {
 
     @Override
     public void sendSimpleChatMessage(String chatId, String messageTemplate, Object... args) {
-        val stringArgs = Arrays.stream(args).map(String::valueOf).toArray(String[]::new);
+        var stringArgs = Arrays.stream(args).map(String::valueOf).toArray(String[]::new);
         chatGateway.sendMessage(chatId, messageTemplate, stringArgs);
     }
 
     @Override
     public EnlistMovieResponse addToWatchList(EnlistMovieRequest request) {
-        val movie = createMovieItemByRequest(request);
-        val absent = movieRepository.getWatchList()
+        var movie = createMovieItemByRequest(request);
+        var absent = movieRepository.getWatchList()
                 .stream()
                 .noneMatch(it -> Objects.equals(it.getExternalId(), movie.getExternalId()));
         if (absent) {

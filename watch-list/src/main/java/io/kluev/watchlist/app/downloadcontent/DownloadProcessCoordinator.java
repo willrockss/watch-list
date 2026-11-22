@@ -9,7 +9,6 @@ import io.kluev.watchlist.infra.config.props.DownloadProperties;
 import io.kluev.watchlist.infra.downloadcontent.DownloadContentProcessDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -43,7 +42,7 @@ public class DownloadProcessCoordinator {
     @EventListener(ContentSelectedForDownload.class)
     public void handle(ContentSelectedForDownload event) {
         log.info("Going to create download process for {}", event.movieItem());
-        val process = DownloadContentProcess
+        var process = DownloadContentProcess
                 .builder()
                 .contentItemIdentity(new ContentItemIdentity(event.movieItem().getExternalId()))
                 .torrFilePath(event.torrFilename())
@@ -72,8 +71,8 @@ public class DownloadProcessCoordinator {
 
         enqueueNewAsPaused();
 
-        val process = activeProcessesCache.getFirst();
-        val status = process.getStatus();
+        var process = activeProcessesCache.getFirst();
+        var status = process.getStatus();
         switch (status) {
             case INITIAL -> {
                 if (insufficientDiskSpace) {
@@ -124,7 +123,7 @@ public class DownloadProcessCoordinator {
             }
             case PROCESSING -> {
                 log.info("Handle processing process {}", process);
-                val finished = process.checkFinished(qBitClient);
+                var finished = process.checkFinished(qBitClient);
                 if (finished) {
                     downloadContentProcessDao.save(process);
                     eventPublisher.publishEvent(new ContentItemDownloadFinishedEvent(process.getContentItemIdentity()));
@@ -164,14 +163,14 @@ public class DownloadProcessCoordinator {
     }
 
     private void refreshProcessesCacheIfRequired() {
-        val needToReloadCache = nextCacheUpdateAfterTimestampMillis < System.currentTimeMillis();
+        var needToReloadCache = nextCacheUpdateAfterTimestampMillis < System.currentTimeMillis();
         if (!needToReloadCache) {
             log.debug("Cache is ok. Do nothing");
             return;
         }
 
         nextCacheUpdateAfterTimestampMillis = System.currentTimeMillis() + CACHE_TTL_MILLIS;
-        val wasEmpty = activeProcessesCache.isEmpty();
+        var wasEmpty = activeProcessesCache.isEmpty();
 
         activeProcessesCache.clear();
         activeProcessesCache.addAll(downloadContentProcessDao.getActive());

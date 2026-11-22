@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -31,7 +30,7 @@ public class Series {
     private int lastWatchedEpisodeNumber;
 
     public boolean markEpisodeWatched(String episodeFilename) {
-        val episode = episodes
+        var episode = episodes
                 .stream()
                 .filter(it -> it.canHaveSameFilename(episodeFilename))
                 .findFirst()

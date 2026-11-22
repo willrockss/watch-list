@@ -12,7 +12,6 @@ import io.kluev.watchlist.infra.googlesheet.clientimpl.RowCellValue;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.RowNumber;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.util.Assert;
 
 import java.util.List;
@@ -41,7 +40,7 @@ public class GoogleSheetsSeriesRepository implements SeriesRepository {
 
     @Override
     public void save(Series series) {
-        val seasonWatchedEvent = (SeasonWatched) series.getEvents()
+        var seasonWatchedEvent = (SeasonWatched) series.getEvents()
                 .stream()
                 .filter(it -> it instanceof SeasonWatched)
                 .findFirst()

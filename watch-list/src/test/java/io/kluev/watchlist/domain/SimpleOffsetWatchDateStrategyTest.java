@@ -1,6 +1,5 @@
 package io.kluev.watchlist.domain;
 
-import lombok.val;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -27,8 +26,8 @@ class SimpleOffsetWatchDateStrategyTest {
     @ParameterizedTest
     @MethodSource("data")
     public void should_calculate_watch_date(ZonedDateTime now, LocalDate expectedWatchDate) {
-        val sut = new SimpleOffsetWatchDateStrategy(3);
-        val calculatedWatchDate = sut.calculateWatchDate(Clock.fixed(now.toInstant(), now.getZone()));
+        var sut = new SimpleOffsetWatchDateStrategy(3);
+        var calculatedWatchDate = sut.calculateWatchDate(Clock.fixed(now.toInstant(), now.getZone()));
         Assertions.assertThat(expectedWatchDate).isEqualTo(calculatedWatchDate);
     }
 

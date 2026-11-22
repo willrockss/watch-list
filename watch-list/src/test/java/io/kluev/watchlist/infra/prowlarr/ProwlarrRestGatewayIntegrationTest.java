@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.infra.config.props.ProwlarrProperties;
 import lombok.SneakyThrows;
-import lombok.val;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -18,7 +17,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.client.RestClient;
 
 import java.nio.charset.StandardCharsets;
-import java.util.function.Predicate;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -89,17 +87,17 @@ class ProwlarrRestGatewayIntegrationTest {
         );
 
         // when
-        val result = sut.query("terminator");
+        var result = sut.query("terminator");
 
         // then
         assertThat(result).hasSize(2);
 
-        val first = result.get(0);
+        var first = result.get(0);
         assertThat(first.getGuid()).isEqualTo("rutracker.org/t=6376416");
         assertThat(first.getTitle()).startsWith("Terminator 2: Judgment Day");
         assertThat(first.getLink()).contains("/4/download?apikey=test-api-key&torrent=ttt");
 
-        val second = result.get(1);
+        var second = result.get(1);
         assertThat(second.getLink()).startsWith("magnet:?");
         assertThat(second.getSize()).isEqualTo(19716241408L);
         assertThat(second.getStatistics().getSeeders()).isEqualTo(57);
@@ -120,7 +118,7 @@ class ProwlarrRestGatewayIntegrationTest {
         );
 
         // when
-        val result = sut.query("terminator", info -> info.getSize() > 1024 * 1024);
+        var result = sut.query("terminator", info -> info.getSize() > 1024 * 1024);
 
         // then
         assertThat(result).hasSize(1);
@@ -131,7 +129,7 @@ class ProwlarrRestGatewayIntegrationTest {
     @Test
     public void should_download_file_and_use_content_disposition_filename() {
         // given
-        val torrentBytes = "fake-torrent-content".getBytes(StandardCharsets.UTF_8);
+        var torrentBytes = "fake-torrent-content".getBytes(StandardCharsets.UTF_8);
         wm.stubFor(get(urlPathEqualTo("/4/download"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -139,14 +137,14 @@ class ProwlarrRestGatewayIntegrationTest {
                         .withHeader("Content-Disposition", "attachment; filename=\"Terminator%202%20%5B1991%5D.torrent\"")
                         .withBody(torrentBytes))
         );
-        val contentInfo = DownloadableContentInfo.builder()
+        var contentInfo = DownloadableContentInfo.builder()
                 .guid("g1")
                 .title("Terminator 2: Judgment Day [1991]")
                 .link("http://localhost:" + wm.getPort() + "/4/download?apikey=test-api-key&torrent=ttt")
                 .build();
 
         // when
-        val result = sut.download(contentInfo);
+        var result = sut.download(contentInfo);
 
         // then
         assertThat(result.filename()).isEqualTo("Terminator_2_[1991].torrent");
@@ -159,21 +157,21 @@ class ProwlarrRestGatewayIntegrationTest {
     @Test
     public void should_derive_filename_from_title_when_content_disposition_missing() {
         // given
-        val torrentBytes = "fake-torrent-content".getBytes(StandardCharsets.UTF_8);
+        var torrentBytes = "fake-torrent-content".getBytes(StandardCharsets.UTF_8);
         wm.stubFor(get(urlPathEqualTo("/4/download"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/x-bittorrent")
                         .withBody(torrentBytes))
         );
-        val contentInfo = DownloadableContentInfo.builder()
+        var contentInfo = DownloadableContentInfo.builder()
                 .guid("g1")
                 .title("Terminator 2: Judgment Day [1991]")
                 .link("http://localhost:" + wm.getPort() + "/4/download?apikey=test-api-key")
                 .build();
 
         // when
-        val result = sut.download(contentInfo);
+        var result = sut.download(contentInfo);
 
         // then
         assertThat(result.filename()).isEqualTo("Terminator_2_Judgment_Day_[1991].torrent");
@@ -184,7 +182,7 @@ class ProwlarrRestGatewayIntegrationTest {
     public void should_fail_when_body_is_empty() {
         // given
         wm.stubFor(get(urlPathEqualTo("/4/download")).willReturn(ok()));
-        val contentInfo = DownloadableContentInfo.builder()
+        var contentInfo = DownloadableContentInfo.builder()
                 .guid("g1")
                 .title("Terminator 2")
                 .link("http://localhost:" + wm.getPort() + "/4/download")

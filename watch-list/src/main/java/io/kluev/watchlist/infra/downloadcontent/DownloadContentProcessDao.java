@@ -5,7 +5,6 @@ import io.kluev.watchlist.app.downloadcontent.DownloadContentProcess;
 import io.kluev.watchlist.app.downloadcontent.DownloadContentProcessStatus;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,8 +43,8 @@ public class DownloadContentProcessDao {
 
     @Transactional
     public boolean save(@NonNull DownloadContentProcess task) {
-        val rec = toDbRecord(task);
-        val isNew = rec.id() == null;
+        var rec = toDbRecord(task);
+        var isNew = rec.id() == null;
         if (isNew) {
             return jdbcClient
                     .sql(INSERT_PROCESS_SQL)

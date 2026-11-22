@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import io.kluev.watchlist.infra.telegrambot.TelegramSessionStore;
-import lombok.val;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -78,7 +77,7 @@ class PlayHandlerRestClientIntegrationTest {
         wm.stubFor(post("/mock/play").willReturn(ok()));
 
         // when
-        val request = new PlayRequest("testId", "testPath", VideoType.MOVIE);
+        var request = new PlayRequest("testId", "testPath", VideoType.MOVIE);
         sut.handle(request);
 
         // then
@@ -92,7 +91,7 @@ class PlayHandlerRestClientIntegrationTest {
     public static class TestConfig {
         @Bean
         public RestTemplate restTemplate() {
-            val template = new RestTemplate();
+            var template = new RestTemplate();
             template.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
             return template;
         }

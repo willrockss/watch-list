@@ -9,7 +9,6 @@ import io.temporal.client.WorkflowExecutionAlreadyStarted;
 import io.temporal.client.WorkflowOptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
@@ -26,24 +25,24 @@ public class SearchMovieWorkflowInitiator {
     @Order(Integer.MAX_VALUE - 1000)
     @EventListener(ChatMessage.class)
     public void listenUnprocessedChatMessage(ChatMessage msg) {
-        val chatId = msg.chatId();
-        val msgId = msg.id();
+        var chatId = msg.chatId();
+        var msgId = msg.id();
 
-        val wfId = "%s-%s-%s".formatted(msg.source(), chatId, msgId);
-        val options = WorkflowOptions.newBuilder()
+        var wfId = "%s-%s-%s".formatted(msg.source(), chatId, msgId);
+        var options = WorkflowOptions.newBuilder()
                 .setWorkflowId(wfId)
                 .setTaskQueue(TemporalQueues.DEFAULT_WORKFLOW_QUEUE)
                 .setWorkflowIdReusePolicy(WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE_FAILED_ONLY)
                 .build();
-        val workflow = workflowClient.newWorkflowStub(SearchMovieWorkflow.class, options);
+        var workflow = workflowClient.newWorkflowStub(SearchMovieWorkflow.class, options);
 
-        val searchRequest = new SearchMovieRequest(chatId, msgId, msg.text());
+        var searchRequest = new SearchMovieRequest(chatId, msgId, msg.text());
         try {
-            val execution = WorkflowClient.start(workflow::run, searchRequest);
+            var execution = WorkflowClient.start(workflow::run, searchRequest);
             log.info("SearchWorkflow(workflowId={}, runId={}) was successfully started.",
                     wfId, execution.getRunId());
         } catch (WorkflowExecutionAlreadyStarted alreadyStarted) {
-            val execution = alreadyStarted.getExecution();
+            var execution = alreadyStarted.getExecution();
             log.info("SearchWorkflow(workflowId={}, runId={}) was successfully started earlier.",
                     wfId, execution.getRunId());
         }

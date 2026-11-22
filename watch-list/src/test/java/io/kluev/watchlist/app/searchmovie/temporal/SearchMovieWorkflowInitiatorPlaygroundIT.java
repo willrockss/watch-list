@@ -10,15 +10,14 @@ import io.temporal.client.WorkflowStub;
 import io.temporal.serviceclient.WorkflowServiceStubs;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions;
 import lombok.SneakyThrows;
-import lombok.val;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.ApplicationEventPublisher;
@@ -57,7 +56,7 @@ class SearchMovieWorkflowInitiatorPlaygroundIT {
     @Test
     @SneakyThrows
     public void should_start_temporal_workflow_on_chat_message() {
-        val msg = ChatMessage.builder()
+        var msg = ChatMessage.builder()
                 .source("Test")
                 .id("test-msg-1")
                 .username("tester")
@@ -67,7 +66,7 @@ class SearchMovieWorkflowInitiatorPlaygroundIT {
 
         eventPublisher.publishEvent(msg);
 
-        val wfId = "%s-%s-%s".formatted(msg.source(), msg.chatId(), msg.id());
+        var wfId = "%s-%s-%s".formatted(msg.source(), msg.chatId(), msg.id());
         WorkflowServiceStubs stubs = WorkflowServiceStubs.newServiceStubs(
                 WorkflowServiceStubsOptions.newBuilder()
                         .setTarget(TARGET)

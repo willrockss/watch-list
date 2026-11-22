@@ -1,7 +1,6 @@
 package io.kluev.watchlist.infra.telegrambot;
 
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +32,7 @@ public class PgTelegramSessionStore implements TelegramSessionStore {
     @Override
     @Transactional
     public void createOrUpdateSession(Update incomingUpdate) {
-        val msg = incomingUpdate.getMessage();
+        var msg = incomingUpdate.getMessage();
         jdbcClient
                 .sql(UPSERT_SESSION_SQL)
                 .params(msg.getFrom().getUserName(), msg.getChatId())
@@ -46,7 +45,7 @@ public class PgTelegramSessionStore implements TelegramSessionStore {
             return List.of();
         }
 
-        val recordsList = jdbcClient
+        var recordsList = jdbcClient
                 .sql(SELECT_CHATS_TEMPLATE_SQL)
                 .param("adminUsernames", admins)
                 .query()

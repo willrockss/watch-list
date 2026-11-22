@@ -54,7 +54,6 @@ import io.kluev.watchlist.infra.telegrambot.WatchListTGBot;
 import io.kluev.watchlist.infra.vkbot.VkChatGateway;
 import io.kluev.watchlist.infra.vkbot.WatchListVkBot;
 import io.micrometer.core.instrument.MeterRegistry;
-import lombok.val;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -62,7 +61,7 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.core5.util.Timeout;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
+import org.springframework.boot.micrometer.metrics.autoconfigure.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
@@ -102,7 +101,7 @@ public class MainBeansConfig {
     @Deprecated
     @Bean
     public RestTemplate restTemplate() {
-        val template = new RestTemplate();
+        var template = new RestTemplate();
         template.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
         return template;
     }
@@ -120,17 +119,17 @@ public class MainBeansConfig {
             RestClient.Builder builder,
             @Value("${rest-client.slow-endpoint.timeout:3m}") Duration timeoutValue
     ) {
-        val timeout = Timeout.of(timeoutValue);
-        val connectionConfig = ConnectionConfig.custom()
+        var timeout = Timeout.of(timeoutValue);
+        var connectionConfig = ConnectionConfig.custom()
                 .setConnectTimeout(timeout)
                 .setSocketTimeout(timeout)
                 .build();
 
-        val connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+        var connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
                 .setDefaultConnectionConfig(connectionConfig)
                 .build();
 
-        val requestConfig = RequestConfig.custom()
+        var requestConfig = RequestConfig.custom()
                 .setConnectionRequestTimeout(timeout)
                 .build();
 
@@ -148,11 +147,27 @@ public class MainBeansConfig {
      */
     @Bean
     public RestClient restClientChecker(RestClient.Builder builder) {
-        val factory = new HttpComponentsClientHttpRequestFactory();
-        factory.setConnectionRequestTimeout(Duration.ofSeconds(2));
-        factory.setConnectTimeout(Duration.ofSeconds(2));
+        var timeout = Timeout.ofSeconds(2);
+        var connectionConfig = ConnectionConfig.custom()
+                .setConnectTimeout(timeout)
+                .setSocketTimeout(timeout)
+                .build();
+
+        var connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+                .setDefaultConnectionConfig(connectionConfig)
+                .build();
+
+        var requestConfig = RequestConfig.custom()
+                .setConnectionRequestTimeout(timeout)
+                .build();
+
+        HttpClient httpClient = HttpClients.custom()
+                .setConnectionManager(connectionManager)
+                .setDefaultRequestConfig(requestConfig)
+                .build();
+
         return builder
-                .requestFactory(factory)
+                .requestFactory(new HttpComponentsClientHttpRequestFactory(httpClient))
                 .build();
     }
 
@@ -216,8 +231,8 @@ public class MainBeansConfig {
 
     @Bean
     public RetryTemplate retryTemplate() {
-        val template = new RetryTemplate();
-        val backOff = new FixedBackOffPolicy();
+        var template = new RetryTemplate();
+        var backOff = new FixedBackOffPolicy();
         backOff.setBackOffPeriod(200);
         template.setBackOffPolicy(backOff);
         template.setRetryPolicy(new SimpleRetryPolicy(3, Map.of(IOException.class, true)));
@@ -400,13 +415,13 @@ public class MainBeansConfig {
             List<VideoItemWatchedSpecification> specs
 
     ) {
-        val specsMap = specs.stream().collect(Collectors.toMap(VideoItemWatchedSpecification::getVideoType, Function.identity()));
+        var specsMap = specs.stream().collect(Collectors.toMap(VideoItemWatchedSpecification::getVideoType, Function.identity()));
         return new ProgressHandlerV2(movieRepository, watchDateStrategy, clock, restClient, properties, lockService, seriesRepository, specsMap);
     }
 
     @Bean
     public ExecutorService virtualThreadExecutorService() {
-        val factory = Thread.ofVirtual().name("virtual-thread-", 0).factory();
+        var factory = Thread.ofVirtual().name("virtual-thread-", 0).factory();
         return Executors.newThreadPerTaskExecutor(factory);
     }
 

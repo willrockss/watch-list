@@ -8,7 +8,6 @@ import io.kluev.watchlist.domain.WatchDateStrategy;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.web.client.RestClient;
 
 import java.net.URLEncoder;
@@ -38,9 +37,9 @@ public class ProgressHandlerV2 {
     public ProgressResponse handle(ProgressRequestV2 request) {
         log.debug("Going to handle progress update {}", request);
 
-        val watchedSpec = getWatchedSpecification(request);
+        var watchedSpec = getWatchedSpecification(request);
         if (watchedSpec.isWatched(request.progress())) {
-            val lock = lockService.acquireLock(request.videoId());
+            var lock = lockService.acquireLock(request.videoId());
             if (lock == null) {
                 log.debug("Unable to acquire to acquire lock to update progress for {}", request.videoId());
                 return ProgressResponse.error("Episode update already in progress");
@@ -72,12 +71,12 @@ public class ProgressHandlerV2 {
     }
 
     private VideoItemWatchedSpecification getWatchedSpecification(ProgressRequestV2 req) {
-        val type = req.videoType();
-        val byTypeSpec = watchedSpecs.get(type);
+        var type = req.videoType();
+        var byTypeSpec = watchedSpecs.get(type);
         if (byTypeSpec != null) {
             return byTypeSpec;
         }
-        val defaultSpec = watchedSpecs.get(null);
+        var defaultSpec = watchedSpecs.get(null);
         if (defaultSpec != null) {
             return defaultSpec;
         }
@@ -85,12 +84,12 @@ public class ProgressHandlerV2 {
     }
 
     private String updateWatchedEpisode(ProgressRequestV2 request) {
-        val series = seriesRepository.getInProgressById(request.videoId()).orElse(null);
+        var series = seriesRepository.getInProgressById(request.videoId()).orElse(null);
         if (series == null) {
             return "Cannot find series by %s to mark episode as watched".formatted(request.videoId());
         }
 
-        val isSuccess = series.markEpisodeWatched(request.videoPath());
+        var isSuccess = series.markEpisodeWatched(request.videoPath());
         if (!isSuccess) {
             return "Cannot find episode to mark as watched or it's already marked as watched";
         }
@@ -109,8 +108,8 @@ public class ProgressHandlerV2 {
 
     private String sendNotification(ProgressRequestV2 request) {
         try {
-            val notificationTextParam = URLEncoder.encode(request.videoPath() + " should be marked as watched", StandardCharsets.UTF_8);
-            val resp = restClient
+            var notificationTextParam = URLEncoder.encode(request.videoPath() + " should be marked as watched", StandardCharsets.UTF_8);
+            var resp = restClient
                     .post()
                     .uri(properties.getUrl() + "/show-notification?text=" + notificationTextParam)
                     .retrieve()

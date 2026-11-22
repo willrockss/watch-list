@@ -1,7 +1,7 @@
 package io.kluev.watchlist.app.searchmovie;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 import dev.restate.sdk.ObjectContext;
 import dev.restate.sdk.SharedWorkflowContext;
 import dev.restate.sdk.WorkflowContext;
@@ -26,7 +26,6 @@ import io.kluev.watchlist.app.searchmovie.generated.EnlistMovieVirtualObjectClie
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -53,7 +52,7 @@ public class SearchMovieWorkflow {
 
     @Workflow
     public void run(WorkflowContext ctx, SearchMovieRequest req) {
-        val foundMovies = ctx.run("searchInExternalMovieDb", LIST_RES_REF, () ->
+        var foundMovies = ctx.run("searchInExternalMovieDb", LIST_RES_REF, () ->
                 externalMovieDatabase.find(req.query())
         );
 
@@ -69,8 +68,8 @@ public class SearchMovieWorkflow {
                 throw new TerminalException("Invalid index");
             }
 
-            val currentMovie = foundMovies.get(index);
-            val searchResultMessage = ChatGateway.MessageArgs.builder()
+            var currentMovie = foundMovies.get(index);
+            var searchResultMessage = ChatGateway.MessageArgs.builder()
                     .chatId(req.chatId())
                     .messageTemplate("%s\n%s")
                     .templateArgs(List.of(currentMovie.getFullName(), currentMovie.previewImageUrl()))
@@ -148,21 +147,21 @@ public class SearchMovieWorkflow {
 
     @Shared
     public String processUserCommand(SharedWorkflowContext ctx, CallbackCommand command) {
-        val callbackCounter = ctx.get(CALLBACK_COUNTER).orElse(0);
-        val callbackKey = getCurrentCallbackKey(callbackCounter);
+        var callbackCounter = ctx.get(CALLBACK_COUNTER).orElse(0);
+        var callbackKey = getCurrentCallbackKey(callbackCounter);
         ctx.promiseHandle(callbackKey).resolve(command);
         return "ok";
     }
 
     private DurablePromiseKey<CallbackCommand> getCurrentCallbackKey(Integer callbackCounter) {
-        val promiseName = COMMAND_PROMISE_NAME_TEMPLATE.formatted(callbackCounter);
+        var promiseName = COMMAND_PROMISE_NAME_TEMPLATE.formatted(callbackCounter);
         return DurablePromiseKey.of(promiseName, CallbackCommand.class);
     }
 
     private void addToWatchList(ObjectContext ctx, String initialMessageId, ExternalMovieDatabase.ExternalMovieDto movieDto, ChatMessageResponse responseMsg) {
-        val enlistClient = EnlistMovieVirtualObjectClient.fromContext(ctx, movieDto.externalId());
+        var enlistClient = EnlistMovieVirtualObjectClient.fromContext(ctx, movieDto.externalId());
 
-        val enlistRequest = EnlistMovieRequest
+        var enlistRequest = EnlistMovieRequest
                 .builder()
                 .title(movieDto.name())
                 .foreignTitle(movieDto.enName())
@@ -171,7 +170,7 @@ public class SearchMovieWorkflow {
                 .username(responseMsg.username())
                 .build();
 
-        val resp = enlistClient.addToWatchList(enlistRequest)
+        var resp = enlistClient.addToWatchList(enlistRequest)
                 .await();
 
         ctx.run(() ->
@@ -219,7 +218,7 @@ public class SearchMovieWorkflow {
     // TODO Move to Test
     @SneakyThrows
     private static List<ExternalMovieDatabase.ExternalMovieDto> mockResult() {
-        return new ObjectMapper().readValue("""
+        return new JsonMapper().readValue("""
                 [
                   {
                     "year": 1991,

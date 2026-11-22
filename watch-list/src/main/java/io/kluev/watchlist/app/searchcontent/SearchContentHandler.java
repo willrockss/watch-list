@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationEventPublisher;
@@ -53,17 +52,17 @@ public class SearchContentHandler {
     @Async
     @EventListener(MovieEnlisted.class)
     public void handle(MovieEnlisted event) {
-        val saga = SearchContentSaga.create(event.movie());
+        var saga = SearchContentSaga.create(event.movie());
         sagaById.put(saga.getSagaId(), saga);
 
-        val year = event.movie().getYear();
-        val possibleYear = Set.of(String.valueOf(year), String.valueOf(year - 1), String.valueOf(year + 1));
+        var year = event.movie().getYear();
+        var possibleYear = Set.of(String.valueOf(year), String.valueOf(year - 1), String.valueOf(year + 1));
 
-        val found = findDownloadableContent(event.movie(), it -> {
-            val title = it.getTitle();
+        var found = findDownloadableContent(event.movie(), it -> {
+            var title = it.getTitle();
             return !title.contains("DVD9") && possibleYear.stream().anyMatch(title::contains);
         });
-        val top10HighQuality = found
+        var top10HighQuality = found
                 .stream()
                 // TODO Add proper filter, sorter based on strategy
                 .distinct()
@@ -109,21 +108,21 @@ public class SearchContentHandler {
     @Async
     @EventListener(ChatMessageResponse.class)
     public void handleResponse(ChatMessageResponse rawResponse) {
-        val resp = SearchContentSagaResponse.parseOrNull(rawResponse);
+        var resp = SearchContentSagaResponse.parseOrNull(rawResponse);
         if (resp == null) {
             log.debug("Unable to parse response {}. Ignore", rawResponse);
             return;
         }
 
-        val saga = sagaById.get(resp.sagaId());
+        var saga = sagaById.get(resp.sagaId());
         if (saga == null) {
             log.error("Unable to find saga by id {}. Ignore", resp.sagaId());
             return;
         }
 
-        val selectedContent = findSelectedDownloadableContentInfoOrNull(saga, resp);
-        val torrFileContent = downloadableContentGateway.download(selectedContent);
-        val savedFilename = save(torrFileContent, saga);
+        var selectedContent = findSelectedDownloadableContentInfoOrNull(saga, resp);
+        var torrFileContent = downloadableContentGateway.download(selectedContent);
+        var savedFilename = save(torrFileContent, saga);
         chatGateway.sendMessage(rawResponse.chatId(), "`file://%s` был успешно скачан", savedFilename.replace("torrent", "tt"));
         eventPublisher.publishEvent(new ContentSelectedForDownload(saga.getMovieItem(), savedFilename));
     }
@@ -133,7 +132,7 @@ public class SearchContentHandler {
             SearchContentSagaResponse resp
     ) {
         // TODO check for null
-        val selectedIndex = NumberUtils.parseOrNull(resp.selectedContent()) - 1;
+        var selectedIndex = NumberUtils.parseOrNull(resp.selectedContent()) - 1;
         if (selectedIndex < 0 || selectedIndex >= saga.getFound().size()) {
             log.error("Invalid selected index {}. Found count {}. Ignore", selectedIndex, saga.getFound().size());
             return null;
@@ -147,7 +146,7 @@ public class SearchContentHandler {
             case EXTERNAL_ID -> saga.getMovieItem().getExternalId() + ".torrent";
             case ESCAPED -> torrFileContent.filename();
         };
-        val file = Path.of(properties.getTorrFolder(), filename).toFile();
+        var file = Path.of(properties.getTorrFolder(), filename).toFile();
 
         FileUtils.writeByteArrayToFile(file, torrFileContent.bytes());
         log.info("{} was created", file.getCanonicalFile());

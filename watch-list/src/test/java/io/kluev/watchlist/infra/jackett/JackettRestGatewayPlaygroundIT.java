@@ -2,7 +2,6 @@ package io.kluev.watchlist.infra.jackett;
 
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
-import lombok.val;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.core5.util.Timeout;
@@ -42,15 +41,15 @@ class JackettRestGatewayPlaygroundIT {
 
     @Test
     public void should_find_and_download_torr() {
-        val query = "Терминатор 2";
-        val response = jackettRestGateway.query(query);
+        var query = "Терминатор 2";
+        var response = jackettRestGateway.query(query);
         System.out.println(response);
         for (DownloadableContentInfo con : response) {
             System.out.println(con.getLink());
         }
 
-//        val torrFileResource = jackettRestGateway.download(response.getFirst());
-//        val file = Path.of("/home", user, "Downloads", "torr", torrFileResource.filename()).toFile();
+//        var torrFileResource = jackettRestGateway.download(response.getFirst());
+//        var file = Path.of("/home", user, "Downloads", "torr", torrFileResource.filename()).toFile();
 //
 //        try {
 //            FileUtils.writeByteArrayToFile(file, torrFileResource.bytes());

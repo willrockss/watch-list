@@ -2,7 +2,6 @@ package io.kluev.watchlist.app;
 
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
@@ -15,7 +14,7 @@ public class PlayHandler {
 
     public PlayResponse handle(PlayRequest request) {
         // TODO validate request
-        val resp = restClient
+        var resp = restClient
                 .post()
                 .uri(properties.getUrl() + properties.getPlayVideoUrl())
                 .contentType(MediaType.APPLICATION_JSON)

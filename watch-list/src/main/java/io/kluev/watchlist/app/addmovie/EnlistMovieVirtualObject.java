@@ -11,7 +11,6 @@ import io.kluev.watchlist.domain.MovieItem;
 import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.domain.event.MovieEnlisted;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -25,7 +24,7 @@ public class EnlistMovieVirtualObject {
 
     @Handler
     public EnlistMovieResponse addToWatchList(ObjectContext ctx, EnlistMovieRequest req) {
-        val movie = createMovieItemByRequest(req);
+        var movie = createMovieItemByRequest(req);
         ctx.run(() -> {
             // TODO check if already in the to-watch-list
             movieRepository.enlist(movie);

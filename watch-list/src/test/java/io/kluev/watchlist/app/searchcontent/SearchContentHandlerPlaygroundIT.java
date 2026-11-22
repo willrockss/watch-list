@@ -5,14 +5,13 @@ import io.kluev.watchlist.domain.MovieItem;
 import io.kluev.watchlist.domain.event.MovieEnlisted;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;
 import lombok.SneakyThrows;
-import lombok.val;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.event.EventListener;
@@ -44,15 +43,15 @@ class SearchContentHandlerPlaygroundIT {
     @Test
     @SneakyThrows
     public void should_select_and_download_torr() {
-        val movie = MovieItem.create("Гравитация", "Gravity", 2013, "468466");
-        val enlistedEvent = new MovieEnlisted(movie, "cranman89");
+        var movie = MovieItem.create("Гравитация", "Gravity", 2013, "468466");
+        var enlistedEvent = new MovieEnlisted(movie, "cranman89");
         searchContentHandler.handle(enlistedEvent);
         countDownLatch.await();
         Thread.sleep(100_000);
     }
 
     @EventListener(ChatMessageResponse.class)
-    public void handleResponse(ChatMessageResponse rawResponse) {
+    public void handleResponse() {
         countDownLatch.countDown();
     }
 

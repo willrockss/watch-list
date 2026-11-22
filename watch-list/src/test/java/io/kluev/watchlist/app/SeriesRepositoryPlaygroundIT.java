@@ -14,7 +14,6 @@ import io.kluev.watchlist.infra.googlesheet.GoogleSheetsSeriesRepository;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.val;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -58,7 +57,7 @@ class SeriesRepositoryPlaygroundIT {
     @Test
     public void ok_mark_season_as_watched() {
         String seasonId = new SeriesIdGenerator().generateId("Волга", 2);
-        val season = new Series(
+        var season = new Series(
                 new TestSeriesId(seasonId),
                 "Волга",
                 "Волга (1, 1/2)",

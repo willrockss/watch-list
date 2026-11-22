@@ -8,7 +8,6 @@ import io.kluev.watchlist.infra.jackett.WLFilenameUtils;
 import io.kluev.watchlist.infra.prowlarr.dto.SearchResource;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestClient;
@@ -39,7 +38,7 @@ public class ProwlarrRestGateway implements DownloadableContentGateway {
     public List<DownloadableContentInfo> query(@NonNull String query, @NonNull Predicate<DownloadableContentInfo> filter) {
         Assert.notNull(query, "Query must not be null!");
 
-        val rawResp = restClient
+        var rawResp = restClient
                 .get()
                 .uri(createQueryUriFunc(properties.getApiKey(), query))
                 .retrieve()
@@ -55,15 +54,15 @@ public class ProwlarrRestGateway implements DownloadableContentGateway {
 
     @Override
     public FileContent download(@NonNull DownloadableContentInfo contentInfo) {
-        val fileResp = restClient.get().uri(contentInfo.getLink()).retrieve().body(Resource.class);
+        var fileResp = restClient.get().uri(contentInfo.getLink()).retrieve().body(Resource.class);
         if (fileResp == null) {
             throw new IllegalArgumentException("Unable to download: " + contentInfo.getLink());
         }
         try {
-            val filename = fileResp.getFilename() != null
+            var filename = fileResp.getFilename() != null
                     ? URLDecoder.decode(fileResp.getFilename(), StandardCharsets.UTF_8)
                     : deriveFilename(contentInfo);
-            val escapedFilename = WLFilenameUtils.escapeFilename(filename);
+            var escapedFilename = WLFilenameUtils.escapeFilename(filename);
             return new FileContent(escapedFilename, fileResp.getContentAsByteArray());
         } catch (IOException ioException) {
             throw new IllegalArgumentException("Unable to read downloaded file: " + contentInfo.getLink(), ioException);
@@ -71,14 +70,14 @@ public class ProwlarrRestGateway implements DownloadableContentGateway {
     }
 
     private String deriveFilename(DownloadableContentInfo contentInfo) {
-        val link = requireNonNull(contentInfo.getLink());
-        val extension = link.startsWith("magnet:") ? ".magnet" : ".torrent";
+        var link = requireNonNull(contentInfo.getLink());
+        var extension = link.startsWith("magnet:") ? ".magnet" : ".torrent";
         return contentInfo.getTitle() + extension;
     }
 
     private Function<UriBuilder, URI> createQueryUriFunc(String apiKey, String query) {
         return (UriBuilder uriBuilder) -> {
-            val uri = uriBuilder
+            var uri = uriBuilder
                     .scheme(properties.getBaseUrl().getScheme())
                     .host(properties.getBaseUrl().getHost())
                     .port(properties.getBaseUrl().getPort())

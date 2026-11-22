@@ -4,7 +4,6 @@ import io.kluev.watchlist.app.LockService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,9 +24,9 @@ public class SimpleLockService implements LockService {
 
     @Override
     public Lock acquireLock(String lockId) {
-        val lock = locks.computeIfAbsent(lockId, this::createNewLock);
+        var lock = locks.computeIfAbsent(lockId, this::createNewLock);
         try {
-            val isLocked = lock.tryLock(DEFAULT_LOCK_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+            var isLocked = lock.tryLock(DEFAULT_LOCK_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
             if (isLocked) {
                 return lock;
             }

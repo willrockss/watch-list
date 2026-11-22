@@ -10,7 +10,6 @@ import io.temporal.spring.boot.ActivityImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationEventPublisher;
@@ -39,11 +38,11 @@ public class SearchContentActivitiesImpl implements SearchContentActivities {
 
     @Override
     public List<DownloadableContentInfo> findDownloadableContent(MovieItem movie) {
-        val year = movie.getYear();
-        val possibleYear = Set.of(String.valueOf(year), String.valueOf(year - 1), String.valueOf(year + 1));
+        var year = movie.getYear();
+        var possibleYear = Set.of(String.valueOf(year), String.valueOf(year - 1), String.valueOf(year + 1));
 
-        val found = findDownloadableContent(movie, it -> {
-            val title = it.getTitle();
+        var found = findDownloadableContent(movie, it -> {
+            var title = it.getTitle();
             return !title.contains("DVD9") && possibleYear.stream().anyMatch(title::contains);
         });
         return found
@@ -62,12 +61,12 @@ public class SearchContentActivitiesImpl implements SearchContentActivities {
     @Override
     @SneakyThrows
     public String downloadAndSave(DownloadableContentInfo content, MovieItem movie) {
-        val torrFileContent = downloadableContentGateway.download(content);
+        var torrFileContent = downloadableContentGateway.download(content);
         String filename = switch (properties.getTorrFilenameStrategy()) {
             case EXTERNAL_ID -> movie.getExternalId() + ".torrent";
             case ESCAPED -> torrFileContent.filename();
         };
-        val file = Path.of(properties.getTorrFolder(), filename).toFile();
+        var file = Path.of(properties.getTorrFolder(), filename).toFile();
 
         FileUtils.writeByteArrayToFile(file, torrFileContent.bytes());
         log.info("{} was created", file.getCanonicalFile());

@@ -1,6 +1,5 @@
 package io.kluev.watchlist.infra.telegrambot;
 
-import lombok.val;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,7 @@ class PgTelegramSessionStorePlaygroundIT {
 
     @Test
     public void should_find_admins_chat_ids() {
-        val result = telegramSessionStore.findChatIdsByUsernames(Set.of("cranman89"));
+        var result = telegramSessionStore.findChatIdsByUsernames(Set.of("cranman89"));
         assertThat(result).isNotEmpty();
     }
 }

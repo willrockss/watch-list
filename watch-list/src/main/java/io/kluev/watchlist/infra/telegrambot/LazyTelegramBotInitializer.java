@@ -2,7 +2,6 @@ package io.kluev.watchlist.infra.telegrambot;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.lang3.ObjectUtils;
 import org.telegram.telegrambots.longpolling.TelegramBotsLongPollingApplication;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
@@ -24,7 +23,7 @@ public class LazyTelegramBotInitializer extends TelegramBotInitializer {
     @SneakyThrows
     @Override
     public void afterPropertiesSet() {
-        val initialized = new AtomicBoolean(false);
+        var initialized = new AtomicBoolean(false);
         Thread.startVirtualThread(() -> {
              do {
                 try {

@@ -1,9 +1,7 @@
 package io.kluev.watchlist.infra.jackett;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.xml.XmlMapper;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.app.FileContent;
 import io.kluev.watchlist.app.DownloadableContentGateway;
@@ -12,7 +10,6 @@ import io.kluev.watchlist.infra.jackett.dto.Item;
 import io.kluev.watchlist.infra.jackett.dto.Rss;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestClient;
@@ -42,13 +39,13 @@ public class JackettRestGateway implements DownloadableContentGateway {
     public List<DownloadableContentInfo> query(@NonNull String query, @NonNull Predicate<DownloadableContentInfo> filter) {
         Assert.notNull(query, "Query must not be null!");
 
-        val rawResp = restClient
+        var rawResp = restClient
                 .get()
                 .uri(createQueryUriFunc(properties.getApiKey(), query.toLowerCase(Locale.ROOT)))
                 .retrieve()
                 .body(String.class);
         try {
-            val response = MAPPER.readValue(rawResp, Rss.class);
+            var response = MAPPER.readValue(rawResp, Rss.class);
             return map(response)
                     .stream()
                     .filter(filter)
@@ -60,13 +57,13 @@ public class JackettRestGateway implements DownloadableContentGateway {
 
     @Override
     public FileContent download(@NonNull DownloadableContentInfo contentInfo) {
-        val fileResp = restClient.get().uri(contentInfo.getLink()).retrieve().body(Resource.class);
+        var fileResp = restClient.get().uri(contentInfo.getLink()).retrieve().body(Resource.class);
         if (fileResp == null) {
             throw new IllegalArgumentException("Unable to download: " + contentInfo.getLink());
         }
         try {
-            val decodedFilename = URLDecoder.decode(requireNonNull(fileResp.getFilename()), StandardCharsets.UTF_8);
-            val escapedFilename = WLFilenameUtils.escapeFilename(decodedFilename);
+            var decodedFilename = URLDecoder.decode(requireNonNull(fileResp.getFilename()), StandardCharsets.UTF_8);
+            var escapedFilename = WLFilenameUtils.escapeFilename(decodedFilename);
             return new FileContent(escapedFilename, fileResp.getContentAsByteArray());
         } catch (IOException ioException) {
             throw new IllegalArgumentException("Unable to read downloaded file: " + contentInfo.getLink(), ioException);
@@ -112,9 +109,8 @@ public class JackettRestGateway implements DownloadableContentGateway {
     }
 
     private static ObjectMapper createXmlMapper() {
-        JacksonXmlModule module = new JacksonXmlModule();
-        module.setDefaultUseWrapper(false);
-        return new XmlMapper(module)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return XmlMapper.builder()
+                .defaultUseWrapper(false)
+                .build();
     }
 }

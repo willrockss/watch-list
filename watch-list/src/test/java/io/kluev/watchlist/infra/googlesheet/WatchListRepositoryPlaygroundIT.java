@@ -10,7 +10,6 @@ import io.kluev.watchlist.domain.MovieRepository;
 import io.kluev.watchlist.infra.config.beans.GoogleSheetServiceConfig;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import lombok.SneakyThrows;
-import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -64,7 +63,7 @@ class WatchListRepositoryPlaygroundIT {
     @SneakyThrows
     @Test
     public void should_add_movie_to_watch() {
-        val movieItem = MovieItem.create("Терминатор 2", 2015, "123");
+        var movieItem = MovieItem.create("Терминатор 2", 2015, "123");
         movieRepository.enlist(movieItem);
         // No exceptions are expected at this point
     }
@@ -97,14 +96,14 @@ class WatchListRepositoryPlaygroundIT {
     @SneakyThrows
     @Test
     public void should_get_movie_list() {
-        val result = movieRepository.getMoviesReadyToWatch();
+        var result = movieRepository.getMoviesReadyToWatch();
         System.out.println(result);
     }
 
     @SneakyThrows
     @Test
     public void should_add_watched_movie() {
-        val movieItem = MovieItem.create("Терминатор 2", 2015, "123");
+        var movieItem = MovieItem.create("Терминатор 2", 2015, "123");
         movieRepository.enlistWatched(movieItem, LocalDate.now());
         // No exceptions are expected at this point
     }
