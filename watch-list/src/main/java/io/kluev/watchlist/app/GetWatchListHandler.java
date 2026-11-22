@@ -52,7 +52,6 @@ public class GetWatchListHandler {
                 movieItem.getFullTitle(),
                 movieItem.getStatus(),
                 movieItem.getFilePath(),
-                movieItem.getFilePath(),
                 getContentUrlOrNull(movieItem.getFilePath(), movieItem.getExternalId())
         );
     }

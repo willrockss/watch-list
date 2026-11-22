@@ -1,10 +1,10 @@
 package io.kluev.watchlist.infra.jackett.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import tools.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.Data;
 
-@JacksonXmlRootElement(localName = "rss")
+@JsonRootName("rss")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 public class Rss {

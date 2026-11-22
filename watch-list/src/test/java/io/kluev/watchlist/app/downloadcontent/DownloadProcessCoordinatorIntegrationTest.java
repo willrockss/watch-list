@@ -39,7 +39,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -381,22 +380,7 @@ static class NeverRunTaskScheduler implements TaskScheduler {
         }
 
         @Override
-        public ScheduledFuture<?> schedule(Runnable task, Date startTime) {
-            return never();
-        }
-
-        @Override
         public ScheduledFuture<?> schedule(Runnable task, Instant startTime) {
-            return never();
-        }
-
-        @Override
-        public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long period) {
-            return never();
-        }
-
-        @Override
-        public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Date startTime, long period) {
             return never();
         }
 
@@ -407,16 +391,6 @@ static class NeverRunTaskScheduler implements TaskScheduler {
 
         @Override
         public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, Instant startTime, Duration period) {
-            return never();
-        }
-
-        @Override
-        public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, long delay) {
-            return never();
-        }
-
-        @Override
-        public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, Date startTime, long delay) {
             return never();
         }
 

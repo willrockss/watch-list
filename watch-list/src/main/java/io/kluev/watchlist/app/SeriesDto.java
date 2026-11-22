@@ -6,8 +6,6 @@ import lombok.Builder;
 public record SeriesDto(
         String id,
         String title,
-        @Deprecated // use localPath instead
-        String toWatchEpisodePath,
         String localPath,
         String contentStreamUrl,
         Integer audioTrack,

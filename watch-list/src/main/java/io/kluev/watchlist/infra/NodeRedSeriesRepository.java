@@ -157,7 +157,6 @@ public class NodeRedSeriesRepository implements SeriesRepository {
         return SeriesDto.builder()
                 .id(seriesId)
                 .title(generateFullTitle(nodeResp))
-                .toWatchEpisodePath(localPath)
                 .localPath(localPath)
                 .contentStreamUrl(getContentUrlOrNull(localPath, seriesId))
                 .audioTrack(nodeResp.audioTrack())

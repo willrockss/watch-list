@@ -2,11 +2,11 @@ package io.kluev.watchlist.app.searchmovie.temporal;
 
 import io.kluev.watchlist.app.chat.ChatMessage;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;
-import io.temporal.api.common.v1.WorkflowExecution;
 import io.temporal.api.enums.v1.WorkflowExecutionStatus;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowClientOptions;
 import io.temporal.client.WorkflowStub;
+import io.temporal.client.WorkflowTargetOptions;
 import io.temporal.serviceclient.WorkflowServiceStubs;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions;
 import lombok.SneakyThrows;
@@ -78,7 +78,7 @@ class SearchMovieWorkflowInitiatorPlaygroundIT {
                             .setNamespace(NAMESPACE)
                             .build());
             WorkflowStub stub = client.newUntypedWorkflowStub(
-                    WorkflowExecution.newBuilder().setWorkflowId(wfId).build(),
+                    WorkflowTargetOptions.newBuilder().setWorkflowId(wfId).build(),
                     Optional.empty());
 
             // Blocks until the workflow execution completes

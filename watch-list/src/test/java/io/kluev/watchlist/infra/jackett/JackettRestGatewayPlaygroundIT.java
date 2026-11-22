@@ -3,7 +3,9 @@ package io.kluev.watchlist.infra.jackett;
 import io.kluev.watchlist.app.DownloadableContentInfo;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.core5.util.Timeout;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -65,13 +67,20 @@ class JackettRestGatewayPlaygroundIT {
         public RestClient restClient() {
             // 2. Настраиваем таймауты подключения и ответа сервера
             RequestConfig requestConfig = RequestConfig.custom()
-                    .setConnectTimeout(Timeout.ofMinutes(2))       // Время на установку соединения
                     .setResponseTimeout(Timeout.ofMinutes(2))      // Время ожидания ответа (Read Timeout)
                     .setConnectionRequestTimeout(Timeout.ofMinutes(2)) // Время ожидания соединения из пула
                     .build();
 
+            // Время на установку соединения настраивается через ConnectionConfig менеджера соединений
+            ConnectionConfig connectionConfig = ConnectionConfig.custom()
+                    .setConnectTimeout(Timeout.ofMinutes(2))
+                    .build();
+
             // 3. Создаем HttpClient с нашими настройками
             HttpClient httpClient = HttpClients.custom()
+                    .setConnectionManager(PoolingHttpClientConnectionManagerBuilder.create()
+                            .setDefaultConnectionConfig(connectionConfig)
+                            .build())
                     .setDefaultRequestConfig(requestConfig)
                     .build();
             return RestClient.builder()
