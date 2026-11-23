@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -53,14 +54,30 @@ public class GoogleSheetsClient {
     private final Map<String, String> sheetNameByCode = new HashMap<>();
     private final Map<String, String> sheetCodeByName = new HashMap<>();
 
-    @SneakyThrows
+    private volatile boolean columnMappingsInitialized = false;
+
     public GoogleSheetsClient(
             Sheets service,
             GoogleSheetProperties properties
     ) {
         this.service = service;
         this.properties = properties;
-        init();
+    }
+
+    /**
+     * Sheet column mappings are loaded lazily, so temporary Google Sheets unavailability
+     * does not prevent the application from starting up.
+     */
+    private synchronized void ensureInitialized() {
+        if (columnMappingsInitialized) {
+            return;
+        }
+        try {
+            init();
+            columnMappingsInitialized = true;
+        } catch (IOException e) {
+            throw new UncheckedIOException("Unable to initialize Google Sheets client", e);
+        }
     }
 
     private void init() throws IOException {
@@ -105,6 +122,7 @@ public class GoogleSheetsClient {
                 .changeRowsInterval(RowNumber.of(rowOffset), RowNumber.of(rowOffset + PAGE_SIZE));
         var fullRange = range.asString();
         try {
+            ensureInitialized();
             var result = service.spreadsheets().values().get(properties.getSpreadsheetId(), fullRange).execute();
             var values = result.getValues();
             if (values == null) {
@@ -126,7 +144,7 @@ public class GoogleSheetsClient {
                     return new RowNumber(i + rowOffset);
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | UncheckedIOException e) {
             log.error(
                     "Unable to fetch rows from {}, range {}. Error: {}",
                     properties.getSpreadsheetId(),
@@ -138,6 +156,7 @@ public class GoogleSheetsClient {
     }
 
     public boolean deleteRow(DeleteRow command) {
+        ensureInitialized();
         BatchUpdateSpreadsheetRequest request = new BatchUpdateSpreadsheetRequest();
         request.setRequests(List.of(
                 new Request()
@@ -159,6 +178,7 @@ public class GoogleSheetsClient {
     }
 
     public boolean cutInsertWithUpdate(CutInsertWithUpdateRowCommand command) {
+        ensureInitialized();
         var reqList = new ArrayList<Request>();
         reqList.add(
                 new Request()
