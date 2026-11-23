@@ -89,9 +89,18 @@ integration:
       admins: <comma separated list of usernames of admins>
 
   jackett:
-    enabled: true
+    enabled: false
     apiKey: <your Jackett API key>
     baseUrl: http://localhost:9117
+  jacred:
+    enabled: true
+    # apiKey: <your JacRed API key>
+    baseUrl: https://jac-red.ru
+    sort: pir
+    # set trackers whitelist
+#    trackers:
+#      - mytracker
+#      - anotherone
   prowlarr:
     enabled: false
     apiKey: <your Prowlarr API key>

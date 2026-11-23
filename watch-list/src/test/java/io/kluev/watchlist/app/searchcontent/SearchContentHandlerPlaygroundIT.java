@@ -27,9 +27,10 @@ import java.util.concurrent.CountDownLatch;
                 "integration.telegram-bot.session-store-type=NOOP",
                 "spring.temporal.connection.target=localhost:7233",
                 "integration.jackett.enabled=false",
-                "integration.prowlarr.enabled=true",
+                "integration.prowlarr.enabled=false",
                 "integration.prowlarr.base-url=http://localhost:9696",
                 "integration.prowlarr.api-key=123",
+                "integration.jacred.enabled=true",
         }
 )
 @EnableAutoConfiguration(exclude={DataSourceAutoConfiguration.class, JdbcTemplateAutoConfiguration.class})

@@ -30,6 +30,7 @@ import io.kluev.watchlist.infra.config.management.PidInfoContributor;
 import io.kluev.watchlist.infra.config.props.DownloadProperties;
 import io.kluev.watchlist.infra.config.props.GoogleSheetProperties;
 import io.kluev.watchlist.infra.config.props.JackettProperties;
+import io.kluev.watchlist.infra.config.props.JacRedProperties;
 import io.kluev.watchlist.infra.config.props.NodeRedIntegrationProperties;
 import io.kluev.watchlist.infra.config.props.ProwlarrProperties;
 import io.kluev.watchlist.infra.config.props.QBitClientProperties;
@@ -42,6 +43,7 @@ import io.kluev.watchlist.infra.googlesheet.GoogleSheetsSeriesRepository;
 import io.kluev.watchlist.infra.googlesheet.GoogleSheetsWatchListRepository;
 import io.kluev.watchlist.infra.googlesheet.clientimpl.GoogleSheetsClient;
 import io.kluev.watchlist.infra.jackett.JackettRestGateway;
+import io.kluev.watchlist.infra.jacred.JacRedRestGateway;
 import io.kluev.watchlist.infra.prowlarr.ProwlarrRestGateway;
 import io.kluev.watchlist.infra.kinopoisk.KinopoiskClient;
 import io.kluev.watchlist.infra.qbit.QBitClientImpl;
@@ -340,6 +342,12 @@ public class MainBeansConfig {
     @Bean
     public DownloadableContentGateway prowlarrRestGateway(ProwlarrProperties properties, RestClient slowEndpointRestClient) {
         return new ProwlarrRestGateway(properties, slowEndpointRestClient);
+    }
+
+    @ConditionalOnProperty(value = "integration.jacred.enabled", havingValue = "true")
+    @Bean
+    public DownloadableContentGateway jacRedRestGateway(JacRedProperties properties, RestClient slowEndpointRestClient) {
+        return new JacRedRestGateway(properties, slowEndpointRestClient);
     }
 
     @ConditionalOnProperty(value = "integration.telegram-bot.enabled")
