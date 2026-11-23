@@ -78,9 +78,29 @@ public class TelegramChatGateway implements ChatGateway {
         for (int i = 0; i < found.size(); i++) {
             var elem = found.get(i);
             var readableSize = FileUtils.byteCountToDisplaySize(elem.getSize());
-            textBuilder.append("\t*%d*\\. %s\\. \n\\[Размер: `%s`, Скачан раз: `%d`\\]\n\n".formatted(i + 1, escapeMarkdown(elem.getTitle()), readableSize, elem.getStatistics().getDownloadedTimes()));
+            textBuilder.append("\t*%d*\\. %s\\. \n\\[Размер: `%s`%s\\]\n\n".formatted(i + 1, escapeMarkdown(elem.getTitle()), readableSize, formatStatsSuffix(elem)));
         }
         return textBuilder.toString();
+    }
+
+    /**
+     * Builds the statistics part of the content line.
+     * JacRed results have no download counter, so seeders/peers are shown instead.
+     */
+    private String formatStatsSuffix(DownloadableContentInfo elem) {
+        var stats = elem.getStatistics();
+        if (stats == null) {
+            return "";
+        }
+        if (stats.getDownloadedTimes() != null) {
+            return ", Скачан раз: `%d`".formatted(stats.getDownloadedTimes());
+        }
+        if (stats.getSeeders() != null || stats.getPeers() != null) {
+            return ", Сидов: `%s`, Пиров: `%s`".formatted(
+                    stats.getSeeders() != null ? stats.getSeeders() : "н/д",
+                    stats.getPeers() != null ? stats.getPeers() : "н/д");
+        }
+        return "";
     }
 
     private String escapeMarkdown(String text) {
