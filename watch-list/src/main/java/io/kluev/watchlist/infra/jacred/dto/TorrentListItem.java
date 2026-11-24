@@ -35,12 +35,10 @@ public class TorrentListItem {
 
     public DownloadableContentInfo toDownloadableContentInfo() {
         // JacRed has no download counter, so downloadedTimes stays null.
-        // url is preferred over magnet as a stable identity and download link.
-        var link = url != null ? url : magnet;
         return DownloadableContentInfo.builder()
-                .guid(link)
+                .guid(url)
                 .title(title)
-                .link(link)
+                .link(magnet)
                 .size(size)
                 .statistics(new DownloadableContentInfo.Statistics(null, sid, pir))
                 .build();
