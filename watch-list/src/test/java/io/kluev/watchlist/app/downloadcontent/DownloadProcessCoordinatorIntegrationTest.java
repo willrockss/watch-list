@@ -1,5 +1,6 @@
 package io.kluev.watchlist.app.downloadcontent;
 
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import io.kluev.watchlist.app.downloadcontent.event.ContentItemDownloadFinishedEvent;
@@ -102,7 +103,7 @@ class DownloadProcessCoordinatorIntegrationTest {
         when(qBitClient.isAvailable()).thenReturn(true);
         when(qBitClient.getFreeSpaceOnDisk()).thenReturn(DataSize.ofGigabytes(200));
         when(movieRepository.getMoviesReadyToWatch()).thenReturn(List.of());
-        when(qBitClient.addTorrPaused(anyString(), any(ContentItemIdentity.class)))
+        when(qBitClient.addTorrByFilePaused(anyString(), any(ContentItemIdentity.class)))
                 .thenReturn(new EnqueuedTorr(TORR_HASH, CONTENT_PATH, 0, 1024L));
         when(qBitClient.findByIdTagOrNull(any(ContentItemIdentity.class)))
                 .thenReturn(new EnqueuedTorr(TORR_HASH, CONTENT_PATH, 0, 1024L));
@@ -110,7 +111,7 @@ class DownloadProcessCoordinatorIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        logAppenders.forEach((logger, appender) -> logger.detachAppender(appender));
+        logAppenders.forEach(Logger::detachAppender);
         logAppenders.clear();
     }
 
@@ -137,7 +138,7 @@ class DownloadProcessCoordinatorIntegrationTest {
         assertThat(record.status()).isEqualTo(PROCESSING.name());
         assertThat(record.torrInfoHash()).isEqualTo(TORR_HASH);
         assertThat(record.contentPath()).isEqualTo(CONTENT_PATH);
-        verify(qBitClient).addTorrPaused("/tmp/kinopoisk-t011.torrent", new ContentItemIdentity("kinopoisk-t011"));
+        verify(qBitClient).addTorrByFilePaused("/tmp/kinopoisk-t011.torrent", new ContentItemIdentity("kinopoisk-t011"));
         verify(qBitClient).start(any(EnqueuedTorr.class));
         assertThat(eventRecorder.enqueued()).hasSize(1);
         assertThat(eventRecorder.started()).hasSize(1);
@@ -155,7 +156,7 @@ class DownloadProcessCoordinatorIntegrationTest {
         assertThat(record.status()).isEqualTo(PAUSED.name());
         assertThat(record.torrInfoHash()).isEqualTo(TORR_HASH);
         assertThat(record.contentPath()).isEqualTo(CONTENT_PATH);
-        verify(qBitClient).addTorrPaused(anyString(), any(ContentItemIdentity.class));
+        verify(qBitClient).addTorrByFilePaused(anyString(), any(ContentItemIdentity.class));
         verify(qBitClient, never()).start(any(EnqueuedTorr.class));
         assertThat(eventRecorder.enqueued()).hasSize(1);
         assertThat(eventRecorder.started()).isEmpty();
@@ -171,7 +172,7 @@ class DownloadProcessCoordinatorIntegrationTest {
         var record = dbRow("kinopoisk-t021");
         assertThat(record.status()).isEqualTo(PAUSED.name());
         assertThat(record.torrInfoHash()).isEqualTo(TORR_HASH);
-        verify(qBitClient).addTorrPaused(anyString(), any(ContentItemIdentity.class));
+        verify(qBitClient).addTorrByFilePaused(anyString(), any(ContentItemIdentity.class));
         verify(qBitClient, never()).start(any(EnqueuedTorr.class));
         assertThat(eventRecorder.enqueued()).hasSize(1);
     }
@@ -187,7 +188,7 @@ class DownloadProcessCoordinatorIntegrationTest {
 
         var record = dbRow("kinopoisk-t022");
         assertThat(record.status()).isEqualTo(PAUSED.name());
-        verify(qBitClient, times(1)).addTorrPaused(anyString(), any(ContentItemIdentity.class));
+        verify(qBitClient, times(1)).addTorrByFilePaused(anyString(), any(ContentItemIdentity.class));
         verify(qBitClient, never()).start(any(EnqueuedTorr.class));
         assertThat(eventRecorder.enqueued()).hasSize(1);
         assertThat(logs.list.stream()
@@ -216,7 +217,7 @@ class DownloadProcessCoordinatorIntegrationTest {
 
         var record = dbRow("kinopoisk-t024");
         assertThat(record.status()).isEqualTo(INITIAL.name());
-        verify(qBitClient, never()).addTorrPaused(anyString(), any(ContentItemIdentity.class));
+        verify(qBitClient, never()).addTorrByFilePaused(anyString(), any(ContentItemIdentity.class));
         verify(qBitClient, never()).start(any(EnqueuedTorr.class));
         assertThat(eventRecorder.all()).isEmpty();
     }

@@ -35,10 +35,19 @@ class QBitClientTestPlaygroundIT {
     @Autowired
     private QBitClient qBitClient;
 
+    private static final String TEST_MAGNET_LINK = "magnet:?xt=urn:btih:B1239D600B39274618B5ACD7755EABD00BAB5B04&tr=http%3A%2F%2Aaa4.t-org.org%2Fann%3Fmagnet";
     @Test
     public void test_add() {
         var torrPath = "/home/alex/Downloads/torr/Головоломка_2_Inside_Out_2_(Келси_Манн)_[2024_комедия_приключения_семейный_WEBRip]_тизер.torrent";
-        var torr = qBitClient.addTorrPaused(torrPath, new ContentItemIdentity("inside_out_2"));
+        var torr = qBitClient.addTorrByFilePaused(torrPath, new ContentItemIdentity("inside_out_2"));
+        assertThat(torr).isNotNull();
+        assertThat(torr.infoHash()).isNotNull();
+        assertThat(torr.contentPath()).isNotNull();
+    }
+
+    @Test
+    public void test_add_magnet() {
+        var torr = qBitClient.addTorrByLinkPaused(TEST_MAGNET_LINK, new ContentItemIdentity("inside_out_2_magnet"));
         assertThat(torr).isNotNull();
         assertThat(torr.infoHash()).isNotNull();
         assertThat(torr.contentPath()).isNotNull();

@@ -107,10 +107,14 @@ integration:
     baseUrl: http://localhost:9696
   qbit:
     url: http://localhost:8080
+    # How long to wait for a magnet link metadata to be resolved before adding the torrent
+    metadata-timeout: 60s
 
 download:
   min-free-disk-space: 40GB
   max-ready-to-watch: 4
+  # How long DownloadContentProcess.start() polls qBittorrent for content_path before giving up
+  content-path-poll-timeout: 60s
 
 search-content:
   torrFolder: /home/${USER}/Downloads/torr

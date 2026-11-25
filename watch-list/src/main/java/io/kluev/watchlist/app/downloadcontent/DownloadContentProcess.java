@@ -33,7 +33,7 @@ public class DownloadContentProcess {
     private OffsetDateTime nextRunAfter;
 
     public void enqueuePaused(QBitClient client) {
-        var enqueuedPaused = client.addTorrPaused(getTorrFilePath(), getContentItemIdentity());
+        var enqueuedPaused = client.addTorrByFilePaused(getTorrFilePath(), getContentItemIdentity());
 
         status = DownloadContentProcessStatus.PAUSED;
         torrInfoHash = Objects.requireNonNull(enqueuedPaused.infoHash(), () -> "hash should not be null in" + enqueuedPaused);
