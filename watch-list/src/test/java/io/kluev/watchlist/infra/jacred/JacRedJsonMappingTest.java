@@ -76,9 +76,10 @@ public class JacRedJsonMappingTest {
         assertThat(first.getSeasons()).containsExactly(1);
 
         var mapped = first.toDownloadableContentInfo();
-        // url is preferred over magnet for guid and link when present
+        // both link (direct .torrent url) and magnet are filled; guid prefers url
         assertThat(mapped.getGuid()).isEqualTo(first.getUrl());
         assertThat(mapped.getLink()).isEqualTo(first.getUrl());
+        assertThat(mapped.getMagnet()).isEqualTo(first.getMagnet());
         assertThat(mapped.getTitle()).startsWith("The Walking Dead: Dead City");
         assertThat(mapped.getSize()).isEqualTo(10709966848L);
         assertThat(mapped.getStatistics()).isNotNull();
@@ -86,12 +87,13 @@ public class JacRedJsonMappingTest {
         assertThat(mapped.getStatistics().getSeeders()).isEqualTo(15);
         assertThat(mapped.getStatistics().getPeers()).isEqualTo(8);
 
-        // magnet-only item falls back to magnet for guid and link
+        // magnet-only item: link is null, magnet carries the URI, guid falls back to magnet
         var second = items.get(1);
         assertThat(second.getUrl()).isNull();
         var mappedSecond = second.toDownloadableContentInfo();
+        assertThat(mappedSecond.getLink()).isNull();
+        assertThat(mappedSecond.getMagnet()).isEqualTo(second.getMagnet());
         assertThat(mappedSecond.getGuid()).isEqualTo(second.getMagnet());
-        assertThat(mappedSecond.getLink()).isEqualTo("magnet:?xt=urn:btih:def456&dn=The.Walking.Dead.Dead.City.S01.1080p&tr=...");
         assertThat(mappedSecond.getSize()).isEqualTo(19716241408L);
         assertThat(mappedSecond.getStatistics().getSeeders()).isEqualTo(57);
         assertThat(mappedSecond.getStatistics().getPeers()).isEqualTo(8);

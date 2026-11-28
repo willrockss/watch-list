@@ -92,6 +92,7 @@ class DownloadContentProcessDaoIntegrationTest {
                 .builder()
                 .id(initialRecord.id())
                 .contentItemIdentity(new ContentItemIdentity("mvi-005"))
+                .torrFilePath("/file005") // same as in the fixture row; updates operate on fully loaded processes
                 .status(PAUSED)
                 .contentPath("/home/user/downloads/mvi-005")
                 .torrInfoHash("0001100011")

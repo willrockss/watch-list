@@ -76,6 +76,7 @@ class TelegramChatGatewayPlaygroundIT {
                 "123",
                 "Терминатор 2: Судный день / Terminator 2: Judgment Day (Джеймс Кэмерон / James Cameron) [1991, фантастика, боевик, триллер, AC3, NTSC] [Theatrical Cut / 35mm Film Scan] Dub (ТВ-3)",
                 "https://example.com",
+                null,
                 12123123123L,
                 new DownloadableContentInfo.Statistics(100500, 100, 100)
         );

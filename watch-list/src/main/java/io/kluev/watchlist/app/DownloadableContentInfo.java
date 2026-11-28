@@ -16,7 +16,10 @@ public class DownloadableContentInfo {
     @EqualsAndHashCode.Include
     String guid;
     String title;
+    /** Direct .torrent download URL, if the source provides one. */
     String link;
+    /** Raw {@code magnet:?xt=...} URI, if the source provides one. */
+    String magnet;
     Long size;
     Statistics statistics;
 

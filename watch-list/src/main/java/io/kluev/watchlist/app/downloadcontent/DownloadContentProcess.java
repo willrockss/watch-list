@@ -1,7 +1,6 @@
 package io.kluev.watchlist.app.downloadcontent;
 
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
@@ -15,7 +14,6 @@ import java.util.Objects;
 @ToString
 @Getter
 @Builder
-@AllArgsConstructor()
 public class DownloadContentProcess {
 
     private Long id;
@@ -24,7 +22,10 @@ public class DownloadContentProcess {
     @Builder.Default
     private int runIteration = 0;
     private final ContentItemIdentity contentItemIdentity;
+    /** Path to a local .torrent file; mutually exclusive with {@link #link}. */
     private final String torrFilePath;
+    /** Magnet {@code magnet:?xt=...} or http(s) link to a torrent; mutually exclusive with {@link #torrFilePath}. */
+    private final String link;
     private String torrInfoHash;
     private String contentPath;
     private String contextInfo;
@@ -32,11 +33,49 @@ public class DownloadContentProcess {
     private OffsetDateTime updatedAt;
     private OffsetDateTime nextRunAfter;
 
+    /**
+     * All-args constructor used by Lombok's {@code @Builder}. Validates that exactly one of
+     * {@code torrFilePath} and {@code link} is set.
+     */
+    public DownloadContentProcess(Long id,
+                                  DownloadContentProcessStatus status,
+                                  int runIteration,
+                                  ContentItemIdentity contentItemIdentity,
+                                  String torrFilePath,
+                                  String link,
+                                  String torrInfoHash,
+                                  String contentPath,
+                                  String contextInfo,
+                                  OffsetDateTime createdAt,
+                                  OffsetDateTime updatedAt,
+                                  OffsetDateTime nextRunAfter) {
+        Assert.isTrue((torrFilePath == null) ^ (link == null),
+                () -> "Exactly one of torrFilePath or link must be set, but got torrFilePath=" + torrFilePath
+                        + " and link=" + link);
+        this.id = id;
+        this.status = status == null ? DownloadContentProcessStatus.INITIAL : status;
+        this.runIteration = runIteration;
+        this.contentItemIdentity = contentItemIdentity;
+        this.torrFilePath = torrFilePath;
+        this.link = link;
+        this.torrInfoHash = torrInfoHash;
+        this.contentPath = contentPath;
+        this.contextInfo = contextInfo;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.nextRunAfter = nextRunAfter;
+    }
+
     public void enqueuePaused(QBitClient client) {
-        var enqueuedPaused = client.addTorrByFilePaused(getTorrFilePath(), getContentItemIdentity());
+        var enqueuedPaused = torrFilePath != null
+                ? client.addTorrByFilePaused(torrFilePath, contentItemIdentity)
+                : client.addTorrByLinkPaused(link, contentItemIdentity);
 
         status = DownloadContentProcessStatus.PAUSED;
         torrInfoHash = Objects.requireNonNull(enqueuedPaused.infoHash(), () -> "hash should not be null in" + enqueuedPaused);
+        // For magnet links addTorrByLinkPaused waits for the metadata fetch first, so the
+        // content path is already known here. A null path is a hard error: the torrent is
+        // treated as not enqueued (the process stays INITIAL and is retried on the next tick).
         contentPath = Objects.requireNonNull(enqueuedPaused.contentPath(), () -> "contentPath should not be null in" + enqueuedPaused);
         createdAt = OffsetDateTime.now();
         // TODO add history into contextInfo

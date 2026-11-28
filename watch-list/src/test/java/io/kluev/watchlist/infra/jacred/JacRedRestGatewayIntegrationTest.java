@@ -110,7 +110,8 @@ class JacRedRestGatewayIntegrationTest {
         assertThat(first.getStatistics().getDownloadedTimes()).isNull();
 
         var second = result.get(1);
-        assertThat(second.getLink()).startsWith("magnet:?");
+        assertThat(second.getLink()).isNull();
+        assertThat(second.getMagnet()).startsWith("magnet:?");
         assertThat(second.getStatistics().getSeeders()).isEqualTo(57);
     }
 
@@ -218,6 +219,38 @@ class JacRedRestGatewayIntegrationTest {
         // then
         assertThat(result.filename()).isEqualTo("Terminator_2_Judgment_Day.magnet");
         assertThat(result.bytes()).isEqualTo(magnetUri.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void should_download_entry_with_magnet_field_and_no_url() {
+        // given
+        var magnetUri = "magnet:?xt=urn:btih:def456&dn=Terminator.2";
+        var contentInfo = DownloadableContentInfo.builder()
+                .guid(magnetUri)
+                .title("Terminator 2: Judgment Day")
+                .magnet(magnetUri)
+                .build();
+
+        // when
+        var result = sut.download(contentInfo);
+
+        // then
+        assertThat(result.filename()).isEqualTo("Terminator_2_Judgment_Day.magnet");
+        assertThat(result.bytes()).isEqualTo(magnetUri.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void should_fail_when_neither_url_nor_magnet_is_available() {
+        // given
+        var contentInfo = DownloadableContentInfo.builder()
+                .guid("g1")
+                .title("Terminator 2: Judgment Day")
+                .build();
+
+        // when then
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> sut.download(contentInfo))
+                .withMessageContaining("Neither torrent url nor magnet link");
     }
 
     @SneakyThrows

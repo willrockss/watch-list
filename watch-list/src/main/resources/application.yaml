@@ -113,8 +113,6 @@ integration:
 download:
   min-free-disk-space: 40GB
   max-ready-to-watch: 4
-  # How long DownloadContentProcess.start() polls qBittorrent for content_path before giving up
-  content-path-poll-timeout: 60s
 
 search-content:
   torrFolder: /home/${USER}/Downloads/torr

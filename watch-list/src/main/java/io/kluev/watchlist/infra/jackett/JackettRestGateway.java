@@ -83,6 +83,7 @@ public class JackettRestGateway implements DownloadableContentGateway {
                 item.getGuid(),
                 item.getTitle(),
                 item.getLink(),
+                null, // no magnet uri in Jackett rss feed
                 item.getSize(),
                 new DownloadableContentInfo.Statistics(
                         item.getGrabs(),

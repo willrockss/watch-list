@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static java.util.Objects.requireNonNull;
-
 @RequiredArgsConstructor
 public class JacRedRestGateway implements DownloadableContentGateway {
 
@@ -50,11 +48,19 @@ public class JacRedRestGateway implements DownloadableContentGateway {
 
     @Override
     public FileContent download(@NonNull DownloadableContentInfo contentInfo) {
-        var link = requireNonNull(contentInfo.getLink());
-        if (link.startsWith("magnet:")) {
-            var magnetFilename = WLFilenameUtils.escapeFilename(contentInfo.getTitle() + ".magnet");
-            return new FileContent(magnetFilename, link.getBytes(StandardCharsets.UTF_8));
+        var link = contentInfo.getLink();
+        if (link != null && !link.startsWith("magnet:")) {
+            return downloadTorrentFile(link, contentInfo);
         }
+        var magnet = link != null ? link : contentInfo.getMagnet();
+        if (magnet != null) {
+            var magnetFilename = WLFilenameUtils.escapeFilename(contentInfo.getTitle() + ".magnet");
+            return new FileContent(magnetFilename, magnet.getBytes(StandardCharsets.UTF_8));
+        }
+        throw new IllegalArgumentException("Neither torrent url nor magnet link is available for: " + contentInfo.getTitle());
+    }
+
+    private FileContent downloadTorrentFile(@NonNull String link, @NonNull DownloadableContentInfo contentInfo) {
         var fileResp = restClient.get().uri(resolveLink(link)).retrieve().body(Resource.class);
         if (fileResp == null) {
             throw new IllegalArgumentException("Unable to download: " + link);
